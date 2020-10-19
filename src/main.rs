@@ -6,6 +6,10 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast; // for dyn_into
 use std::f64;
 
+//better panics
+extern crate console_error_panic_hook;
+use std::panic;
+
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -94,5 +98,6 @@ pub fn main() {
 //start section of the executable may not literally point to main
 #[wasm_bindgen(start)]
 pub fn start() {
+    panic::set_hook(Box::new(console_error_panic_hook::hook));
    main()
 } 
