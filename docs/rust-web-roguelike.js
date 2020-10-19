@@ -47,6 +47,18 @@ function takeObject(idx) {
     dropObject(idx);
     return ret;
 }
+
+let cachegetInt32Memory0 = null;
+function getInt32Memory0() {
+    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachegetInt32Memory0;
+}
+
+function getArrayU8FromWasm0(ptr, len) {
+    return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
+}
 /**
 */
 export function start() {
@@ -107,14 +119,6 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
-
-let cachegetInt32Memory0 = null;
-function getInt32Memory0() {
-    if (cachegetInt32Memory0 === null || cachegetInt32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetInt32Memory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachegetInt32Memory0;
-}
 /**
 */
 export const Cell = Object.freeze({ Player:0,Floor:1,Wall:2, });
@@ -157,11 +161,15 @@ export class Universe {
         return ret >>> 0;
     }
     /**
-    * @returns {number}
+    * @returns {Uint8Array}
     */
     get_cells() {
-        var ret = wasm.universe_get_cells(this.ptr);
-        return ret;
+        wasm.universe_get_cells(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1);
+        return v0;
     }
 }
 

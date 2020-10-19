@@ -30,7 +30,7 @@ pub enum Cell {
 pub struct Universe {
     width: u32,
     height: u32,
-    cells: Vec<Cell>,
+    cells: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
 }
 
 
@@ -54,21 +54,24 @@ pub fn idx_xy(idx: usize) -> (i32, i32) {
 impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{width:20, height:20,
-            cells: vec![Cell::Floor; 20 * 20],
+            cells: vec![Cell::Floor as u8; 20 * 20],
         };
     
         // Make the boundaries walls
         for x in 0..20 {
-            state.cells[xy_idx(x, 0)] = Cell::Wall;
-            state.cells[xy_idx(x, 19)] = Cell::Wall;
+            state.cells[xy_idx(x, 0)] = Cell::Wall as u8;
+            state.cells[xy_idx(x, 19)] = Cell::Wall as u8;
         }
         for y in 0..20 {
-            state.cells[xy_idx(0, y)] = Cell::Wall;
-            state.cells[xy_idx(19, y)] = Cell::Wall;
+            state.cells[xy_idx(0, y)] = Cell::Wall as u8;
+            state.cells[xy_idx(19, y)] = Cell::Wall as u8;
         }
     
         //Player
-        state.cells[xy_idx(1,1)] = Cell::Player;
+        state.cells[xy_idx(1,1)] = Cell::Player as u8;
+
+        //debug
+        log!("We have a universe");
 
         // We'll return the state with the short-hand
         state
@@ -82,15 +85,18 @@ impl Universe {
         self.height
     }
 
-    pub fn get_cells(&self) -> *const Cell {
-        self.cells.as_ptr()
+    pub fn get_cells(&self) -> Vec<u8> {
+        self.cells.clone()
     }
+
+    // pub fn get_cells_ptr(&self) -> *const Cell {
+    //     self.cells.as_ptr()
+    // }
+
 }
 
 pub fn main() {
-    let gs = Universe::new();
-    //debug
-    log!("We have a universe");
+    //let gs = Universe::new();
 }
 
 
@@ -99,5 +105,5 @@ pub fn main() {
 #[wasm_bindgen(start)]
 pub fn start() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
-   main()
+   //main()
 } 

@@ -7,6 +7,8 @@
 // eventually the manual initialization won't be required!
 import init from './rust-web-roguelike.js';
 
+import {initRenderer } from './render.js';
+
 async function run() {
     // First up we need to actually load the wasm file, so we use the
     // default export to inform it where the wasm file is located on the
