@@ -59,6 +59,14 @@ function getInt32Memory0() {
 function getArrayU8FromWasm0(ptr, len) {
     return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
 }
+
+function getArrayI32FromWasm0(ptr, len) {
+    return getInt32Memory0().subarray(ptr / 4, ptr / 4 + len);
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
 /**
 */
 export function start() {
@@ -124,6 +132,9 @@ function passStringToWasm0(arg, malloc, realloc) {
 export const Cell = Object.freeze({ Player:0,Floor:1,Wall:2, });
 /**
 */
+export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3, });
+/**
+*/
 export class Universe {
 
     static __wrap(ptr) {
@@ -170,6 +181,30 @@ export class Universe {
         var v0 = getArrayU8FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 1);
         return v0;
+    }
+    /**
+    * @returns {Int32Array}
+    */
+    player() {
+        wasm.universe_player(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayI32FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 4);
+        return v0;
+    }
+    /**
+    * @param {number | undefined} input
+    */
+    process(input) {
+        wasm.universe_process(this.ptr, isLikeNone(input) ? 4 : input);
+    }
+    /**
+    * @param {number} delta_x
+    * @param {number} delta_y
+    */
+    move_player(delta_x, delta_y) {
+        wasm.universe_move_player(this.ptr, delta_x, delta_y);
     }
 }
 

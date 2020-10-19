@@ -17,6 +17,11 @@ const getIndex = (x, y) => {
     return x * 20 + y;
 };
 
+//inverse of the above
+const getPos = (ind) => {
+    return [ind % 20, ind / 20];
+}
+
 // Returns a Tile based on the char array map
 function getDungeonTile(x, y) {
     var t = "";
@@ -27,23 +32,40 @@ function getDungeonTile(x, y) {
         const cells = universe.get_cells();
         const idx = getIndex(x, y);
         v = cells[idx];
-        console.log("Cell at ", x, " y: ", y, "is: ", v);
+        //console.log("Cell at ", x, " y: ", y, "is: ", v);
     }
     catch(err) { return ut.NULLTILE; }
 
     //map rust values to our tiles
-    if (v == 1 ) { t = '.'};
-    if (v == 2 ) { t = '#'};
+    if (v == 1 ) { return FLOOR };
+    if (v == 2 ) { return WALL };
   	
 	if (t === '#') return WALL;
 	if (t === '.') return FLOOR;
 	return ut.NULLTILE;
 }
 
+// Main loop
 function tick() {
-    eng.update(1, 1); // Update tiles
-	term.put(AT, term.cx, term.cy); // Player character
+    const pl = universe.player();
+    eng.update(pl[0], pl[1]); // Update tiles
+	term.put(AT, term.cx, term.cy); // Player character centered for free by JS
 	term.render(); // Render
+}
+
+// Key press handler - movement & collision handling
+//Just converts to rust commands
+function onKeyDown(k) {
+    var cmd = -1;
+	if (k === ut.KEY_LEFT || k === ut.KEY_H) cmd = rust.Command.MoveLeft;
+	else if (k === ut.KEY_RIGHT || k === ut.KEY_L) cmd = rust.Command.MoveRight;
+	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
+    else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
+    
+    // update Rust
+    universe.process(cmd);
+    // update display
+	tick();
 }
 
 function initRenderer(wasm) {
@@ -56,7 +78,7 @@ function initRenderer(wasm) {
 	// Initialize Engine, i.e. the Tile manager
 	eng = new ut.Engine(term, getDungeonTile, 20, 20);
 	// Initialize input
-	//ut.initInput(onKeyDown);
+	ut.initInput(onKeyDown);
 }
 
 export { initRenderer }

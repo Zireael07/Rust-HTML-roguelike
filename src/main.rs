@@ -27,10 +27,20 @@ pub enum Cell {
 }
 
 #[wasm_bindgen]
+pub enum Command {
+    MoveLeft,
+    MoveRight,
+    MoveDown,
+    MoveUp,
+}
+
+
+#[wasm_bindgen]
 pub struct Universe {
     width: u32,
     height: u32,
     cells: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
+    player_position: usize,
 }
 
 
@@ -55,6 +65,7 @@ impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{width:20, height:20,
             cells: vec![Cell::Floor as u8; 20 * 20],
+            player_position: xy_idx(1, 1),
         };
     
         // Make the boundaries walls
@@ -68,7 +79,8 @@ impl Universe {
         }
     
         //Player
-        state.cells[xy_idx(1,1)] = Cell::Player as u8;
+        //let idx = xy_idx(1, 1);
+        //state.player_position = idx; 
 
         //debug
         log!("We have a universe");
@@ -92,6 +104,45 @@ impl Universe {
     // pub fn get_cells_ptr(&self) -> *const Cell {
     //     self.cells.as_ptr()
     // }
+
+    pub fn player(&self) -> Vec<i32> {
+        let pos = idx_xy(self.player_position);
+        vec![pos.0, pos.1]
+    }
+
+    pub fn process(&mut self, input: Option<Command>) {
+        // New: handle keyboard inputs.
+        match input {
+            None => {} // Nothing happened
+            Some(input) => {
+                // A key is pressed or held
+                match input {
+                    // We're matching a command from the host
+                    // and applying movement via the move_player function.
+
+                    // Cursors
+                    Command::MoveUp => self.move_player(0, -1),
+                    Command::MoveDown => self.move_player(0, 1),
+                    Command::MoveLeft => self.move_player(-1, 0),
+                    Command::MoveRight => self.move_player(1, 0),
+
+                    _ => {} // Ignore all the other possibilities
+                }
+            }
+        }
+    }
+
+    // Handle player movement. Delta X and Y are the relative move
+    // requested by the player. We calculate the new coordinates,
+    // and if it is a floor - move the player there.
+    pub fn move_player(&mut self, delta_x: i32, delta_y: i32) {
+        let current_position = idx_xy(self.player_position);
+        let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
+        let new_idx = xy_idx(new_position.0, new_position.1);
+        if self.cells[new_idx] == Cell::Floor as u8 {
+            self.player_position = new_idx;
+        }
+    }
 
 }
 
