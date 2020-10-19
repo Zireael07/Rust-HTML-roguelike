@@ -5,6 +5,12 @@
     <title>My Rust project!</title>
   </head>
   <body>
+    <link href="../3rd-party/unicodetiles/unicodetiles.css" rel="stylesheet" type="text/css" />
+	<link href="style.css" rel="stylesheet" type="text/css" />
+	<script src="../3rd-party/unicodetiles/unicodetiles.js"></script>
+  <script src="../3rd-party/unicodetiles/ut.DOMRenderer.js"></script>
+  <script src="render.js"></script>
+  <!-- <script src="../3rd-party/unicodetiles/input.js"></script> -->
   <!-- load wasm -->
   <!-- Note the usage of `type=module` here as this is an ES6 module -->
   <script type="module">
@@ -30,9 +36,11 @@
     }
 
     run();
+    initRenderer();
     </script>
-    <div class="wrapper">
-    <canvas id="canvas" height="600" width="800"/></canvas>
-    </div>
+
+  <div class="centerer">
+    <div id="game">Enable JavaScript and reload the page.</div>
+  </div>
   </body>
 </html>
