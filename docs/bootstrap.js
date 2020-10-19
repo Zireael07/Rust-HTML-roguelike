@@ -15,26 +15,11 @@ async function run() {
     // Also note that the promise, when resolved, yields the wasm module's
     // exports which is the same as importing the `*_bg` module in other
     // modes
-    await init();
-    initRenderer();
+    const wasm = await init('./rust-web-roguelike_bg.wasm');
+    initRenderer(wasm);
 
 }
 
-var term, eng; // Can't be initialized yet because DOM is not ready
-
-function tick() {
-
-}
-
-function initRenderer() {
-    window.setInterval(tick, 50); // Animation
-	// Initialize Viewport, i.e. the place where the characters are displayed
-	term = new ut.Viewport(document.getElementById("game"), 40, 25, "dom");
-	// Initialize Engine, i.e. the Tile manager
-	//eng = new ut.Engine(term, getDungeonTile, 20, 20);
-	// Initialize input
-	//ut.initInput(onKeyDown);
-}
 
 //init game
 run();
