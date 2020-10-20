@@ -129,7 +129,7 @@ function passStringToWasm0(arg, malloc, realloc) {
 }
 /**
 */
-export const Cell = Object.freeze({ Player:0,Floor:1,Wall:2, });
+export const Cell = Object.freeze({ Floor:0,Wall:1, });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3, });
@@ -174,8 +174,8 @@ export class Universe {
     /**
     * @returns {Uint8Array}
     */
-    get_cells() {
-        wasm.universe_get_cells(8, this.ptr);
+    get_tiles() {
+        wasm.universe_get_tiles(8, this.ptr);
         var r0 = getInt32Memory0()[8 / 4 + 0];
         var r1 = getInt32Memory0()[8 / 4 + 1];
         var v0 = getArrayU8FromWasm0(r0, r1).slice();

@@ -2,7 +2,7 @@
 import * as rust from './rust-web-roguelike.js';
 
 var term, eng; // Can't be initialized yet because DOM is not ready
-var universe, g_wasm; // Can't be initialized yet because WASM is not ready
+var universe, g_wasm, map, player; // Can't be initialized yet because WASM is not ready
 
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
@@ -28,17 +28,16 @@ function getDungeonTile(x, y) {
     var v = -1;
 	try { 
         //t = map[y][x];
-
-        const cells = universe.get_cells();
+       // const map = universe.get_cells(); 
         const idx = getIndex(x, y);
-        v = cells[idx];
+        v = map[idx];
         //console.log("Cell at ", x, " y: ", y, "is: ", v);
     }
     catch(err) { return ut.NULLTILE; }
 
     //map rust values to our tiles
-    if (v == 1 ) { return FLOOR };
-    if (v == 2 ) { return WALL };
+    if (v == 0 ) { return FLOOR };
+    if (v == 1 ) { return WALL };
   	
 	if (t === '#') return WALL;
 	if (t === '.') return FLOOR;
@@ -47,8 +46,8 @@ function getDungeonTile(x, y) {
 
 // Main loop
 function tick() {
-    const pl = universe.player();
-    eng.update(pl[0], pl[1]); // Update tiles
+    player = universe.player();
+    eng.update(player[0], player[1]); // Update tiles in viewport
 	term.put(AT, term.cx, term.cy); // Player character centered for free by JS
 	term.render(); // Render
 }
@@ -70,6 +69,9 @@ function onKeyDown(k) {
 
 function initRenderer(wasm) {
     universe = rust.Universe.new();
+    // those are the map tiles, they don't change
+    map = universe.get_tiles();
+    player = universe.player();
     g_wasm = wasm;
 
     window.setInterval(tick, 50); // Animation

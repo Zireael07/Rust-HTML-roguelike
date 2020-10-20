@@ -21,9 +21,8 @@ macro_rules! log {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cell {
-    Player = 0,
-    Floor = 1,
-    Wall = 2,
+    Floor = 0,
+    Wall = 1,
 }
 
 #[wasm_bindgen]
@@ -39,7 +38,7 @@ pub enum Command {
 pub struct Universe {
     width: u32,
     height: u32,
-    cells: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
+    tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     player_position: usize,
 }
 
@@ -64,18 +63,18 @@ pub fn idx_xy(idx: usize) -> (i32, i32) {
 impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{width:20, height:20,
-            cells: vec![Cell::Floor as u8; 20 * 20],
+            tiles: vec![Cell::Floor as u8; 20 * 20],
             player_position: xy_idx(1, 1),
         };
     
         // Make the boundaries walls
         for x in 0..20 {
-            state.cells[xy_idx(x, 0)] = Cell::Wall as u8;
-            state.cells[xy_idx(x, 19)] = Cell::Wall as u8;
+            state.tiles[xy_idx(x, 0)] = Cell::Wall as u8;
+            state.tiles[xy_idx(x, 19)] = Cell::Wall as u8;
         }
         for y in 0..20 {
-            state.cells[xy_idx(0, y)] = Cell::Wall as u8;
-            state.cells[xy_idx(19, y)] = Cell::Wall as u8;
+            state.tiles[xy_idx(0, y)] = Cell::Wall as u8;
+            state.tiles[xy_idx(19, y)] = Cell::Wall as u8;
         }
     
         //Player
@@ -97,8 +96,8 @@ impl Universe {
         self.height
     }
 
-    pub fn get_cells(&self) -> Vec<u8> {
-        self.cells.clone()
+    pub fn get_tiles(&self) -> Vec<u8> {
+        self.tiles.clone()
     }
 
     // pub fn get_cells_ptr(&self) -> *const Cell {
@@ -139,7 +138,7 @@ impl Universe {
         let current_position = idx_xy(self.player_position);
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = xy_idx(new_position.0, new_position.1);
-        if self.cells[new_idx] == Cell::Floor as u8 {
+        if self.tiles[new_idx] == Cell::Floor as u8 {
             self.player_position = new_idx;
         }
     }
