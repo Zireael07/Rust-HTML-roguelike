@@ -10,6 +10,11 @@ use std::f64;
 extern crate console_error_panic_hook;
 use std::panic;
 
+//our stuff
+mod fov;
+use fov::*;
+
+
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -40,6 +45,8 @@ pub struct Universe {
     height: u32,
     tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     player_position: usize,
+    fov: FovRecursiveShadowCasting,
+    fov_data: MapData,
 }
 
 
@@ -65,21 +72,35 @@ impl Universe {
         let mut state = Universe{width:20, height:20,
             tiles: vec![Cell::Floor as u8; 20 * 20],
             player_position: xy_idx(1, 1),
+            fov: FovRecursiveShadowCasting::new(),
+            fov_data: MapData::new(20,20)
         };
     
         // Make the boundaries walls
         for x in 0..20 {
             state.tiles[xy_idx(x, 0)] = Cell::Wall as u8;
             state.tiles[xy_idx(x, 19)] = Cell::Wall as u8;
+            //mark 'em as opaque
+            state.fov_data.set_transparent(x as usize, 0 as usize, false);
+            state.fov_data.set_transparent(x as usize, 19 as usize, false);
         }
         for y in 0..20 {
             state.tiles[xy_idx(0, y)] = Cell::Wall as u8;
             state.tiles[xy_idx(19, y)] = Cell::Wall as u8;
+            //mark 'em as opaque
+            state.fov_data.set_transparent(0 as usize, y as usize, false);
+            state.fov_data.set_transparent(19 as usize, y as usize, false);
         }
     
         //Player
         //let idx = xy_idx(1, 1);
-        //state.player_position = idx; 
+        //state.player_position = idx;
+        
+        //let mut fov = FovRecursiveShadowCasting::new();
+        state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+        state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
+        
+
 
         //debug
         log!("We have a universe");
@@ -107,6 +128,10 @@ impl Universe {
     pub fn player(&self) -> Vec<i32> {
         let pos = idx_xy(self.player_position);
         vec![pos.0, pos.1]
+    }
+
+    pub fn is_visible(&self, x: usize, y:usize) -> bool {
+        return self.fov_data.is_in_fov(x,y);
     }
 
     pub fn process(&mut self, input: Option<Command>) {
@@ -140,6 +165,9 @@ impl Universe {
         let new_idx = xy_idx(new_position.0, new_position.1);
         if self.tiles[new_idx] == Cell::Floor as u8 {
             self.player_position = new_idx;
+            //refresh fov
+            self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+            self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
         }
     }
 
