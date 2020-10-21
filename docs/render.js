@@ -22,6 +22,11 @@ const getPos = (ind) => {
     return [ind % 20, ind / 20];
 }
 
+//wrapper for Rust function
+function is_Visible(x,y){
+    return universe.is_visible(x,y);
+}
+
 // Returns a Tile based on the char array map
 function getDungeonTile(x, y) {
     var t = "";
@@ -78,7 +83,9 @@ function initRenderer(wasm) {
 	// Initialize Viewport, i.e. the place where the characters are displayed
 	term = new ut.Viewport(document.getElementById("game"), 40, 25, "dom");
 	// Initialize Engine, i.e. the Tile manager
-	eng = new ut.Engine(term, getDungeonTile, 20, 20);
+    eng = new ut.Engine(term, getDungeonTile, 20, 20);
+    //use fov
+    eng.setMaskFunc(is_Visible);
 	// Initialize input
 	ut.initInput(onKeyDown);
 }

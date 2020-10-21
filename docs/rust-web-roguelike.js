@@ -194,6 +194,15 @@ export class Universe {
         return v0;
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {boolean}
+    */
+    is_visible(x, y) {
+        var ret = wasm.universe_is_visible(this.ptr, x, y);
+        return ret !== 0;
+    }
+    /**
     * @param {number | undefined} input
     */
     process(input) {
