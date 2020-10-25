@@ -10,6 +10,9 @@ use std::f64;
 extern crate console_error_panic_hook;
 use std::panic;
 
+//ECS
+use hecs::World;
+
 //our stuff
 mod fov;
 use fov::*;
@@ -31,6 +34,13 @@ pub enum Cell {
 }
 
 #[wasm_bindgen]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Renderable {
+    Thug = 0,
+}
+
+#[wasm_bindgen]
 pub enum Command {
     MoveLeft,
     MoveRight,
@@ -47,6 +57,7 @@ pub struct Universe {
     player_position: usize,
     fov: FovRecursiveShadowCasting,
     fov_data: MapData,
+    ecs_world: World,
 }
 
 
@@ -73,7 +84,8 @@ impl Universe {
             tiles: vec![Cell::Floor as u8; 20 * 20],
             player_position: xy_idx(1, 1),
             fov: FovRecursiveShadowCasting::new(),
-            fov_data: MapData::new(20,20)
+            fov_data: MapData::new(20,20),
+            ecs_world: World::new(),
         };
     
         // Make the boundaries walls
@@ -100,7 +112,8 @@ impl Universe {
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
-
+        //spawn entity
+        let a = state.ecs_world.spawn((4 as usize, 4 as usize, Renderable::Thug as u8));
 
         //debug
         log!("We have a universe");
@@ -168,6 +181,14 @@ impl Universe {
             //refresh fov
             self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
             self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+        }
+    }
+
+    pub fn draw_entities(&self) {
+        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
+            if self.is_visible(*pos_x, *pos_y) {
+                log!("{}", &format!("x {} y {} tile {}", pos_x, pos_y, render));
+            }
         }
     }
 
