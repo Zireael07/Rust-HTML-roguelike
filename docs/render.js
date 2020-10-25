@@ -2,11 +2,13 @@
 import * as rust from './rust-web-roguelike.js';
 
 var term, eng; // Can't be initialized yet because DOM is not ready
-var universe, g_wasm, map, player; // Can't be initialized yet because WASM is not ready
+var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet because WASM is not ready
 
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
 var AT = new ut.Tile("@", 255, 255, 255);
+var THUG = new ut.Tile("t", 255, 0, 0);
+
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
 
@@ -51,10 +53,43 @@ function getDungeonTile(x, y) {
 
 // Main loop
 function tick() {
+    var i, len, ex, ey, tile, tilex, tiley; //cache
     player = universe.player();
+
+    //player is always centered (see below); cx is half width
+	//so this comes out to top left coordinates
+	var cam_x = player[0]-term.cx;
+	var cam_y = player[1]-term.cy;
+
     eng.update(player[0], player[1]); // Update tiles in viewport
-	term.put(AT, term.cx, term.cy); // Player character centered for free by JS
-	term.render(); // Render
+    term.put(AT, term.cx, term.cy); // Player character centered for free by JS
+    
+    //draw entities
+    entities_mem = universe.draw_entities();
+    len = entities_mem.length;
+    for (i = 0; i < len; i += 3) {
+        ex = entities_mem[i + 0];
+        ey = entities_mem[i + 1]
+        tile = entities_mem[i + 2];
+        //console.log("x:", ex, "y:", ey, "glyph:", tile);
+
+        //draw in screen space
+		tilex = ex - cam_x;
+        tiley = ey - cam_y;
+        //substitute correct glyph
+        if (tile == 0) {
+            tile = THUG;
+        }
+
+		// if (e.tile == null || e.tile == undefined) {
+		// 	console.log("Tile for " + e + " is null!");
+		// 	continue;
+		// }
+		term.put(tile, tilex, tiley);
+    }
+    
+    term.render(); // Render
+
 }
 
 // Key press handler - movement & collision handling

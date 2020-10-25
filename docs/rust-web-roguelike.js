@@ -132,6 +132,9 @@ function passStringToWasm0(arg, malloc, realloc) {
 export const Cell = Object.freeze({ Floor:0,Wall:1, });
 /**
 */
+export const Renderable = Object.freeze({ Thug:0, });
+/**
+*/
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3, });
 /**
 */
@@ -214,6 +217,17 @@ export class Universe {
     */
     move_player(delta_x, delta_y) {
         wasm.universe_move_player(this.ptr, delta_x, delta_y);
+    }
+    /**
+    * @returns {Uint8Array}
+    */
+    draw_entities() {
+        wasm.universe_draw_entities(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1);
+        return v0;
     }
 }
 

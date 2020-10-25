@@ -184,12 +184,20 @@ impl Universe {
         }
     }
 
-    pub fn draw_entities(&self) {
+    pub fn draw_entities(&self) -> Vec<u8> {
+        // Each "drawn" will store 3 u8 values (x,y and tile)
+        // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
+        let mut js_drawn = Vec::new();
         for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
             if self.is_visible(*pos_x, *pos_y) {
-                log!("{}", &format!("x {} y {} tile {}", pos_x, pos_y, render));
+                js_drawn.push(*pos_x as u8);
+                js_drawn.push(*pos_y as u8);
+                js_drawn.push(*render);
+                log!("{}", &format!("Rust: x {} y {} tile {}", pos_x, pos_y, render));
             }
         }
+
+        return js_drawn;
     }
 
 }
