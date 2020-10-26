@@ -169,6 +169,17 @@ impl Universe {
         }
     }
 
+    pub fn blocking_creatures_at(&self, x: usize, y: usize) -> bool {
+        let mut blocked = false;
+        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
+            if *pos_x == x && *pos_y == y {
+                blocked = true;
+                break;
+            }
+        }
+        return blocked;
+    }
+
     // Handle player movement. Delta X and Y are the relative move
     // requested by the player. We calculate the new coordinates,
     // and if it is a floor - move the player there.
@@ -177,10 +188,12 @@ impl Universe {
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = xy_idx(new_position.0, new_position.1);
         if self.tiles[new_idx] == Cell::Floor as u8 {
-            self.player_position = new_idx;
-            //refresh fov
-            self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
-            self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+            if !self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize) {
+                self.player_position = new_idx;
+                //refresh fov
+                self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+                self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+            }
         }
     }
 
@@ -193,7 +206,7 @@ impl Universe {
                 js_drawn.push(*pos_x as u8);
                 js_drawn.push(*pos_y as u8);
                 js_drawn.push(*render);
-                log!("{}", &format!("Rust: x {} y {} tile {}", pos_x, pos_y, render));
+                //log!("{}", &format!("Rust: x {} y {} tile {}", pos_x, pos_y, render));
             }
         }
 
