@@ -40,6 +40,8 @@ pub enum Renderable {
     Thug = 0,
 }
 
+pub struct AI {}
+
 #[wasm_bindgen]
 pub enum Command {
     MoveLeft,
@@ -113,7 +115,7 @@ impl Universe {
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
         //spawn entity
-        let a = state.ecs_world.spawn((4 as usize, 4 as usize, Renderable::Thug as u8));
+        let a = state.ecs_world.spawn((4 as usize, 4 as usize, Renderable::Thug as u8, "Thug", AI{}));
 
         //debug
         log!("We have a universe");
@@ -169,17 +171,6 @@ impl Universe {
         }
     }
 
-    pub fn blocking_creatures_at(&self, x: usize, y: usize) -> bool {
-        let mut blocked = false;
-        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
-            if *pos_x == x && *pos_y == y {
-                blocked = true;
-                break;
-            }
-        }
-        return blocked;
-    }
-
     // Handle player movement. Delta X and Y are the relative move
     // requested by the player. We calculate the new coordinates,
     // and if it is a floor - move the player there.
@@ -193,6 +184,7 @@ impl Universe {
                 //refresh fov
                 self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
                 self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+                self.get_AI();
             }
         }
     }
@@ -214,6 +206,30 @@ impl Universe {
     }
 
 }
+
+//Methods not exposed to JS
+impl Universe {
+    pub fn blocking_creatures_at(&self, x: usize, y: usize) -> bool {
+        let mut blocked = false;
+        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
+            if *pos_x == x && *pos_y == y {
+                blocked = true;
+                break;
+            }
+        }
+        return blocked;
+    }
+    
+    pub fn get_AI(&self) {
+        for (id, (ai)) in self.ecs_world.query::<(&AI)>()
+        .with::<&str>() //we can't query it directly above because str length is unknown at compile time
+        .iter()
+         {
+            log!("{}", &format!("Got AI {}", self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+        }
+    }
+}
+
 
 pub fn main() {
     //let gs = Universe::new();
