@@ -125,7 +125,7 @@ impl Universe {
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
         //spawn entity
-        let a = state.ecs_world.spawn((4 as usize, 4 as usize, Renderable::Thug as u8, "Thug", AI{}));
+        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}));
 
         //debug
         log!("We have a universe");
@@ -203,10 +203,10 @@ impl Universe {
         // Each "drawn" will store 3 u8 values (x,y and tile)
         // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
         let mut js_drawn = Vec::new();
-        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
-            if self.is_visible(*pos_x, *pos_y) {
-                js_drawn.push(*pos_x as u8);
-                js_drawn.push(*pos_y as u8);
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>().iter() {
+            if self.is_visible(point.x as usize, point.y as usize) {
+                js_drawn.push(point.x as u8);
+                js_drawn.push(point.y as u8);
                 js_drawn.push(*render);
                 //log!("{}", &format!("Rust: x {} y {} tile {}", pos_x, pos_y, render));
             }
@@ -231,12 +231,17 @@ impl Universe {
     }
     
     pub fn get_AI(&mut self) {
-        for (id, (ai, pos_x, pos_y)) in self.ecs_world.query::<(&AI, &usize, &usize)>()
+        // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
+        for (id, (ai, point)) in &mut self.ecs_world.query::<(&AI, &mut Point)>()
         .with::<&str>() //we can't query it directly above because str length is unknown at compile time
         .iter()
          {
-            log!("{}", &format!("Got AI {} x {} y {}",  pos_x, pos_y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
-            let new_position = path_to_player(&mut self.map, *pos_x, *pos_y, self.player_position);
+            log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+            let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
+            //actually move
+            point.x = new_pos.0 as i32;
+            point.y = new_pos.1 as i32;
+            //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
         }
     }
 }
