@@ -14,6 +14,8 @@ use std::panic;
 use hecs::World;
 
 //our stuff
+mod map;
+use map::*;
 mod fov;
 use fov::*;
 mod astar;
@@ -57,8 +59,7 @@ pub enum Command {
 
 #[wasm_bindgen]
 pub struct Universe {
-    width: u32,
-    height: u32,
+    map: Map,
     tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     player_position: usize,
     fov: FovRecursiveShadowCasting,
@@ -71,7 +72,8 @@ pub struct Universe {
 #[wasm_bindgen]
 impl Universe {
     pub fn new() -> Universe {
-        let mut state = Universe{width:20, height:20,
+        let mut state = Universe{
+            map: Map::new(20,20), //{width:20, height:20},
             tiles: vec![Cell::Floor as u8; 20 * 20],
             player_position: xy_idx(1, 1),
             fov: FovRecursiveShadowCasting::new(),
@@ -114,11 +116,11 @@ impl Universe {
     }
 
     pub fn width(&self) -> u32 {
-        self.width
+        self.map.width
     }
 
     pub fn height(&self) -> u32 {
-        self.height
+        self.map.height
     }
 
     pub fn get_tiles(&self) -> Vec<u8> {
@@ -209,13 +211,6 @@ impl Universe {
         return blocked;
     }
     
-    pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {
-        if x < 1 || x > self.width as i32-1 || y < 1 || y > self.height as i32-1 { return false; }
-        //let idx = (y * self.width) + x;
-        //TODO: check for blocking
-        return true;
-    }
-
     pub fn path_to_player(&self, x: usize, y: usize) {
         //call A*
         let path = a_star_search(xy_idx(x as i32, y as i32) as i32, self.player_position as i32, &self);

@@ -1,5 +1,5 @@
 use super::utils::*;
-use super::Universe;
+use super::Map;
 
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ const MAX_DIRECT_PATH_CHECK : f32 = 2048.0;
 const MAX_ASTAR_STEPS :i32 = 2048;
 
 
-fn get_available_neighbors(map: &Universe, idx:i32) -> Vec<(i32, f32)> {
+fn get_available_neighbors(map: &Map, idx:i32) -> Vec<(i32, f32)> {
     let mut neighbors : Vec<(i32, f32)> = Vec::new();
     let x = idx % map.width as i32;
     let y = idx / map.width as i32;
@@ -31,7 +31,7 @@ fn get_available_neighbors(map: &Universe, idx:i32) -> Vec<(i32, f32)> {
 }
 
 #[allow(dead_code)]
-pub fn a_star_search(start:i32, end:i32, map: &Universe) -> NavigationPath {
+pub fn a_star_search(start:i32, end:i32, map: &Map) -> NavigationPath {
     let mut searcher = AStar::new(start, end);
     return searcher.search(map);
 }
@@ -83,11 +83,11 @@ impl AStar {
         };
     }
 
-    fn distance_to_end(&self, idx :i32, map: &Universe) -> f32 {
+    fn distance_to_end(&self, idx :i32, map: &Map) -> f32 {
         return distance2d(&Point{x:idx_xy(idx as usize).0, y:idx_xy(idx as usize).1}, &Point{x:idx_xy(self.end as usize).0, y:idx_xy(self.end as usize).1});
     }
 
-    fn add_node(&mut self, q:Node, idx:i32, cost:f32, map: &Universe) -> bool {
+    fn add_node(&mut self, q:Node, idx:i32, cost:f32, map: &Map) -> bool {
         // Did we reach our goal?
         if idx == self.end {
             self.parents.insert(idx, q.idx);
@@ -134,7 +134,7 @@ impl AStar {
         return result;
     }
 
-    fn search(&mut self, map: &Universe) -> NavigationPath {
+    fn search(&mut self, map: &Map) -> NavigationPath {
         let result = NavigationPath::new();
         while self.open_list.len() != 0 && self.step_counter < MAX_ASTAR_STEPS {
             self.step_counter += 1;
