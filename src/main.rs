@@ -67,6 +67,25 @@ pub struct Universe {
     ecs_world: World,
 }
 
+//it's outside Universe because we're careful not to pass 'self' to it
+pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize) -> (usize, usize) {
+    //call A*
+    let path = a_star_search(xy_idx(x as i32, y as i32) as i32, player_position as i32, &map);
+    if path.success {
+        let idx = path.steps[1];
+        let idx_pos = idx_xy(idx as usize);
+        if !map.is_tile_blocked(idx) {
+            let old_idx = (y * map.width as usize) + x;
+            //mark as blocked for pathfinding
+            map.clear_tile_blocked(old_idx as i32);
+            map.set_tile_blocked(idx as i32);
+            log!("{}", &format!("Path step x {} y {}", idx_pos.0, idx_pos.1));
+            return (idx_pos.0 as usize, idx_pos.1 as usize);
+        }
+    }
+    (x,y) //dummy
+}
+
 
 /// Public methods, exported to JavaScript.
 #[wasm_bindgen]
@@ -211,23 +230,13 @@ impl Universe {
         return blocked;
     }
     
-    pub fn path_to_player(&self, x: usize, y: usize) {
-        //call A*
-        let path = a_star_search(xy_idx(x as i32, y as i32) as i32, self.player_position as i32, &self);
-        if path.success {
-            let idx = path.steps[1];
-            let idx_pos = idx_xy(idx as usize);
-            log!("{}", &format!("Path step x {} y {}", idx_pos.0, idx_pos.1));
-        }
-    }
-
-    pub fn get_AI(&self) {
+    pub fn get_AI(&mut self) {
         for (id, (ai, pos_x, pos_y)) in self.ecs_world.query::<(&AI, &usize, &usize)>()
         .with::<&str>() //we can't query it directly above because str length is unknown at compile time
         .iter()
          {
             log!("{}", &format!("Got AI {} x {} y {}",  pos_x, pos_y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
-            self.path_to_player(*pos_x, *pos_y);
+            let new_position = path_to_player(&mut self.map, *pos_x, *pos_y, self.player_position);
         }
     }
 }
