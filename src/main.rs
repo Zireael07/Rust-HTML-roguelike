@@ -16,6 +16,10 @@ use hecs::World;
 //our stuff
 mod fov;
 use fov::*;
+mod astar;
+use astar::*;
+mod utils;
+use utils::*;
 
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
@@ -61,21 +65,6 @@ pub struct Universe {
     fov_data: MapData,
     ecs_world: World,
 }
-
-
-// We're storing all the tiles in one big array, so we need a way to map an X,Y coordinate to
-// a tile. Each row is stored sequentially (so 0..20, 21..40, etc.). This takes an x/y and returns
-// the array index.
-pub fn xy_idx(x: i32, y: i32) -> usize {
-    (y as usize * 20) + x as usize
-}
-
-// It's a great idea to have a reverse mapping for these coordinates. This is as simple as
-// index % 20 (mod 20), and index / 20
-pub fn idx_xy(idx: usize) -> (i32, i32) {
-    (idx as i32 % 20, idx as i32 / 20)
-}
-
 
 
 /// Public methods, exported to JavaScript.
@@ -220,12 +209,30 @@ impl Universe {
         return blocked;
     }
     
+    pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {
+        if x < 1 || x > self.width as i32-1 || y < 1 || y > self.height as i32-1 { return false; }
+        //let idx = (y * self.width) + x;
+        //TODO: check for blocking
+        return true;
+    }
+
+    pub fn path_to_player(&self, x: usize, y: usize) {
+        //call A*
+        let path = a_star_search(xy_idx(x as i32, y as i32) as i32, self.player_position as i32, &self);
+        if path.success {
+            let idx = path.steps[1];
+            let idx_pos = idx_xy(idx as usize);
+            log!("{}", &format!("Path step x {} y {}", idx_pos.0, idx_pos.1));
+        }
+    }
+
     pub fn get_AI(&self) {
-        for (id, (ai)) in self.ecs_world.query::<(&AI)>()
+        for (id, (ai, pos_x, pos_y)) in self.ecs_world.query::<(&AI, &usize, &usize)>()
         .with::<&str>() //we can't query it directly above because str length is unknown at compile time
         .iter()
          {
-            log!("{}", &format!("Got AI {}", self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+            log!("{}", &format!("Got AI {} x {} y {}",  pos_x, pos_y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+            self.path_to_player(*pos_x, *pos_y);
         }
     }
 }
