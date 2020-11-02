@@ -13,6 +13,9 @@ use std::panic;
 //ECS
 use hecs::World;
 
+//RNG
+use rand::Rng;
+
 //our stuff
 mod map;
 use map::*;
@@ -229,6 +232,21 @@ impl Universe {
         }
         return blocked;
     }
+
+    //a very simple test, akin to flipping a coin or throwing a d2
+    fn make_test_d2(&self, skill: u32) -> Vec<bool> {
+        let mut rolls = Vec::new();
+        for _ in 0..20-skill { // exclusive of end
+            rolls.push(rand::random()) // generates a boolean
+        }
+        return rolls
+    }
+
+    fn attack(&self) {
+        let res = self.make_test_d2(1);
+        log!("{}", format!("Test: {:?}", res));
+    }
+
     
     pub fn get_AI(&mut self) {
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
@@ -241,7 +259,8 @@ impl Universe {
             // move or attack
             let player_pos = idx_xy(self.player_position);
             if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
-                log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()))
+                log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                self.attack();
             } else {
                 //actually move
                 point.x = new_pos.0 as i32;

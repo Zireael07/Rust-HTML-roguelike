@@ -31,3 +31,6 @@ console_error_panic_hook = "0.1.5"
 
 # ECS
 hecs = "0.2.15"
+
+# RNG
+rand = { version = "0.7.3", features = ["wasm-bindgen"] }
