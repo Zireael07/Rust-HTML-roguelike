@@ -238,10 +238,17 @@ impl Universe {
          {
             log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
             let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
-            //actually move
-            point.x = new_pos.0 as i32;
-            point.y = new_pos.1 as i32;
-            //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+            // move or attack
+            let player_pos = idx_xy(self.player_position);
+            if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+                log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()))
+            } else {
+                //actually move
+                point.x = new_pos.0 as i32;
+                point.y = new_pos.1 as i32;
+                //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+            }
+
         }
     }
 }
