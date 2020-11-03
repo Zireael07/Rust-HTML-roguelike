@@ -12,6 +12,7 @@ use std::panic;
 
 //ECS
 use hecs::World;
+use hecs::Entity;
 
 //RNG
 use rand::Rng;
@@ -212,20 +213,26 @@ impl Universe {
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = xy_idx(new_position.0, new_position.1);
         if self.tiles[new_idx] == Cell::Floor as u8 {
-            if !self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize) {
-                self.player_position = new_idx;
-                //refresh fov
-                self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
-                self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
-                //enemy turn
-                self.get_AI();
+            let blocker = self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize);
+
+            match blocker {
+                Some(entity) => { 
+                    //this assumes the blocker has a name!
+                    game_message(&format!("Player kicked the {}", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+                    self.attack();
+                    //enemy turn
+                    self.get_AI();
+                },
+                None => {
+                    self.player_position = new_idx;
+                    //refresh fov
+                    self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+                    self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+                    //enemy turn
+                    self.get_AI();
+                }
             }
-            else {
-                game_message(&format!("Player kicked at the AI"));
-                self.attack();
-                //enemy turn
-                self.get_AI();
-            }
+                 
         }
     }
 
@@ -249,11 +256,11 @@ impl Universe {
 
 //Methods not exposed to JS
 impl Universe {
-    pub fn blocking_creatures_at(&self, x: usize, y: usize) -> bool {
-        let mut blocked = false;
+    pub fn blocking_creatures_at(&self, x: usize, y: usize) -> Option<Entity> {
+        let mut blocked: Option<Entity> = None;
         for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>().iter() {
             if point.x as usize == x && point.y as usize == y {
-                blocked = true;
+                blocked = Some(id);
                 break;
             }
         }
