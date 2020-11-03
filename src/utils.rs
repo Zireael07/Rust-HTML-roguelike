@@ -26,6 +26,12 @@ pub fn idx_xy(idx: usize) -> (i32, i32) {
     (idx as i32 % 20, idx as i32 / 20)
 }
 
+//aka Chebyshev
+pub fn distance2d_chessboard(sx: i32, sy: i32, tx: i32, ty: i32) -> i32 {
+    return max((sy-sx).abs(), (ty-tx).abs());
+}
+
+
 #[allow(dead_code)]
 pub fn distance2d_squared(start: &Point, end: &Point) -> f32 {
     let dx = (max(start.x, end.x) - min (start.x, end.x)) as f32;

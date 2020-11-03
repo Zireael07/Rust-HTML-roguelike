@@ -86,6 +86,7 @@ pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize)
             return (idx_pos.0 as usize, idx_pos.1 as usize);
         }
     }
+    log!("{}", &format!("No path found sx {} sy {} tx {} ty {}", x, y, idx_xy(player_position).0, idx_xy(player_position).1));
     (x,y) //dummy
 }
 
@@ -262,17 +263,25 @@ impl Universe {
         .iter()
          {
             log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
-            let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
-            // move or attack
+            //if the player's immediately next to us, don't run costly A*
             let player_pos = idx_xy(self.player_position);
-            if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+            //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
+            if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
+                //log!("{}", &format!("AI next to player, attack!"));
                 log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
                 self.attack();
             } else {
-                //actually move
-                point.x = new_pos.0 as i32;
-                point.y = new_pos.1 as i32;
-                //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+                let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
+                // move or attack            
+                if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+                    log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                    self.attack();
+                } else {
+                    //actually move
+                    point.x = new_pos.0 as i32;
+                    point.y = new_pos.1 as i32;
+                    //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+                }
             }
 
         }
