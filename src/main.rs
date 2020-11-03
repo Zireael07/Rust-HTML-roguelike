@@ -34,6 +34,25 @@ macro_rules! log {
     }
 }
 
+//using web_sys here because I am not too sure on how to pass strings to custom JS
+pub fn game_message(string: &str)
+{
+    let window = web_sys::window().expect("global window does not exists");    
+    let document = window.document().expect("expecting a document on window");
+    
+    let messages = document.get_element_by_id("messages").unwrap();
+    let line = document.create_element("div").unwrap();
+    line.set_inner_html(string);
+    messages.append_child(&line).unwrap(); //implicitly converts to Node
+
+    //axe the first if more than 5
+    while messages.child_element_count() > 5 {
+        messages.remove_child(&messages.first_element_child().unwrap()); //implicit conversion
+    }
+}	
+
+
+
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -202,7 +221,7 @@ impl Universe {
                 self.get_AI();
             }
             else {
-                log!("{}", &format!("Player kicked at the AI"));
+                game_message(&format!("Player kicked at the AI"));
                 self.attack();
                 //enemy turn
                 self.get_AI();
@@ -268,13 +287,14 @@ impl Universe {
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
             if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));
-                log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                //log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
                 self.attack();
             } else {
                 let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
                 // move or attack            
                 if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
-                    log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                    game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
                     self.attack();
                 } else {
                     //actually move
