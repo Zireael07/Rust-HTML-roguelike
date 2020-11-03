@@ -197,6 +197,13 @@ impl Universe {
                 //refresh fov
                 self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
                 self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+                //enemy turn
+                self.get_AI();
+            }
+            else {
+                log!("{}", &format!("Player kicked at the AI"));
+                self.attack();
+                //enemy turn
                 self.get_AI();
             }
         }
@@ -224,8 +231,8 @@ impl Universe {
 impl Universe {
     pub fn blocking_creatures_at(&self, x: usize, y: usize) -> bool {
         let mut blocked = false;
-        for (id, (pos_x, pos_y, render)) in self.ecs_world.query::<(&usize, &usize, &u8)>().iter() {
-            if *pos_x == x && *pos_y == y {
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>().iter() {
+            if point.x as usize == x && point.y as usize == y {
                 blocked = true;
                 break;
             }
