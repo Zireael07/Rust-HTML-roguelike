@@ -69,8 +69,17 @@ pub enum Renderable {
     Thug = 0,
 }
 
+//for ECS
+pub struct Player{}
 pub struct AI {}
+pub struct CombatStats {
+    pub max_hp : i32,
+    pub hp : i32,
+    pub defense : i32,
+    pub power : i32
+}
 
+//input
 #[wasm_bindgen]
 pub enum Command {
     MoveLeft,
@@ -148,8 +157,11 @@ impl Universe {
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
+        //rendering and position handled otherwise, so the player Entity only needs combat stats
+        let player = state.ecs_world.spawn((Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
+
         //spawn entity
-        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}));
+        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
 
         //debug
         log!("We have a universe");
@@ -219,7 +231,7 @@ impl Universe {
                 Some(entity) => { 
                     //this assumes the blocker has a name!
                     game_message(&format!("Player kicked the {}", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
-                    self.attack();
+                    self.attack(&entity);
                     //enemy turn
                     self.get_AI();
                 },
@@ -258,7 +270,7 @@ impl Universe {
 impl Universe {
     pub fn blocking_creatures_at(&self, x: usize, y: usize) -> Option<Entity> {
         let mut blocked: Option<Entity> = None;
-        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>().iter() {
+        for (id, (point, combat)) in self.ecs_world.query::<(&Point, &CombatStats)>().iter() {
             if point.x as usize == x && point.y as usize == y {
                 blocked = Some(id);
                 break;
@@ -276,9 +288,14 @@ impl Universe {
         return rolls
     }
 
-    fn attack(&self) {
+    fn attack(&mut self, target: &Entity) {
         let res = self.make_test_d2(1);
-        log!("{}", format!("Test: {:?}", res));
+        let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
+        log!("{}", &format!("Test: {:?} sum: {}", res, sum));
+        //deal damage
+        // the mut here is obligatory!!!
+        let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
+        stats.hp = stats.hp - 2;
     }
 
     
@@ -294,15 +311,32 @@ impl Universe {
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
             if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));
-                //log!("{}", &format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
                 game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
-                self.attack();
+                //get player entity
+                let mut play: Option<Entity> = None;
+                for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+                    play = Some(id);
+                }
+                match play {
+                    Some(entity) => self.attack(&entity),
+                    None => {},
+                }
+                
             } else {
                 let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
                 // move or attack            
                 if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
                     game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
-                    self.attack();
+                    //get player entity
+                    let mut play: Option<Entity> = None;
+                    for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+                        play = Some(id);
+                    }
+                    match play {
+                        Some(entity) => self.attack(&entity),
+                        None => {},
+                    }
+
                 } else {
                     //actually move
                     point.x = new_pos.0 as i32;
