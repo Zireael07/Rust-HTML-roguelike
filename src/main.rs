@@ -234,6 +234,7 @@ impl Universe {
                     self.attack(&entity);
                     //enemy turn
                     self.get_AI();
+                    self.remove_dead();
                 },
                 None => {
                     self.player_position = new_idx;
@@ -242,6 +243,7 @@ impl Universe {
                     self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
                     //enemy turn
                     self.get_AI();
+                    self.remove_dead();
                 }
             }
                  
@@ -288,7 +290,7 @@ impl Universe {
         return rolls
     }
 
-    fn attack(&mut self, target: &Entity) {
+    fn attack(&self, target: &Entity) {
         let res = self.make_test_d2(1);
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
         log!("{}", &format!("Test: {:?} sum: {}", res, sum));
@@ -296,7 +298,29 @@ impl Universe {
         // the mut here is obligatory!!!
         let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
         stats.hp = stats.hp - 2;
+        //if killed, despawn
+        //borrow checker doesn't allow this??
+        // if stats.hp <= 0 {
+        //     self.ecs_world.despawn(*target).unwrap();
+        //     log!("{}", &format!("Target was killed!"));
+        // }
     }
+
+    fn remove_dead(&mut self) {
+        // Here we query entities with 0 or less hp and despawn them
+        let mut to_remove: Vec<Entity> = Vec::new();
+        for (id, stats) in &mut self.ecs_world.query::<&CombatStats>() {
+            if stats.hp <= 0 {
+                to_remove.push(id);
+            }
+        }
+
+        for entity in to_remove {
+            game_message(&format!("AI {} is dead", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+            self.ecs_world.despawn(entity).unwrap();
+        }
+    }
+    
 
     
     pub fn get_AI(&mut self) {
