@@ -67,11 +67,14 @@ pub enum Cell {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Renderable {
     Thug = 0,
+    Knife = 1,
 }
 
 //for ECS
 pub struct Player{}
 pub struct AI {}
+pub struct Item{}
+pub struct InBackpack{}
 pub struct CombatStats {
     pub max_hp : i32,
     pub hp : i32,
@@ -86,6 +89,7 @@ pub enum Command {
     MoveRight,
     MoveDown,
     MoveUp,
+    GetItem,
 }
 
 
@@ -162,6 +166,7 @@ impl Universe {
 
         //spawn entity
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}));
 
         //debug
         log!("We have a universe");
@@ -211,6 +216,9 @@ impl Universe {
                     Command::MoveLeft => self.move_player(-1, 0),
                     Command::MoveRight => self.move_player(1, 0),
 
+                    //others
+                    Command::GetItem => self.get_item(),
+
                     _ => {} // Ignore all the other possibilities
                 }
             }
@@ -250,16 +258,35 @@ impl Universe {
         }
     }
 
+    pub fn get_item(&mut self) {
+        let current_position = idx_xy(self.player_position);
+        let item = self.items_at(current_position.0 as usize, current_position.1 as usize);
+
+        match item {
+            Some(entity) => {
+                //this assumes the blocker has a name!
+                game_message(&format!("Player picked up {}", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+                //puts the item in backpack
+                self.pickup_item(&entity)
+            },
+            None => { 
+                game_message(&format!("No item to pick up here"));
+            },
+        }
+    }
+
     pub fn draw_entities(&self) -> Vec<u8> {
         // Each "drawn" will store 3 u8 values (x,y and tile)
         // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
         let mut js_drawn = Vec::new();
-        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>().iter() {
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        .without::<InBackpack>() //no ref/pointer here!
+        .iter() {
             if self.is_visible(point.x as usize, point.y as usize) {
                 js_drawn.push(point.x as u8);
                 js_drawn.push(point.y as u8);
                 js_drawn.push(*render);
-                //log!("{}", &format!("Rust: x {} y {} tile {}", pos_x, pos_y, render));
+                //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render));
             }
         }
 
@@ -280,6 +307,28 @@ impl Universe {
         }
         return blocked;
     }
+
+    pub fn items_at(&self, x: usize, y: usize) -> Option<Entity> {
+        let mut item: Option<Entity> = None;
+        for (id, (point, it)) in self.ecs_world.query::<(&Point, &Item)>()
+        .without::<InBackpack>() //no ref/pointer here!!!
+        .iter() {
+            if point.x as usize == x && point.y as usize == y {
+                item = Some(id);
+                break;
+            }
+        }
+        return item;
+    }
+
+    pub fn pickup_item(&mut self, item: &Entity) {
+        self.ecs_world.insert_one(*item, InBackpack{});
+        //test
+        for (id, (item, backpack)) in &mut self.ecs_world.query::<(&Item, &InBackpack)>().iter(){
+            log!("{}", &format!("Item in inventory: {}", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+        }
+    }
+
 
     //a very simple test, akin to flipping a coin or throwing a d2
     fn make_test_d2(&self, skill: u32) -> Vec<bool> {

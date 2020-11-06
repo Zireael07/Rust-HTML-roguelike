@@ -8,6 +8,7 @@ var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet bec
 // thousands of Tiles on the fly.
 var AT = new ut.Tile("@", 255, 255, 255);
 var THUG = new ut.Tile("t", 255, 0, 0);
+var KNIFE = new ut.Tile("/", 0, 255, 255);
 
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
@@ -80,6 +81,9 @@ function tick() {
         if (tile == 0) {
             tile = THUG;
         }
+        if (tile == 1) {
+            tile = KNIFE;
+        }
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
@@ -100,6 +104,7 @@ function onKeyDown(k) {
 	else if (k === ut.KEY_RIGHT || k === ut.KEY_L) cmd = rust.Command.MoveRight;
 	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
+    else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
     
     // update Rust
     universe.process(cmd);

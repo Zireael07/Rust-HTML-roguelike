@@ -201,10 +201,10 @@ function handleError(e) {
 export const Cell = Object.freeze({ Floor:0,Wall:1, });
 /**
 */
-export const Renderable = Object.freeze({ Thug:0, });
+export const Renderable = Object.freeze({ Thug:0,Knife:1, });
 /**
 */
-export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3, });
+export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4, });
 /**
 */
 export class Universe {
@@ -278,7 +278,7 @@ export class Universe {
     * @param {number | undefined} input
     */
     process(input) {
-        wasm.universe_process(this.ptr, isLikeNone(input) ? 4 : input);
+        wasm.universe_process(this.ptr, isLikeNone(input) ? 5 : input);
     }
     /**
     * @param {number} delta_x
@@ -286,6 +286,11 @@ export class Universe {
     */
     move_player(delta_x, delta_y) {
         wasm.universe_move_player(this.ptr, delta_x, delta_y);
+    }
+    /**
+    */
+    get_item() {
+        wasm.universe_get_item(this.ptr);
     }
     /**
     * @returns {Uint8Array}
