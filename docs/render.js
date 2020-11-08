@@ -1,7 +1,7 @@
 //JS starts here
 import * as rust from './rust-web-roguelike.js';
 
-var term, eng; // Can't be initialized yet because DOM is not ready
+var term, eng, inventoryOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet because WASM is not ready
 
 // The tile palette is precomputed in order to not have to create
@@ -96,6 +96,78 @@ function tick() {
 
 }
 
+//inventory
+function clickFunction(button, item) {
+	inventoryOverlay.setVisibility(false); //close the inventory
+	console.log("Pressed button " + button.innerHTML);
+	//use_item(item, player);
+}
+
+function display_name(item){
+    return universe.inventory_name_for_id(item);
+}
+
+//based on redblobgames
+function createInventoryOverlay() {
+    const overlay = document.querySelector("#inventory");
+    let visible = false;
+
+    function draw() {
+        let html = `<ul>`;
+        let empty = true;
+
+        //let len = player.inventory.items.length;
+        let len = universe.inventory_size();
+		for (var i = 0; i < len; ++i) {
+            //var item = player.inventory.items[i];
+            var item = universe.inventory_items()[i];
+            html += `<li><button class="inv_button" }">${String.fromCharCode(65 + i)}</button> ${display_name(item)}</li>`;
+			empty = false;
+			//not added yet!
+			//var button = document.querySelector(".inv_button");
+        } //);
+        html += `</ul>`;
+        if (empty) {
+            html = `<div>Your inventory is empty. Press <kbd>I</kbd> again to cancel.</div>${html}`;
+        } else {
+            html = `<div>Select an item to use it, or <kbd>I</kbd> again to cancel.</div>${html}`;
+        }
+		overlay.innerHTML = html;
+		//TODO: fold into the previous somehow?
+		for (var i = 0; i < len; ++i) {
+			var buttons = document.querySelectorAll(".inv_button");
+			for (var i=0; i < buttons.length; ++i) {
+				var button = buttons[i];
+				//anonymous function
+				button.onclick = function() { clickFunction(button, item); }
+			}
+		}
+    }
+
+    return {
+        get visible() { return visible; },
+        setVisibility(visibility) {
+            visible = visibility;
+            overlay.classList.toggle('visible', visibility);
+            if (visible) draw();
+        },
+    };
+}
+
+
+function showInventory() {
+	//var set = inventoryOverlay.visible? false : true;
+	if (inventoryOverlay.visible) {
+		inventoryOverlay.setVisibility(false);
+	}
+	else if (!inventoryOverlay.visible) {
+		inventoryOverlay.setVisibility(true);
+	}
+	//return;
+}
+
+
+
 // Key press handler - movement & collision handling
 //Just converts to rust commands
 function onKeyDown(k) {
@@ -105,6 +177,10 @@ function onKeyDown(k) {
 	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
+    else if (k == ut.KEY_I) {
+        cmd = rust.Command.Inventory //dummy
+        showInventory() //do our thing
+    } 
     
     // update Rust
     universe.process(cmd);
@@ -126,6 +202,10 @@ function initRenderer(wasm) {
     eng = new ut.Engine(term, getDungeonTile, 20, 20);
     //use fov
     eng.setMaskFunc(is_Visible);
+
+    //more game init
+    inventoryOverlay = createInventoryOverlay();
+
 	// Initialize input
 	ut.initInput(onKeyDown);
 }

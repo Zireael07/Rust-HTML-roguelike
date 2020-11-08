@@ -187,6 +187,22 @@ function getArrayI32FromWasm0(ptr, len) {
 function isLikeNone(x) {
     return x === undefined || x === null;
 }
+
+let cachegetUint64Memory0 = null;
+function getUint64Memory0() {
+    if (cachegetUint64Memory0 === null || cachegetUint64Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint64Memory0 = new BigUint64Array(wasm.memory.buffer);
+    }
+    return cachegetUint64Memory0;
+}
+
+function getArrayU64FromWasm0(ptr, len) {
+    return getUint64Memory0().subarray(ptr / 8, ptr / 8 + len);
+}
+
+const u32CvtShim = new Uint32Array(2);
+
+const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
 /**
 */
 export function start() {
@@ -204,7 +220,7 @@ export const Cell = Object.freeze({ Floor:0,Wall:1, });
 export const Renderable = Object.freeze({ Thug:0,Knife:1, });
 /**
 */
-export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4, });
+export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5, });
 /**
 */
 export class Universe {
@@ -278,7 +294,7 @@ export class Universe {
     * @param {number | undefined} input
     */
     process(input) {
-        wasm.universe_process(this.ptr, isLikeNone(input) ? 5 : input);
+        wasm.universe_process(this.ptr, isLikeNone(input) ? 6 : input);
     }
     /**
     * @param {number} delta_x
@@ -302,6 +318,41 @@ export class Universe {
         var v0 = getArrayU8FromWasm0(r0, r1).slice();
         wasm.__wbindgen_free(r0, r1 * 1);
         return v0;
+    }
+    /**
+    * @returns {number}
+    */
+    inventory_size() {
+        var ret = wasm.universe_inventory_size(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {BigUint64Array}
+    */
+    inventory_items() {
+        wasm.universe_inventory_items(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayU64FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 8);
+        return v0;
+    }
+    /**
+    * @param {BigInt} id
+    * @returns {string}
+    */
+    inventory_name_for_id(id) {
+        try {
+            uint64CvtShim[0] = id;
+            const low0 = u32CvtShim[0];
+            const high0 = u32CvtShim[1];
+            wasm.universe_inventory_name_for_id(8, this.ptr, low0, high0);
+            var r0 = getInt32Memory0()[8 / 4 + 0];
+            var r1 = getInt32Memory0()[8 / 4 + 1];
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_free(r0, r1);
+        }
     }
 }
 

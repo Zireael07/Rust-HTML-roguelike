@@ -90,6 +90,7 @@ pub enum Command {
     MoveDown,
     MoveUp,
     GetItem,
+    Inventory,
 }
 
 
@@ -293,6 +294,23 @@ impl Universe {
         return js_drawn;
     }
 
+
+    pub fn inventory_size(&self) -> usize {
+        return self.items_in_inventory().len()
+    }
+
+    pub fn inventory_items(&self) -> Vec<u64> {
+        return self.items_in_inventory();
+    }
+
+    //unfortunately we can't pass a Vec<&str> to JS... nor borrowed refs like &str
+    // so instead, we store a list of ids and get the actual strings with this separate function
+    pub fn inventory_name_for_id(&self, id: u64) -> String {
+        //let item = self.ecs_world.find_entity_from_id(id); //not present in hecs 0.2.15
+        let item = hecs::Entity::from_bits(id); //restore
+        return self.ecs_world.get::<&str>(item).unwrap().to_string()
+    }
+
 }
 
 //Methods not exposed to JS
@@ -321,12 +339,20 @@ impl Universe {
         return item;
     }
 
-    pub fn pickup_item(&mut self, item: &Entity) {
-        self.ecs_world.insert_one(*item, InBackpack{});
+    pub fn items_in_inventory(&self) -> Vec<u64>{
+        let mut ids = Vec::new();
         //test
         for (id, (item, backpack)) in &mut self.ecs_world.query::<(&Item, &InBackpack)>().iter(){
             log!("{}", &format!("Item in inventory: {}", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+            //log!("{}", &format!("ID: {:?}", id));
+            ids.push(id.to_bits()); //we can't get from id later on, yet
         }
+        return ids;
+    }
+
+    pub fn pickup_item(&mut self, item: &Entity) {
+        self.ecs_world.insert_one(*item, InBackpack{});
+        self.items_in_inventory();
     }
 
 
