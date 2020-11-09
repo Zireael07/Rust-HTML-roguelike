@@ -68,6 +68,7 @@ pub enum Cell {
 pub enum Renderable {
     Thug = 0,
     Knife = 1,
+    Medkit = 2,
 }
 
 //for ECS
@@ -81,6 +82,17 @@ pub struct CombatStats {
     pub defense : i32,
     pub power : i32
 }
+
+pub struct Consumable{}
+pub struct ProvidesHealing {
+    pub heal_amount : i32
+}
+
+pub struct WantsToUseItem {
+    pub item : Entity
+}
+// tells the engine to nuke us
+pub struct ToRemove {}
 
 //input
 #[wasm_bindgen]
@@ -163,11 +175,12 @@ impl Universe {
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
-        let player = state.ecs_world.spawn((Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
+        let player = state.ecs_world.spawn(("Player", Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
 
-        //spawn entity
+        //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}));
+        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit", Item{}, Consumable{}, ProvidesHealing{heal_amount:5}));
 
         //debug
         log!("We have a universe");
@@ -311,6 +324,21 @@ impl Universe {
         return self.ecs_world.get::<&str>(item).unwrap().to_string()
     }
 
+    pub fn use_item_ext(&mut self, id: u64) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let item = hecs::Entity::from_bits(id); //restore
+                self.use_item(&entity, &item);
+            },
+            None => {},
+        }
+    }
+
 }
 
 //Methods not exposed to JS
@@ -343,7 +371,7 @@ impl Universe {
         let mut ids = Vec::new();
         //test
         for (id, (item, backpack)) in &mut self.ecs_world.query::<(&Item, &InBackpack)>().iter(){
-            log!("{}", &format!("Item in inventory: {}", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+            //log!("{}", &format!("Item in inventory: {}", self.ecs_world.get::<&str>(id).unwrap().to_string()));
             //log!("{}", &format!("ID: {:?}", id));
             ids.push(id.to_bits()); //we can't get from id later on, yet
         }
@@ -353,6 +381,29 @@ impl Universe {
     pub fn pickup_item(&mut self, item: &Entity) {
         self.ecs_world.insert_one(*item, InBackpack{});
         self.items_in_inventory();
+    }
+
+    pub fn use_item(&mut self, user: &Entity, it: &Entity) {
+        // The indirection is here to make it possible for non-player Entities to use items
+        //tell the engine that we want to use the item
+        self.ecs_world.insert_one(*user, WantsToUseItem{item:*it});
+
+        //message
+        game_message(&format!("{} used {}", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<&str>(*it).unwrap().to_string()));
+        // apply the use effects
+        for (id, (wantstouse)) in self.ecs_world.query::<(&WantsToUseItem)>().iter(){
+            //log!("{}", &format!("Want to use item: {:?}", wantstouse.item));
+            //log!("{}", &format!("Item: {}", self.ecs_world.get::<&str>(wantstouse.item).unwrap().to_string()));
+
+            // If it heals, apply the healing
+            // NOTE: no & here!!!
+            if self.ecs_world.get::<ProvidesHealing>(wantstouse.item).is_ok() {
+                game_message(&format!("{} heals {} damage", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
+            } else {
+                log!("Item doesn't provide healing");
+            }
+        }
+
     }
 
 

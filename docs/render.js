@@ -9,6 +9,7 @@ var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet bec
 var AT = new ut.Tile("@", 255, 255, 255);
 var THUG = new ut.Tile("t", 255, 0, 0);
 var KNIFE = new ut.Tile("/", 0, 255, 255);
+var MED = new ut.Tile("!", 255, 0, 0);
 
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
@@ -78,12 +79,9 @@ function tick() {
 		tilex = ex - cam_x;
         tiley = ey - cam_y;
         //substitute correct glyph
-        if (tile == 0) {
-            tile = THUG;
-        }
-        if (tile == 1) {
-            tile = KNIFE;
-        }
+        if (tile == 0) { tile = THUG; }
+        if (tile == 1) { tile = KNIFE; }
+        if (tile == 2) { tile = MED; }
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
@@ -100,7 +98,7 @@ function tick() {
 function clickFunction(button, item) {
 	inventoryOverlay.setVisibility(false); //close the inventory
 	console.log("Pressed button " + button.innerHTML);
-	//use_item(item, player);
+	universe.use_item_ext(item);
 }
 
 function display_name(item){
