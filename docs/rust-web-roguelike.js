@@ -217,7 +217,7 @@ function handleError(e) {
 export const Cell = Object.freeze({ Floor:0,Wall:1, });
 /**
 */
-export const Renderable = Object.freeze({ Thug:0,Knife:1, });
+export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2, });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5, });
@@ -353,6 +353,15 @@ export class Universe {
         } finally {
             wasm.__wbindgen_free(r0, r1);
         }
+    }
+    /**
+    * @param {BigInt} id
+    */
+    use_item_ext(id) {
+        uint64CvtShim[0] = id;
+        const low0 = u32CvtShim[0];
+        const high0 = u32CvtShim[1];
+        wasm.universe_use_item_ext(this.ptr, low0, high0);
     }
 }
 

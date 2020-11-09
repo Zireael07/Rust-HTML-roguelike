@@ -92,7 +92,7 @@ pub struct WantsToUseItem {
     pub item : Entity
 }
 // tells the engine to nuke us
-pub struct ToRemove {}
+pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
 
 //input
 #[wasm_bindgen]
@@ -179,8 +179,8 @@ impl Universe {
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}));
-        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit", Item{}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}, ToRemove{yes:false}));
+        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit", Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
 
         //debug
         log!("We have a universe");
@@ -334,6 +334,7 @@ impl Universe {
             Some(entity) => {
                 let item = hecs::Entity::from_bits(id); //restore
                 self.use_item(&entity, &item);
+                self.remove_dead(); //in case we used a consumable item
             },
             None => {},
         }
@@ -402,7 +403,15 @@ impl Universe {
             } else {
                 log!("Item doesn't provide healing");
             }
+
+            if self.ecs_world.get::<Consumable>(wantstouse.item).is_ok() {
+                log!("Item is a consumable");
+                //FIXME: we can't add components or remove entities while iterating, so this is a hack
+                self.ecs_world.get_mut::<ToRemove>(wantstouse.item).unwrap().yes = true;
+            }
         }
+
+       
 
     }
 
@@ -441,8 +450,17 @@ impl Universe {
             }
         }
 
+        for (id, remove) in &mut self.ecs_world.query::<&ToRemove>() {
+            if remove.yes {
+                to_remove.push(id);
+            }
+        }
+
         for entity in to_remove {
-            game_message(&format!("AI {} is dead", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+            if self.ecs_world.get::<Item>(entity).is_err() {
+                game_message(&format!("AI {} is dead", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+            }
+            
             self.ecs_world.despawn(entity).unwrap();
         }
     }
