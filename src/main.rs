@@ -74,8 +74,6 @@ pub enum Renderable {
 //for ECS
 pub struct Player{}
 pub struct AI {}
-pub struct Item{}
-pub struct InBackpack{}
 pub struct CombatStats {
     pub max_hp : i32,
     pub hp : i32,
@@ -83,6 +81,8 @@ pub struct CombatStats {
     pub power : i32
 }
 
+pub struct Item{}
+pub struct InBackpack{}
 pub struct Consumable{}
 pub struct ProvidesHealing {
     pub heal_amount : i32
@@ -93,6 +93,19 @@ pub struct WantsToUseItem {
 }
 // tells the engine to nuke us
 pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum EquipmentSlot { Melee }
+pub struct Equippable {
+    pub slot : EquipmentSlot
+}
+pub struct Equipped {
+    pub owner : Entity,
+    pub slot : EquipmentSlot
+}
+pub struct MeleeBonus {
+    pub bonus : i32
+}
 
 //input
 #[wasm_bindgen]
@@ -179,7 +192,7 @@ impl Universe {
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}, ToRemove{yes:false}));
+        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit", Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
 
         //debug
@@ -321,7 +334,13 @@ impl Universe {
     pub fn inventory_name_for_id(&self, id: u64) -> String {
         //let item = self.ecs_world.find_entity_from_id(id); //not present in hecs 0.2.15
         let item = hecs::Entity::from_bits(id); //restore
-        return self.ecs_world.get::<&str>(item).unwrap().to_string()
+
+        // add (equipped) for items that are, well, equipped
+        let mut name = self.ecs_world.get::<&str>(item).unwrap().to_string();
+        if self.ecs_world.get::<Equipped>(item).is_ok(){
+            name = name + " (equipped)" //Rust string concat is easy!
+        }
+        return name
     }
 
     pub fn use_item_ext(&mut self, id: u64) {
@@ -392,6 +411,8 @@ impl Universe {
         //message
         game_message(&format!("{} used {}", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<&str>(*it).unwrap().to_string()));
         // apply the use effects
+        let mut wants : Vec<Entity> = Vec::new();
+        let mut to_unequip : Vec<Entity> = Vec::new();
         for (id, (wantstouse)) in self.ecs_world.query::<(&WantsToUseItem)>().iter(){
             //log!("{}", &format!("Want to use item: {:?}", wantstouse.item));
             //log!("{}", &format!("Item: {}", self.ecs_world.get::<&str>(wantstouse.item).unwrap().to_string()));
@@ -403,6 +424,28 @@ impl Universe {
             } else {
                 log!("Item doesn't provide healing");
             }
+            // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
+            if self.ecs_world.get::<Equippable>(wantstouse.item).is_ok() {
+                let can_equip = self.ecs_world.get::<Equippable>(wantstouse.item).unwrap();
+                let target_slot = can_equip.slot;
+        
+                // Remove any items the target has in the item's slot
+                //let mut to_unequip : Vec<Entity> = Vec::new();
+
+                //find items in slot
+                for (ent_id, (equipped)) in self.ecs_world.query::<(&Equipped)>()
+                .with::<&str>() //we can't query it directly above because str length is unknown at compile time
+                .iter()
+                {
+                    if equipped.owner == *user && equipped.slot == target_slot {
+                        to_unequip.push(ent_id);
+                        //if target == *player_entity {
+                        game_message(&format!("You unequip {}.", self.ecs_world.get::<&str>(ent_id).unwrap().to_string()));
+                    }   
+                }
+                wants.push(wantstouse.item);
+                game_message(&format!("{} equips {}", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<&str>(*it).unwrap().to_string()));
+            }
 
             if self.ecs_world.get::<Consumable>(wantstouse.item).is_ok() {
                 log!("Item is a consumable");
@@ -411,7 +454,21 @@ impl Universe {
             }
         }
 
-       
+        // deferred some actions because we can't add or remove components when iterating
+        for item in to_unequip.iter() {
+            self.ecs_world.remove_one::<Equipped>(*item);
+        }
+
+        for item in wants.iter() {
+            { //scope to get around borrow checker
+                let eq = self.ecs_world.get::<Equippable>(*item).unwrap();
+            }
+            self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:EquipmentSlot::Melee});
+            //TODO: make the slot related to item's slot
+            //self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:eq.slot});
+            
+            //self.ecs_world.remove_one::<InBackpack>(*item);
+        }
 
     }
 
@@ -429,12 +486,22 @@ impl Universe {
         let res = self.make_test_d2(1);
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
         log!("{}", &format!("Test: {:?} sum: {}", res, sum));
+
+        //item bonuses
+        let mut offensive_bonus = 0;
+        for (id, (power_bonus, equipped_by)) in self.ecs_world.query::<(&MeleeBonus, &Equipped)>().iter() {
+            //if equipped_by.owner == attacker {
+                offensive_bonus += power_bonus.bonus;
+        }
+
         //deal damage
         // the mut here is obligatory!!!
         let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
-        stats.hp = stats.hp - 2;
-        //if killed, despawn
+        stats.hp = stats.hp - 2 - offensive_bonus;
+        game_message(&format!("Dealt {} damage", 2+offensive_bonus));
+        
         //borrow checker doesn't allow this??
+        //if killed, despawn
         // if stats.hp <= 0 {
         //     self.ecs_world.despawn(*target).unwrap();
         //     log!("{}", &format!("Target was killed!"));
