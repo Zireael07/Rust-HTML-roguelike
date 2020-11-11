@@ -96,9 +96,11 @@ pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify en
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum EquipmentSlot { Melee }
+#[derive(Clone, Copy)]
 pub struct Equippable {
     pub slot : EquipmentSlot
 }
+#[derive(Clone, Copy)]
 pub struct Equipped {
     pub owner : Entity,
     pub slot : EquipmentSlot
@@ -461,12 +463,13 @@ impl Universe {
         }
 
         for item in wants.iter() {
-            { //scope to get around borrow checker
-                let eq = self.ecs_world.get::<Equippable>(*item).unwrap();
-            }
-            self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:EquipmentSlot::Melee});
-            //TODO: make the slot related to item's slot
-            //self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:eq.slot});
+            let eq = { //scope to get around borrow checker
+                let get = self.ecs_world.get::<Equippable>(*item).unwrap();
+                *get //clone here to get around borrow checker
+            };
+            //self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:EquipmentSlot::Melee});
+            // slot related to item's slot
+            self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:eq.slot});
             
             //self.ecs_world.remove_one::<InBackpack>(*item);
         }
