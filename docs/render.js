@@ -95,9 +95,15 @@ function tick() {
 }
 
 //inventory
-function clickFunction(button, item) {
-	inventoryOverlay.setVisibility(false); //close the inventory
-	console.log("Pressed button " + button.innerHTML);
+function clickFunction(button) {
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+    //console.log("ID: ", i);
+    inventoryOverlay.setVisibility(false); //close the inventory
+    var item = universe.inventory_items()[i];
+	console.log("Pressed button " + button.innerHTML, " id: ", item);
 	universe.use_item_ext(item);
 }
 
@@ -119,7 +125,7 @@ function createInventoryOverlay() {
 		for (var i = 0; i < len; ++i) {
             //var item = player.inventory.items[i];
             var item = universe.inventory_items()[i];
-            html += `<li><button class="inv_button" }">${String.fromCharCode(65 + i)}</button> ${display_name(item)}</li>`;
+            html += `<li><button class="inv_button" id=item-${i}>${String.fromCharCode(65 + i)}</button> ${display_name(item)}</li>`;
 			empty = false;
 			//not added yet!
 			//var button = document.querySelector(".inv_button");
@@ -132,13 +138,16 @@ function createInventoryOverlay() {
         }
 		overlay.innerHTML = html;
 		//TODO: fold into the previous somehow?
-		for (var i = 0; i < len; ++i) {
-			var buttons = document.querySelectorAll(".inv_button");
-			for (var i=0; i < buttons.length; ++i) {
-				var button = buttons[i];
-				//anonymous function
-				button.onclick = function() { clickFunction(button, item); }
-			}
+		for (var i = 0; i < len; i++) {
+			//var buttons = document.querySelectorAll(".inv_button");
+			//for (var i=0; i < buttons.length; ++i) {
+                //var button = buttons[i];
+                var button = document.querySelector('#item-'+CSS.escape(i));
+                //var item = universe.inventory_items()[i];
+                //console.log(button, item);
+                //anonymous function
+				button.onclick = function(e) { clickFunction(e.target); }
+			//}
 		}
     }
 

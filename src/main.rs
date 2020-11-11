@@ -351,6 +351,7 @@ impl Universe {
         }
         match play {
             Some(entity) => {
+                log!("Player uses item {}", id);
                 let item = hecs::Entity::from_bits(id); //restore
                 self.use_item(&entity, &item);
                 self.remove_dead(); //in case we used a consumable item
