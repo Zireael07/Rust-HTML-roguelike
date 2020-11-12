@@ -274,7 +274,7 @@ impl Universe {
                     Command::GetItem => self.get_item(),
 
                     //save/load
-                    Command::SaveGame => self.save_game(),
+                    //Command::SaveGame => self.save_game(),
 
                     _ => {} // Ignore all the other possibilities
                 }
@@ -390,7 +390,7 @@ impl Universe {
         }
     }
 
-    pub fn save_game(&self) {
+    pub fn save_game(&self) -> String {
         log!("Saving game...");
         //iterate over all entities
         let entities = self.ecs_world.iter().map(|(id, _)| id).collect::<Vec<_>>();
@@ -437,9 +437,16 @@ impl Universe {
 
             save_datas.push(saved);
         }
-
-        log!("JSON: {:?} ", serde_json::to_string(&save_datas));
+        //'r' stands for Result
+        let json_r = serde_json::to_string(&save_datas);
+        log!("JSON: {:?} ", json_r);
         log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
+        if json_r.is_ok() {
+            return json_r.unwrap();
+        } else {
+            return "".to_string();
+        }
+
     }
 
 }

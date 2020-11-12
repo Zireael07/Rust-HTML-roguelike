@@ -188,8 +188,16 @@ function onKeyDown(k) {
         cmd = rust.Command.Inventory //dummy
         showInventory() //do our thing
     } 
-    else if (k == ut.KEY_S) cmd = rust.Command.SaveGame; 
-
+    else if (k == ut.KEY_S) {
+        cmd = rust.Command.SaveGame; //dummy
+        let save = universe.save_game();
+        // unfortunately we're using 0.0.6...
+        let storage = new Sifrr.Storage();
+        let data = {'save': save};
+        storage.set(data).then(() => {
+            console.log("Saved game to browser...");
+        }) ;
+    }
     // update Rust
     universe.process(cmd);
     // update display
