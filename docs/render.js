@@ -188,7 +188,8 @@ function onKeyDown(k) {
         cmd = rust.Command.Inventory //dummy
         showInventory() //do our thing
     } 
-    
+    else if (k == ut.KEY_S) cmd = rust.Command.SaveGame; 
+
     // update Rust
     universe.process(cmd);
     // update display

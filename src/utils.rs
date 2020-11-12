@@ -1,7 +1,7 @@
 use std::cmp::{max, min};
+use serde::{Serialize, Deserialize};
 
-
-#[derive(Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub struct Point {
     pub x: i32,
     pub y: i32

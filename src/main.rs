@@ -17,6 +17,10 @@ use hecs::Entity;
 //RNG
 use rand::Rng;
 
+//save/load
+use serde::{Serialize, Deserialize};
+use serde_json::json;
+
 //our stuff
 mod map;
 use map::*;
@@ -64,7 +68,7 @@ pub enum Cell {
 
 #[wasm_bindgen]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Renderable {
     Thug = 0,
     Knife = 1,
@@ -72,41 +76,61 @@ pub enum Renderable {
 }
 
 //for ECS
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Player{}
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct AI {}
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct CombatStats {
     pub max_hp : i32,
     pub hp : i32,
     pub defense : i32,
     pub power : i32
 }
-
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Item{}
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct InBackpack{}
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Consumable{}
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ProvidesHealing {
     pub heal_amount : i32
 }
 
+//don't need to be serialized
 pub struct WantsToUseItem {
     pub item : Entity
 }
 // tells the engine to nuke us
 pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum EquipmentSlot { Melee }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Equippable {
     pub slot : EquipmentSlot
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Equipped {
-    pub owner : Entity,
+    pub owner : u64, //because Entity cannot be serialized by serde
     pub slot : EquipmentSlot
 }
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct MeleeBonus {
     pub bonus : i32
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SaveData {
+    entity: u64, //because Entity cannot be serialized by serde
+    name: String,
+    point: Option<Point>,
+    render: Option<Renderable>,
+    player: Option<Player>,
+    item: Option<Item>,
+    backpack: Option<InBackpack>,
+    equip: Option<Equipped>,
 }
 
 //input
@@ -118,6 +142,7 @@ pub enum Command {
     MoveUp,
     GetItem,
     Inventory,
+    SaveGame,
 }
 
 
@@ -248,6 +273,9 @@ impl Universe {
                     //others
                     Command::GetItem => self.get_item(),
 
+                    //save/load
+                    Command::SaveGame => self.save_game(),
+
                     _ => {} // Ignore all the other possibilities
                 }
             }
@@ -362,6 +390,58 @@ impl Universe {
         }
     }
 
+    pub fn save_game(&self) {
+        log!("Saving game...");
+        //iterate over all entities
+        let entities = self.ecs_world.iter().map(|(id, _)| id).collect::<Vec<_>>();
+        let mut save_datas : Vec<SaveData> = Vec::new();
+    
+        for e in entities {
+            //note to self: JSON macro doesn't work with conditionals
+            //so we need an intermediate struct
+            let mut saved = SaveData{
+                entity: e.to_bits(),
+                point: None,
+                render: None,
+                name: self.ecs_world.get::<&str>(e).unwrap().to_string(), // to get String as opposed to &str
+                player: None,
+                item: None,
+                backpack: None,
+                equip : None,
+            };
+
+            //log!("{:?}", e);
+
+            // player doesn't have point or renderable
+            if self.ecs_world.get::<Point>(e).is_ok() {
+                saved.point = Some(*self.ecs_world.get::<Point>(e).unwrap()); //they all need to be dereferenced
+            }
+            if self.ecs_world.get::<Renderable>(e).is_ok() {
+                saved.render = Some(*self.ecs_world.get::<Renderable>(e).unwrap());
+            }
+
+            //those aren't guaranteed
+            if self.ecs_world.get::<Player>(e).is_ok() {
+                //log!("{:?} is player", e);
+                saved.player = Some(*self.ecs_world.get::<Player>(e).unwrap());
+            }
+            if self.ecs_world.get::<Item>(e).is_ok() {
+                saved.item = Some(*self.ecs_world.get::<Item>(e).unwrap());
+            }
+            if self.ecs_world.get::<InBackpack>(e).is_ok() {
+                saved.backpack = Some(*self.ecs_world.get::<InBackpack>(e).unwrap());
+            }
+            if self.ecs_world.get::<Equipped>(e).is_ok() {
+                saved.equip = Some(*self.ecs_world.get::<Equipped>(e).unwrap()); 
+            }
+
+            save_datas.push(saved);
+        }
+
+        log!("JSON: {:?} ", serde_json::to_string(&save_datas));
+        log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
+    }
+
 }
 
 //Methods not exposed to JS
@@ -440,7 +520,8 @@ impl Universe {
                 .with::<&str>() //we can't query it directly above because str length is unknown at compile time
                 .iter()
                 {
-                    if equipped.owner == *user && equipped.slot == target_slot {
+                    let owner = hecs::Entity::from_bits(equipped.owner);
+                    if owner == *user && equipped.slot == target_slot {
                         to_unequip.push(ent_id);
                         //if target == *player_entity {
                         game_message(&format!("You unequip {}.", self.ecs_world.get::<&str>(ent_id).unwrap().to_string()));
@@ -467,9 +548,8 @@ impl Universe {
                 let get = self.ecs_world.get::<Equippable>(*item).unwrap();
                 *get //clone here to get around borrow checker
             };
-            //self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:EquipmentSlot::Melee});
             // slot related to item's slot
-            self.ecs_world.insert_one(*item, Equipped{owner:*user, slot:eq.slot});
+            self.ecs_world.insert_one(*item, Equipped{owner:user.to_bits(), slot:eq.slot});
             
             //self.ecs_world.remove_one::<InBackpack>(*item);
         }

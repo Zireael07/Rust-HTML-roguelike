@@ -220,7 +220,7 @@ export const Cell = Object.freeze({ Floor:0,Wall:1, });
 export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2, });
 /**
 */
-export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5, });
+export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5,SaveGame:6, });
 /**
 */
 export class Universe {
@@ -294,7 +294,7 @@ export class Universe {
     * @param {number | undefined} input
     */
     process(input) {
-        wasm.universe_process(this.ptr, isLikeNone(input) ? 6 : input);
+        wasm.universe_process(this.ptr, isLikeNone(input) ? 7 : input);
     }
     /**
     * @param {number} delta_x
@@ -363,6 +363,11 @@ export class Universe {
         const high0 = u32CvtShim[1];
         wasm.universe_use_item_ext(this.ptr, low0, high0);
     }
+    /**
+    */
+    save_game() {
+        wasm.universe_save_game(this.ptr);
+    }
 }
 
 function init(module) {
@@ -378,9 +383,6 @@ function init(module) {
     imports.wbg.__wbindgen_string_new = function(arg0, arg1) {
         var ret = getStringFromWasm0(arg0, arg1);
         return addHeapObject(ret);
-    };
-    imports.wbg.__widl_f_log_1_ = function(arg0) {
-        console.log(getObject(arg0));
     };
     imports.wbg.__widl_instanceof_Window = function(arg0) {
         var ret = getObject(arg0) instanceof Window;
@@ -428,6 +430,9 @@ function init(module) {
     imports.wbg.__widl_f_document_Window = function(arg0) {
         var ret = getObject(arg0).document;
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__widl_f_log_1_ = function(arg0) {
+        console.log(getObject(arg0));
     };
     imports.wbg.__wbg_call_12b949cfc461d154 = function(arg0, arg1) {
         try {
