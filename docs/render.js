@@ -198,6 +198,16 @@ function onKeyDown(k) {
             console.log("Saved game to browser...");
         }) ;
     }
+    else if (k == ut.KEY_R) //'R'estore because L is taken by 'vikeys'
+    {
+        cmd = rust.Command.SaveGame; //dummy
+        let storage = new Sifrr.Storage(); //with the same (default) options, we access the same storage
+        storage.get('save').then(value => {
+            console.log("Loaded game: ", value)
+            //pass to Rust
+            universe.load_save(value.save);
+        });
+    }
     // update Rust
     universe.process(cmd);
     // update display

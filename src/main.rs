@@ -76,7 +76,7 @@ pub enum Renderable {
 }
 
 //for ECS
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Player{}
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct AI {}
@@ -87,11 +87,11 @@ pub struct CombatStats {
     pub defense : i32,
     pub power : i32
 }
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Item{}
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct InBackpack{}
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Consumable{}
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ProvidesHealing {
@@ -105,13 +105,13 @@ pub struct WantsToUseItem {
 // tells the engine to nuke us
 pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
 
-#[derive(PartialEq, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum EquipmentSlot { Melee }
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Equippable {
     pub slot : EquipmentSlot
 }
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Equipped {
     pub owner : u64, //because Entity cannot be serialized by serde
     pub slot : EquipmentSlot
@@ -126,7 +126,7 @@ pub struct SaveData {
     entity: u64, //because Entity cannot be serialized by serde
     name: String,
     point: Option<Point>,
-    render: Option<Renderable>,
+    render: Option<u8>,
     player: Option<Player>,
     item: Option<Item>,
     backpack: Option<InBackpack>,
@@ -416,8 +416,8 @@ impl Universe {
             if self.ecs_world.get::<Point>(e).is_ok() {
                 saved.point = Some(*self.ecs_world.get::<Point>(e).unwrap()); //they all need to be dereferenced
             }
-            if self.ecs_world.get::<Renderable>(e).is_ok() {
-                saved.render = Some(*self.ecs_world.get::<Renderable>(e).unwrap());
+            if self.ecs_world.get::<u8>(e).is_ok() {
+                saved.render = Some(*self.ecs_world.get::<u8>(e).unwrap());
             }
 
             //those aren't guaranteed
@@ -441,12 +441,25 @@ impl Universe {
         let json_r = serde_json::to_string(&save_datas);
         log!("JSON: {:?} ", json_r);
         log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
+        // extract String from Result
         if json_r.is_ok() {
             return json_r.unwrap();
         } else {
             return "".to_string();
         }
+    }
 
+    pub fn load_save(&self, data: String) {
+        log!("Rust received loaded data {}", data);
+        let res =  serde_json::from_str(&data);
+        if res.is_ok() {
+            let ent: Vec<SaveData> = res.unwrap();
+            for e in ent {
+                //log!("Ent from save: {:?}", e);
+                log!("{}", &format!("Ent from save: {} {} {:?} {:?} {:?} {:?} {:?}", e.entity, e.name, e.render, e.point, e.item, e.backpack, e.equip));
+            }
+        }
+        //let ent: Vec<SaveData> = Vec:new();
     }
 
 }
