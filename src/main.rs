@@ -436,6 +436,9 @@ impl Universe {
             if self.ecs_world.get::<Player>(e).is_ok() {
                 //log!("{:?} is player", e);
                 saved.player = Some(*self.ecs_world.get::<Player>(e).unwrap());
+                //save player position
+                let current_position = idx_xy(self.player_position);
+                saved.point = Some(Point{x:current_position.0, y:current_position.1});
             }
             if self.ecs_world.get::<AI>(e).is_ok(){
                 saved.ai = Some(*self.ecs_world.get::<AI>(e).unwrap());
@@ -502,6 +505,8 @@ impl Universe {
                 }
                 if e.player.is_some(){
                     builder.add(e.player.unwrap());
+                    let point = e.point.unwrap();
+                    self.player_position = xy_idx(point.x, point.y);
                 }
                 if e.ai.is_some(){
                     builder.add(e.ai.unwrap());
@@ -535,6 +540,11 @@ impl Universe {
                 // automatically despawns any existing entities with the ids
                 self.ecs_world.spawn_at(ent, builder.build());
             }
+
+            let current_position = idx_xy(self.player_position);
+            // refresh FOV
+            self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+            self.fov.compute_fov(&mut self.fov_data, current_position.0 as usize, current_position.1 as usize, 6, true);
         }
         //let ent: Vec<SaveData> = Vec:new();
     }
