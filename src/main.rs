@@ -215,12 +215,12 @@ impl Universe {
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
-        let player = state.ecs_world.spawn(("Player", Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
+        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
 
         //spawn entities
-        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug", AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife", Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
-        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit", Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
+        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
 
         //debug
         log!("We have a universe");
@@ -295,7 +295,7 @@ impl Universe {
             match blocker {
                 Some(entity) => { 
                     //this assumes the blocker has a name!
-                    game_message(&format!("Player kicked the {}", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+                    game_message(&format!("Player kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
                     self.attack(&entity);
                     //enemy turn
                     self.get_AI();
@@ -322,7 +322,7 @@ impl Universe {
         match item {
             Some(entity) => {
                 //this assumes the blocker has a name!
-                game_message(&format!("Player picked up {}", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+                game_message(&format!("Player picked up {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
                 //puts the item in backpack
                 self.pickup_item(&entity)
             },
@@ -366,7 +366,7 @@ impl Universe {
         let item = hecs::Entity::from_bits(id); //restore
 
         // add (equipped) for items that are, well, equipped
-        let mut name = self.ecs_world.get::<&str>(item).unwrap().to_string();
+        let mut name = self.ecs_world.get::<String>(item).unwrap().to_string();
         if self.ecs_world.get::<Equipped>(item).is_ok(){
             name = name + " (equipped)" //Rust string concat is easy!
         }
@@ -403,7 +403,7 @@ impl Universe {
                 entity: e.to_bits(),
                 point: None,
                 render: None,
-                name: self.ecs_world.get::<&str>(e).unwrap().to_string(), // to get String as opposed to &str
+                name: self.ecs_world.get::<String>(e).unwrap().to_string(),
                 player: None,
                 item: None,
                 backpack: None,
@@ -512,18 +512,18 @@ impl Universe {
         self.ecs_world.insert_one(*user, WantsToUseItem{item:*it});
 
         //message
-        game_message(&format!("{} used {}", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<&str>(*it).unwrap().to_string()));
+        game_message(&format!("{} used {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
         // apply the use effects
         let mut wants : Vec<Entity> = Vec::new();
         let mut to_unequip : Vec<Entity> = Vec::new();
         for (id, (wantstouse)) in self.ecs_world.query::<(&WantsToUseItem)>().iter(){
             //log!("{}", &format!("Want to use item: {:?}", wantstouse.item));
-            //log!("{}", &format!("Item: {}", self.ecs_world.get::<&str>(wantstouse.item).unwrap().to_string()));
+            //log!("{}", &format!("Item: {}", self.ecs_world.get::<String>(wantstouse.item).unwrap().to_string()));
 
             // If it heals, apply the healing
             // NOTE: no & here!!!
             if self.ecs_world.get::<ProvidesHealing>(wantstouse.item).is_ok() {
-                game_message(&format!("{} heals {} damage", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
+                game_message(&format!("{} heals {} damage", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
             } else {
                 log!("Item doesn't provide healing");
             }
@@ -544,11 +544,11 @@ impl Universe {
                     if owner == *user && equipped.slot == target_slot {
                         to_unequip.push(ent_id);
                         //if target == *player_entity {
-                        game_message(&format!("You unequip {}.", self.ecs_world.get::<&str>(ent_id).unwrap().to_string()));
+                        game_message(&format!("You unequip {}.", self.ecs_world.get::<String>(ent_id).unwrap().to_string()));
                     }   
                 }
                 wants.push(wantstouse.item);
-                game_message(&format!("{} equips {}", self.ecs_world.get::<&str>(*user).unwrap().to_string(), self.ecs_world.get::<&str>(*it).unwrap().to_string()));
+                game_message(&format!("{} equips {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
             }
 
             if self.ecs_world.get::<Consumable>(wantstouse.item).is_ok() {
@@ -629,7 +629,7 @@ impl Universe {
 
         for entity in to_remove {
             if self.ecs_world.get::<Item>(entity).is_err() {
-                game_message(&format!("AI {} is dead", self.ecs_world.get::<&str>(entity).unwrap().to_string()));
+                game_message(&format!("AI {} is dead", self.ecs_world.get::<String>(entity).unwrap().to_string()));
             }
             
             self.ecs_world.despawn(entity).unwrap();
@@ -641,16 +641,16 @@ impl Universe {
     pub fn get_AI(&mut self) {
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
         for (id, (ai, point)) in &mut self.ecs_world.query::<(&AI, &mut Point)>()
-        .with::<&str>() //we can't query it directly above because str length is unknown at compile time
+        .with::<String>()
         .iter()
          {
-            log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<&str>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+            log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<String>(id).unwrap().to_string())); //just unwrapping isn't enough to format
             //if the player's immediately next to us, don't run costly A*
             let player_pos = idx_xy(self.player_position);
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
             if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));
-                game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
                 //get player entity
                 let mut play: Option<Entity> = None;
                 for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
