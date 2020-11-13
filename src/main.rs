@@ -128,8 +128,14 @@ pub struct SaveData {
     point: Option<Point>,
     render: Option<u8>,
     player: Option<Player>,
+    ai: Option<AI>,
+    combat: Option<CombatStats>,
     item: Option<Item>,
     backpack: Option<InBackpack>,
+    consumable: Option<Consumable>,
+    heals: Option<ProvidesHealing>,
+    equippable: Option<Equippable>,
+    meleebonus: Option<MeleeBonus>,
     equip: Option<Equipped>,
 }
 
@@ -405,8 +411,14 @@ impl Universe {
                 render: None,
                 name: self.ecs_world.get::<String>(e).unwrap().to_string(),
                 player: None,
+                ai: None,
+                combat: None,
                 item: None,
                 backpack: None,
+                consumable: None,
+                heals: None,
+                equippable: None,
+                meleebonus: None,
                 equip : None,
             };
 
@@ -425,11 +437,29 @@ impl Universe {
                 //log!("{:?} is player", e);
                 saved.player = Some(*self.ecs_world.get::<Player>(e).unwrap());
             }
+            if self.ecs_world.get::<AI>(e).is_ok(){
+                saved.ai = Some(*self.ecs_world.get::<AI>(e).unwrap());
+            }
+            if self.ecs_world.get::<CombatStats>(e).is_ok(){
+                saved.combat = Some(*self.ecs_world.get::<CombatStats>(e).unwrap());
+            }
             if self.ecs_world.get::<Item>(e).is_ok() {
                 saved.item = Some(*self.ecs_world.get::<Item>(e).unwrap());
             }
             if self.ecs_world.get::<InBackpack>(e).is_ok() {
                 saved.backpack = Some(*self.ecs_world.get::<InBackpack>(e).unwrap());
+            }
+            if self.ecs_world.get::<Consumable>(e).is_ok() {
+                saved.consumable = Some(*self.ecs_world.get::<Consumable>(e).unwrap());
+            }
+            if self.ecs_world.get::<ProvidesHealing>(e).is_ok(){
+                saved.heals = Some(*self.ecs_world.get::<ProvidesHealing>(e).unwrap());
+            }
+            if self.ecs_world.get::<Equippable>(e).is_ok() {
+                saved.equippable = Some(*self.ecs_world.get::<Equippable>(e).unwrap());
+            }
+            if self.ecs_world.get::<MeleeBonus>(e).is_ok(){
+                saved.meleebonus = Some(*self.ecs_world.get::<MeleeBonus>(e).unwrap());
             }
             if self.ecs_world.get::<Equipped>(e).is_ok() {
                 saved.equip = Some(*self.ecs_world.get::<Equipped>(e).unwrap()); 
@@ -449,14 +479,61 @@ impl Universe {
         }
     }
 
-    pub fn load_save(&self, data: String) {
+    pub fn load_save(&mut self, data: String) {
         log!("Rust received loaded data {}", data);
         let res =  serde_json::from_str(&data);
         if res.is_ok() {
             let ent: Vec<SaveData> = res.unwrap();
             for e in ent {
                 //log!("Ent from save: {:?}", e);
-                log!("{}", &format!("Ent from save: {} {} {:?} {:?} {:?} {:?} {:?}", e.entity, e.name, e.render, e.point, e.item, e.backpack, e.equip));
+                //log!("{}", &format!("Ent from save: {} {} {:?} {:?} {:?} {:?} {:?}", e.entity, e.name, e.render, e.point, e.item, e.backpack, e.equip));
+                
+                //entity handle
+                let ent = hecs::Entity::from_bits(e.entity); //restore
+
+                //build our entity from pieces listed
+                let mut builder = hecs::EntityBuilder::new();
+                builder.add(e.name);
+                if e.render.is_some(){
+                    builder.add(e.render.unwrap());
+                }
+                if e.point.is_some(){
+                    builder.add(e.point.unwrap());
+                }
+                if e.player.is_some(){
+                    builder.add(e.player.unwrap());
+                }
+                if e.ai.is_some(){
+                    builder.add(e.ai.unwrap());
+                }
+                if e.combat.is_some(){
+                    builder.add(e.combat.unwrap());
+                }
+                if e.item.is_some(){
+                    builder.add(e.item.unwrap());
+                }
+                if e.backpack.is_some(){
+                    builder.add(e.backpack.unwrap());
+                }
+                if e.consumable.is_some(){
+                    builder.add(e.consumable.unwrap());
+                }
+                if e.heals.is_some(){
+                    builder.add(e.heals.unwrap());
+                }
+                if e.equippable.is_some(){
+                    builder.add(e.equippable.unwrap());
+                }
+                if e.meleebonus.is_some(){
+                    builder.add(e.meleebonus.unwrap());
+                }
+                if e.equip.is_some(){
+                    builder.add(e.equip.unwrap());
+                }
+
+                // spawn based on loaded data
+                // automatically despawns any existing entities with the ids
+                self.ecs_world.spawn_at(ent, builder.build());
             }
         }
         //let ent: Vec<SaveData> = Vec:new();
