@@ -17,8 +17,9 @@ var FLOOR = new ut.Tile('.', 50, 50, 50);
 
 //JS stub logic starts here
 
+//absolutely needs to match Rust logic in utils.rs!!!
 const getIndex = (x, y) => {
-    return x * 20 + y;
+    return y * 20 + x;
 };
 
 //inverse of the above
