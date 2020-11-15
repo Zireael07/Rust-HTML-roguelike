@@ -39,3 +39,4 @@ hecs = "0.3.0"
 
 # RNG
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
+rand_xoshiro = { version = "0.4.0" }
