@@ -1,4 +1,19 @@
+use serde::{Serialize, Deserialize};
+extern crate wasm_bindgen;
+
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Cell {
+    Floor = 0,
+    Wall = 1,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Map {
+    pub tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     pub width: u32,
     pub height: u32,
     blocked: Vec<bool>,
@@ -13,7 +28,9 @@ impl Map {
             blocked.push(false);
             revealed.push(false);
         }
-        return Map{width: w, height: h, blocked: blocked, revealed_tiles: revealed};
+        let tiles = vec![Cell::Floor as u8; (w * h) as usize];
+
+        return Map{width: w, height: h, tiles: tiles, blocked: blocked, revealed_tiles: revealed};
     }
 
     //blocked for pathfinding

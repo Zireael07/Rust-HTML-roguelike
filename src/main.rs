@@ -62,15 +62,6 @@ pub fn game_message(string: &str)
 }	
 
 
-
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
-    Floor = 0,
-    Wall = 1,
-}
-
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -144,6 +135,7 @@ pub struct SaveData {
     equip: Option<Equipped>,
 }
 
+
 //input
 #[wasm_bindgen]
 pub enum Command {
@@ -160,7 +152,6 @@ pub enum Command {
 #[wasm_bindgen]
 pub struct Universe {
     map: Map,
-    tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     player_position: usize,
     fov: FovRecursiveShadowCasting,
     fov_data: MapData,
@@ -194,7 +185,6 @@ impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{
             map: Map::new(20,20), //{width:20, height:20},
-            tiles: vec![Cell::Floor as u8; 20 * 20],
             player_position: xy_idx(1, 1),
             fov: FovRecursiveShadowCasting::new(),
             fov_data: MapData::new(20,20),
@@ -222,7 +212,7 @@ impl Universe {
                 n = n*-255 as f32; //because defaults are vanishingly small
                 log!("{}", &format!("Noise: x{}y{} {}", x, y, n));
                 if n > 125.0 || n < -125.0 {
-                    state.tiles[xy_idx(x,y)] = Cell::Wall as u8;
+                    state.map.tiles[xy_idx(x,y)] = Cell::Wall as u8;
                     // opaque
                     state.fov_data.set_transparent(x as usize, y as usize, false);
                 } else {
@@ -236,15 +226,15 @@ impl Universe {
 
         // Make the boundaries walls
         for x in 0..20 {
-            state.tiles[xy_idx(x, 0)] = Cell::Wall as u8;
-            state.tiles[xy_idx(x, 19)] = Cell::Wall as u8;
+            state.map.tiles[xy_idx(x, 0)] = Cell::Wall as u8;
+            state.map.tiles[xy_idx(x, 19)] = Cell::Wall as u8;
             //mark 'em as opaque
             state.fov_data.set_transparent(x as usize, 0 as usize, false);
             state.fov_data.set_transparent(x as usize, 19 as usize, false);
         }
         for y in 0..20 {
-            state.tiles[xy_idx(0, y)] = Cell::Wall as u8;
-            state.tiles[xy_idx(19, y)] = Cell::Wall as u8;
+            state.map.tiles[xy_idx(0, y)] = Cell::Wall as u8;
+            state.map.tiles[xy_idx(19, y)] = Cell::Wall as u8;
             //mark 'em as opaque
             state.fov_data.set_transparent(0 as usize, y as usize, false);
             state.fov_data.set_transparent(19 as usize, y as usize, false);
@@ -288,7 +278,7 @@ impl Universe {
     }
 
     pub fn get_tiles(&self) -> Vec<u8> {
-        self.tiles.clone()
+        self.map.tiles.clone()
     }
 
     // pub fn get_cells_ptr(&self) -> *const Cell {
@@ -347,7 +337,7 @@ impl Universe {
         let current_position = idx_xy(self.player_position);
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = xy_idx(new_position.0, new_position.1);
-        if self.tiles[new_idx] == Cell::Floor as u8 {
+        if self.map.tiles[new_idx] == Cell::Floor as u8 {
             let blocker = self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize);
 
             match blocker {
