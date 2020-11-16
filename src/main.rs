@@ -524,10 +524,16 @@ impl Universe {
         //'r' stands for Result
         let json_r = serde_json::to_string(&save_datas);
         log!("JSON: {:?} ", json_r);
-        log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
+
+
+        //map data
+        let json_r2 = serde_json::to_string(&self.map);
+        log!("JSON 2: {:?}", json_r2);
+
+        //log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
         // extract String from Result
-        if json_r.is_ok() {
-            return json_r.unwrap();
+        if json_r.is_ok() && json_r2.is_ok() {
+            return json_r.unwrap() + " \nmap:" + &json_r2.unwrap();
         } else {
             return "".to_string();
         }
@@ -535,7 +541,13 @@ impl Universe {
 
     pub fn load_save(&mut self, data: String) {
         log!("Rust received loaded data {}", data);
-        let res =  serde_json::from_str(&data);
+        // split the string
+        let split : Vec<&str> = data.split(" \nmap:").collect();
+        // for s in split{
+        //     log!("{}", &format!("Split {}", s));
+        // }
+
+        let res =  serde_json::from_str(&split[0]);
         if res.is_ok() {
             let ent: Vec<SaveData> = res.unwrap();
             for e in ent {
@@ -598,6 +610,12 @@ impl Universe {
             self.fov.compute_fov(&mut self.fov_data, current_position.0 as usize, current_position.1 as usize, 6, true);
         }
         //let ent: Vec<SaveData> = Vec:new();
+
+        let res =  serde_json::from_str(&split[1]);
+        if res.is_ok() {
+            let mapa = res.unwrap();
+            self.map = mapa;
+        }
     }
 
 }
