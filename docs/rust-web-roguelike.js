@@ -291,6 +291,24 @@ export class Universe {
         return ret !== 0;
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {boolean}
+    */
+    is_seen(x, y) {
+        var ret = wasm.universe_is_seen(this.ptr, x, y);
+        return ret !== 0;
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {boolean}
+    */
+    should_draw(x, y) {
+        var ret = wasm.universe_should_draw(this.ptr, x, y);
+        return ret !== 0;
+    }
+    /**
     * @param {number | undefined} input
     */
     process(input) {

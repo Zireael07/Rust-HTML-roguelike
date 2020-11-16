@@ -2,15 +2,18 @@ pub struct Map {
     pub width: u32,
     pub height: u32,
     blocked: Vec<bool>,
+    pub revealed_tiles : Vec<bool>,
 }
 
 impl Map {
     pub fn new(w:u32, h:u32) -> Map {
         let mut blocked = Vec::new();
+        let mut revealed = Vec::new();
         for _i in 0 .. (w*h) {
             blocked.push(false);
+            revealed.push(false);
         }
-        return Map{width: w, height: h, blocked: blocked};
+        return Map{width: w, height: h, blocked: blocked, revealed_tiles: revealed};
     }
 
     //blocked for pathfinding

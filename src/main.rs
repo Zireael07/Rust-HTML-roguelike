@@ -257,6 +257,12 @@ impl Universe {
         //let mut fov = FovRecursiveShadowCasting::new();
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
+        //reveal tiles
+        for (idx, b) in state.fov_data.fov.iter().enumerate() {
+            if *b {
+                state.map.revealed_tiles[idx] = true;
+            }
+        }
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
@@ -296,6 +302,14 @@ impl Universe {
 
     pub fn is_visible(&self, x: usize, y:usize) -> bool {
         return self.fov_data.is_in_fov(x,y);
+    }
+
+    pub fn is_seen(&self, x: usize, y:usize) -> bool {
+        return self.map.revealed_tiles[xy_idx(x as i32, y as i32)];
+    }
+
+    pub fn should_draw(&self, x: usize, y:usize) -> bool {
+        return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
     pub fn process(&mut self, input: Option<Command>) {
@@ -350,6 +364,12 @@ impl Universe {
                     //refresh fov
                     self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
                     self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);
+                    //reveal tiles
+                    for (idx, b) in self.fov_data.fov.iter().enumerate() {
+                        if *b {
+                            self.map.revealed_tiles[idx] = true;
+                        }
+                    }
                     //enemy turn
                     self.get_AI();
                     self.remove_dead();

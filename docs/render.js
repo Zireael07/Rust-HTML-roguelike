@@ -27,9 +27,17 @@ const getPos = (ind) => {
     return [ind % 20, ind / 20];
 }
 
-//wrapper for Rust function
+//wrappers for Rust functions
 function is_Visible(x,y){
     return universe.is_visible(x,y);
+}
+
+function isSeen(x,y) {
+    return universe.is_seen(x,y);
+}
+
+function shouldDraw(x,y) {
+    return universe.should_draw(x,y);
 }
 
 // Returns a Tile based on the char array map
@@ -53,6 +61,26 @@ function getDungeonTile(x, y) {
 	if (t === '.') return FLOOR;
 	return ut.NULLTILE;
 }
+
+function getRenderTile(x,y) {
+	if (is_Visible(x,y)) {
+		return getDungeonTile(x,y)
+	}
+	else if (isSeen(x,y)) {
+		var tile = getDungeonTile(x,y);
+		if (tile == ut.NULLTILE) { 
+			return ut.NULLTILE //those don't have anything to tint xDDD
+		} 
+		else {
+			return new ut.Tile(tile.getChar(), tile.r*0.5, tile.g*0.5, tile.b*0.5)
+		}
+	}
+	//paranoia
+	else {
+		return ut.NULLTILE;
+	}
+}
+
 
 // Main loop
 function tick() {
@@ -226,9 +254,9 @@ function initRenderer(wasm) {
 	// Initialize Viewport, i.e. the place where the characters are displayed
 	term = new ut.Viewport(document.getElementById("game"), 40, 25, "dom");
 	// Initialize Engine, i.e. the Tile manager
-    eng = new ut.Engine(term, getDungeonTile, 20, 20);
+    eng = new ut.Engine(term, getRenderTile, 20, 20);
     //use fov
-    eng.setMaskFunc(is_Visible);
+    eng.setMaskFunc(shouldDraw);
 
     //more game init
     inventoryOverlay = createInventoryOverlay();
