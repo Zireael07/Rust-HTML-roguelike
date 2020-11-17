@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>My Rust project!</title>
+  </head>
+  <body>
+    <link href="../3rd-party/unicodetiles/unicodetiles.css" rel="stylesheet" type="text/css" />
+	<link href="style.css" rel="stylesheet" type="text/css" />
+	<script src="../3rd-party/unicodetiles/unicodetiles.js"></script>
+  <script src="../3rd-party/unicodetiles/ut.DOMRenderer.js"></script>
+  <script src="../3rd-party/unicodetiles/input.js"></script>
+  <script src="../3rd-party/sifrr.storage.js"></script>
+  <script type="module" src="render.js"></script>
+  <!-- load wasm -->
+  <!-- Note the usage of `type=module` here as this is an ES6 module -->
+  <script type="module" src="bootstrap.js"></script>
+
+  <div class="centerer">
+    <div id="game">Enable JavaScript and reload the page.</div>
+    <div id="messages"></div>
+    <div id="inventory" class="overlay"></div>
+  </div>
+  </body>
+</html>

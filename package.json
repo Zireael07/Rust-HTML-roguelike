@@ -1,0 +1,13 @@
+{
+  "name": "rust-web-roguelike",
+  "collaborators": [
+    "Zireael07 <zi@mail.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "rust_web_roguelike_bg.wasm",
+    "rust_web_roguelike.js"
+  ],
+  "module": "rust_web_roguelike.js",
+  "sideEffects": false
+}

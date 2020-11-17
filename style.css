@@ -1,0 +1,43 @@
+@charset "utf-8";
+
+.centerer {
+    text-align: center;
+    display: grid; /* Picked up from redblobgames, ensures other elements fit size */
+    justify-content: center; /* Centers the above */
+    grid-template-areas: "game" "message-area";
+}
+
+#game {
+	font-size: 16px; 
+    background-color: #000;
+    grid-area: game;
+	z-index: 1;
+}
+
+#messages {
+    grid-area: message-area;
+	z-index: 1;
+}
+
+.overlay {
+    grid-area: game;
+    z-index: 0;
+    height: auto;
+    align-self: center;
+    padding: 0.5em;
+    line-height: 1.0;
+    font-family: monospace;
+    font-size: 0.8em;
+    opacity: 0;
+    background: black;
+    color: white;
+}
+.overlay.visible {
+    z-index: 2;
+    /* box-shadow: 0 1px 4px -3px white; */
+    opacity: 1;
+}
+
+.overlay li {
+    text-align: left;
+}
