@@ -19,3 +19,27 @@ jobs:
 
       - name: Build
         run: wasm-pack build --out-dir docs --target web --no-typescript
+
+      - name: Upload wasm
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: ./docs # /home/runner/work/{repository-name}
+
+  deploy:
+    name: Deploy to GH Pages
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download wasm
+        uses: actions/download-artifact@v1
+        with:
+          name: my-artifact
+          path: docs
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages # The branch the action should deploy to.
+          FOLDER: docs # The folder the action should deploy.
