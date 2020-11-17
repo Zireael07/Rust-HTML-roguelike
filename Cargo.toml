@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Zireael07 <zi@mail.com>"]
 edition = "2018"
 
+# For WASM pack
 [lib]
 crate-type = ["cdylib"]
 
