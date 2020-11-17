@@ -33,7 +33,7 @@ impl Map {
         return Map{width: w, height: h, tiles: tiles, blocked: blocked, revealed_tiles: revealed};
     }
 
-    //blocked for pathfinding
+    //blocked for pathfinding (eg. by other entities)
     pub fn set_tile_blocked(&mut self, idx : i32) {
         self.blocked[idx as usize] = true;
     }
@@ -44,6 +44,11 @@ impl Map {
 
     pub fn is_tile_blocked(&self, idx: i32) -> bool {
         return self.blocked[idx as usize];
+    }
+
+    pub fn is_tile_walkable(&self, x:i32, y:i32) -> bool {
+        let idx = (y * self.width as i32) + x;
+        return self.tiles[idx as usize] == Cell::Floor as u8;
     }
 
     pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {

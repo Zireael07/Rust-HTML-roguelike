@@ -16,16 +16,16 @@ fn get_available_neighbors(map: &Map, idx:i32) -> Vec<(i32, f32)> {
     let y = idx / map.width as i32;
 
     // Cardinal directions
-    if map.is_tile_valid(x-1, y) { neighbors.push((idx-1, 1.0)) };
-    if map.is_tile_valid(x+1, y) { neighbors.push((idx+1, 1.0)) };
-    if map.is_tile_valid(x, y-1) { neighbors.push((idx-map.width as i32, 1.0)) };
-    if map.is_tile_valid(x, y+1) { neighbors.push((idx+map.width as i32, 1.0)) };
+    if map.is_tile_valid(x-1, y) && map.is_tile_walkable(x-1, y) { neighbors.push((idx-1, 1.0)) };
+    if map.is_tile_valid(x+1, y) && map.is_tile_walkable(x+1, y) { neighbors.push((idx+1, 1.0)) };
+    if map.is_tile_valid(x, y-1) && map.is_tile_walkable(x, y-1) { neighbors.push((idx-map.width as i32, 1.0)) };
+    if map.is_tile_valid(x, y+1) && map.is_tile_walkable(x, y+1) { neighbors.push((idx+map.width as i32, 1.0)) };
 
     // Diagonals
-    if map.is_tile_valid(x-1, y-1) { neighbors.push(((idx-map.width as i32)-1, 1.4)); }
-    if map.is_tile_valid(x+1, y-1) { neighbors.push(((idx-map.width as i32)+1, 1.4)); }
-    if map.is_tile_valid(x-1, y+1) { neighbors.push(((idx+map.width as i32)-1, 1.4)); }
-    if map.is_tile_valid(x+1, y+1) { neighbors.push(((idx+map.width as i32)+1, 1.4)); }
+    if map.is_tile_valid(x-1, y-1) && map.is_tile_walkable(x-1, y-1) { neighbors.push(((idx-map.width as i32)-1, 1.4)); }
+    if map.is_tile_valid(x+1, y-1) && map.is_tile_walkable(x+1, y-1) { neighbors.push(((idx-map.width as i32)+1, 1.4)); }
+    if map.is_tile_valid(x-1, y+1) && map.is_tile_walkable(x-1, y+1) { neighbors.push(((idx+map.width as i32)-1, 1.4)); }
+    if map.is_tile_valid(x+1, y+1) && map.is_tile_walkable(x+1, y+1) { neighbors.push(((idx+map.width as i32)+1, 1.4)); }
 
     return neighbors;
 }
