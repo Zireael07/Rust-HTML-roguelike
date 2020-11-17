@@ -5,7 +5,7 @@
 // will "boot" the module and make it ready to use. Currently browsers
 // don't support natively imported WebAssembly as an ES module, but
 // eventually the manual initialization won't be required!
-import init from './rust-web-roguelike.js';
+import init from './rust_web_roguelike.js';
 
 import {initRenderer } from './render.js';
 
@@ -17,7 +17,7 @@ async function run() {
     // Also note that the promise, when resolved, yields the wasm module's
     // exports which is the same as importing the `*_bg` module in other
     // modes
-    const wasm = await init('./rust-web-roguelike_bg.wasm');
+    const wasm = await init('./rust_web_roguelike_bg.wasm');
     initRenderer(wasm);
 
 }

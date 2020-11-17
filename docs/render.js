@@ -1,5 +1,5 @@
 //JS starts here
-import * as rust from './rust-web-roguelike.js';
+import * as rust from './rust_web_roguelike.js';
 
 var term, eng, inventoryOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet because WASM is not ready
