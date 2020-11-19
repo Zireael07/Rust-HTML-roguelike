@@ -2,7 +2,7 @@ extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
-//the websys Canvas bindings uses it
+//the websys bindings uses it
 use wasm_bindgen::JsCast; // for dyn_into
 use std::f64;
 
@@ -20,6 +20,8 @@ use rand::Rng;
 //save/load
 use serde::{Serialize, Deserialize};
 use serde_json::json;
+
+use std::fmt;
 
 //our stuff
 
@@ -146,6 +148,38 @@ pub struct MeleeBonus {
     pub bonus : i32
 }
 
+//make a struct so that....
+pub struct Rolls(Vec<bool>);
+
+// .. we can implement `Display`
+
+//ref: https://stackoverflow.com/questions/54042984/can-i-format-debug-output-as-binary-when-the-values-are-in-a-vector 
+//ref: https://doc.rust-lang.org/rust-by-example/hello/print/print_display.html
+impl fmt::Display for Rolls {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // extract the value using tuple idexing
+        // and create reference to 'vec'
+        let vec = &self.0;
+
+        // @count -> the index of the value,
+        // @n     -> the value
+        for (count, n) in vec.iter().enumerate() { 
+            if count != 0 { write!(f, " ")?; }
+
+            if n == &false {
+                write!(f, "0")?;
+            } else {
+                write!(f, "1")?;
+            }
+
+        }
+        Ok(())
+    }
+}
+
+
+
+// what it says on the tin
 #[derive(Serialize, Deserialize)]
 pub struct SaveData {
     entity: u64, //because Entity cannot be serialized by serde
@@ -767,7 +801,7 @@ impl Universe {
     fn attack(&self, target: &Entity) {
         let res = self.make_test_d2(1);
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
-        log!("{}", &format!("Test: {:?} sum: {}", res, sum));
+        game_message(&format!("Test: {} sum: {}", Rolls(res), sum));
 
         //item bonuses
         let mut offensive_bonus = 0;
