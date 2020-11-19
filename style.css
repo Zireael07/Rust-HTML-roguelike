@@ -16,7 +16,17 @@
 
 #messages {
     grid-area: message-area;
-	z-index: 1;
+	box-sizing: border-box;
+	font-family: "DejaVuSansMono", "DejaVu Sans Mono", monospace;
+    font-size: 0.8em;
+    height: 6em; /* 5 lines of text plus fudge*/
+    line-height: 1.0;
+    background: black;
+    color: white; /* Default - overwritten by gameMessage */
+    margin: 0;
+    padding: 0.5em 1em;
+    text-align: left;
+    z-index: 1;
 }
 
 .overlay {

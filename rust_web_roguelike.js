@@ -418,9 +418,19 @@ function init(module) {
     imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
         takeObject(arg0);
     };
+    imports.wbg.__widl_f_log_1_ = function(arg0) {
+        console.log(getObject(arg0));
+    };
     imports.wbg.__widl_instanceof_Window = function(arg0) {
         var ret = getObject(arg0) instanceof Window;
         return ret;
+    };
+    imports.wbg.__widl_f_set_property_CSSStyleDeclaration = function(arg0, arg1, arg2, arg3, arg4) {
+        try {
+            getObject(arg0).setProperty(getStringFromWasm0(arg1, arg2), getStringFromWasm0(arg3, arg4));
+        } catch (e) {
+            handleError(e)
+        }
     };
     imports.wbg.__widl_f_create_element_Document = function(arg0, arg1, arg2) {
         try {
@@ -445,6 +455,14 @@ function init(module) {
         var ret = getObject(arg0).childElementCount;
         return ret;
     };
+    imports.wbg.__widl_instanceof_HTMLElement = function(arg0) {
+        var ret = getObject(arg0) instanceof HTMLElement;
+        return ret;
+    };
+    imports.wbg.__widl_f_style_HTMLElement = function(arg0) {
+        var ret = getObject(arg0).style;
+        return addHeapObject(ret);
+    };
     imports.wbg.__widl_f_append_child_Node = function(arg0, arg1) {
         try {
             var ret = getObject(arg0).appendChild(getObject(arg1));
@@ -464,9 +482,6 @@ function init(module) {
     imports.wbg.__widl_f_document_Window = function(arg0) {
         var ret = getObject(arg0).document;
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
-    };
-    imports.wbg.__widl_f_log_1_ = function(arg0) {
-        console.log(getObject(arg0));
     };
     imports.wbg.__wbg_call_12b949cfc461d154 = function(arg0, arg1) {
         try {
