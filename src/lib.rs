@@ -44,15 +44,44 @@ macro_rules! log {
     }
 }
 
+//TODO: shuffle all or most of this to JS because Rust is clunky when it comes to DOM... :/
 //using web_sys here because I am not too sure on how to pass strings to custom JS
 pub fn game_message(string: &str)
 {
+    //convert
+    let mut string = string.to_string();
     let window = web_sys::window().expect("global window does not exists");    
     let document = window.document().expect("expecting a document on window");
     
     let messages = document.get_element_by_id("messages").unwrap();
-    let line = document.create_element("div").unwrap();
-    line.set_inner_html(string);
+    let line = document.create_element("div").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap(); //dyn_into for style() to work
+
+    //apply CSS to whole line
+    if string.starts_with("{r"){
+        //strip tag
+        string = string.trim_start_matches("{r").to_string();
+        line.style().set_property("color", "rgb(255,0,0)");
+    }
+    if string.starts_with("{gr"){
+        //strip tag
+        string = string.trim_start_matches("{gr").to_string();
+        line.style().set_property("color", "rgb(127,127,127)");
+    }
+    if string.starts_with("{g"){
+        //strip tag
+        string = string.trim_start_matches("{g").to_string();
+        line.style().set_property("color", "rgb(0,255,0)");
+    }
+
+    //detect in-line styles
+    if string.contains("{r") {
+        //parse style
+        string = string.replace("{r", "<span style=\"color:rgb(255,0,0)\">");
+        string = string.replace("}", "</span>");
+    }
+
+
+    line.set_inner_html(&string); //wants &str
     messages.append_child(&line).unwrap(); //implicitly converts to Node
 
     //axe the first if more than 5
@@ -240,11 +269,6 @@ impl Universe {
             state.fov_data.set_transparent(19 as usize, y as usize, false);
         }
     
-        //Player
-        //let idx = xy_idx(1, 1);
-        //state.player_position = idx;
-        
-        //let mut fov = FovRecursiveShadowCasting::new();
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
         state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
         //reveal tiles
@@ -281,9 +305,6 @@ impl Universe {
         self.map.tiles.clone()
     }
 
-    // pub fn get_cells_ptr(&self) -> *const Cell {
-    //     self.cells.as_ptr()
-    // }
 
     pub fn player(&self) -> Vec<i32> {
         let pos = idx_xy(self.player_position);
@@ -343,7 +364,7 @@ impl Universe {
             match blocker {
                 Some(entity) => { 
                     //this assumes the blocker has a name!
-                    game_message(&format!("Player kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
+                    game_message(&format!("{{gPlayer kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
                     self.attack(&entity);
                     //enemy turn
                     self.get_AI();
@@ -533,6 +554,7 @@ impl Universe {
         //log!("{}", &format!("{}", serde_json::to_string(&self.player_position).unwrap()));
         // extract String from Result
         if json_r.is_ok() && json_r2.is_ok() {
+            //hack because we can't return a tuple or Vec<> of Strings
             return json_r.unwrap() + " \nmap:" + &json_r2.unwrap();
         } else {
             return "".to_string();
@@ -679,7 +701,7 @@ impl Universe {
             // If it heals, apply the healing
             // NOTE: no & here!!!
             if self.ecs_world.get::<ProvidesHealing>(wantstouse.item).is_ok() {
-                game_message(&format!("{} heals {} damage", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
+                game_message(&format!("{{g{} heals {} damage", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
             } else {
                 log!("Item doesn't provide healing");
             }
@@ -700,11 +722,11 @@ impl Universe {
                     if owner == *user && equipped.slot == target_slot {
                         to_unequip.push(ent_id);
                         //if target == *player_entity {
-                        game_message(&format!("You unequip {}.", self.ecs_world.get::<String>(ent_id).unwrap().to_string()));
+                        game_message(&format!("{{rYou unequip {}.", self.ecs_world.get::<String>(ent_id).unwrap().to_string()));
                     }   
                 }
                 wants.push(wantstouse.item);
-                game_message(&format!("{} equips {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
+                game_message(&format!("{{g{} equips {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
             }
 
             if self.ecs_world.get::<Consumable>(wantstouse.item).is_ok() {
@@ -758,7 +780,7 @@ impl Universe {
         // the mut here is obligatory!!!
         let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
         stats.hp = stats.hp - 2 - offensive_bonus;
-        game_message(&format!("Dealt {} damage", 2+offensive_bonus));
+        game_message(&format!("Dealt {{r{}}} damage", 2+offensive_bonus));
         
         //borrow checker doesn't allow this??
         //if killed, despawn
@@ -785,7 +807,7 @@ impl Universe {
 
         for entity in to_remove {
             if self.ecs_world.get::<Item>(entity).is_err() {
-                game_message(&format!("AI {} is dead", self.ecs_world.get::<String>(entity).unwrap().to_string()));
+                game_message(&format!("{{grAI {} is dead", self.ecs_world.get::<String>(entity).unwrap().to_string()));
             }
             
             self.ecs_world.despawn(entity).unwrap();
@@ -806,7 +828,7 @@ impl Universe {
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
             if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));
-                game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
+                game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
                 //get player entity
                 let mut play: Option<Entity> = None;
                 for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
@@ -821,7 +843,7 @@ impl Universe {
                 let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
                 // move or attack            
                 if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
-                    game_message(&format!("AI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                    game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
                     //get player entity
                     let mut play: Option<Entity> = None;
                     for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {

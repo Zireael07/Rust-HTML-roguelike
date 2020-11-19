@@ -22,10 +22,12 @@ wasm-bindgen = { version = "0.2.51", features = ["serde-serialize"] }
 [dependencies.web-sys]
 version = "0.3.4"
 features = ["console",
+  'CssStyleDeclaration',
   'CanvasRenderingContext2d',
   'Document',
   'Element',
   'Node',
+  'HtmlElement',
   'HtmlCanvasElement',
   'HtmlImageElement',
   'Window',
