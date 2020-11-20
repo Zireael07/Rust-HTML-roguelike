@@ -81,6 +81,26 @@ pub fn game_message(string: &str)
         string = string.replace("{r", "<span style=\"color:rgb(255,0,0)\">");
         string = string.replace("}", "</span>");
     }
+    if string.contains("{gr") {
+        //parse style
+        string = string.replace("{gr", "<span style=\"color:rgb(127,127,127)\">");
+        string = string.replace("}", "</span>");
+    }
+    if string.contains("{g") {
+        //parse style
+        string = string.replace("{g", "<span style=\"color:rgb(0,255,0)\">");
+        string = string.replace("}", "</span>");
+    }
+    if string.contains("{c"){
+        //parse style
+        string = string.replace("{c", "<span style=\"color:rgb(0,255,255)\">");
+        string = string.replace("}", "</span>");
+    }
+    if string.contains("{y"){
+        //parse style
+        string = string.replace("{y", "<span style=\"color:rgb(255,255,0)\">");
+        string = string.replace("}", "</span>");
+    }
 
 
     line.set_inner_html(&string); //wants &str
@@ -167,9 +187,9 @@ impl fmt::Display for Rolls {
             if count != 0 { write!(f, " ")?; }
 
             if n == &false {
-                write!(f, "0")?;
+                write!(f, "{{gr0}}")?; //this is format, so we need to escape
             } else {
-                write!(f, "1")?;
+                write!(f, "{{c1}}")?;
             }
 
         }
@@ -812,7 +832,7 @@ impl Universe {
     fn attack(&self, target: &Entity) {
         let res = self.make_test_d2(1);
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
-        game_message(&format!("Test: {} sum: {}", Rolls(res), sum));
+        game_message(&format!("Test: {} sum: {{g{}", Rolls(res), sum));
 
         //item bonuses
         let mut offensive_bonus = 0;
