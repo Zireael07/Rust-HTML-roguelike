@@ -313,6 +313,7 @@ impl Universe {
         }
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
+        //NOTE: player is always entity id 0
         let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
 
         //spawn entities
@@ -389,6 +390,10 @@ impl Universe {
     // requested by the player. We calculate the new coordinates,
     // and if it is a floor - move the player there.
     pub fn move_player(&mut self, delta_x: i32, delta_y: i32) {
+        if self.is_player_dead() {
+            return;
+        }
+
         let current_position = idx_xy(self.player_position);
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = xy_idx(new_position.0, new_position.1);
@@ -493,6 +498,12 @@ impl Universe {
         }
         match play {
             Some(entity) => {
+                //check dead
+                let hp = self.ecs_world.get::<CombatStats>(entity).unwrap().hp;
+                if hp <= 0 {
+                    return 
+                }
+
                 log!("Player uses item {}", id);
                 let item = hecs::Entity::from_bits(id); //restore
                 self.use_item(&entity, &item);
@@ -749,7 +760,7 @@ impl Universe {
 
                 //find items in slot
                 for (ent_id, (equipped)) in self.ecs_world.query::<(&Equipped)>()
-                .with::<&str>() //we can't query it directly above because str length is unknown at compile time
+                .with::<String>()
                 .iter()
                 {
                     let owner = hecs::Entity::from_bits(equipped.owner);
@@ -824,12 +835,39 @@ impl Universe {
         // }
     }
 
+    fn is_player_dead(&self) -> bool {
+        //check for dead
+        let mut dead = false;
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => { 
+                let hp = self.ecs_world.get::<CombatStats>(entity).unwrap().hp;
+                if hp <= 0 {
+                    dead = true;
+                }
+            },
+            None => { dead = true },
+        }
+        return dead;
+    }
+
+
     fn remove_dead(&mut self) {
         // Here we query entities with 0 or less hp and despawn them
         let mut to_remove: Vec<Entity> = Vec::new();
         for (id, stats) in &mut self.ecs_world.query::<&CombatStats>() {
             if stats.hp <= 0 {
-                to_remove.push(id);
+                if id.id() > 0 { 
+                    to_remove.push(id);
+                }
+                // player - just a log message
+                else {
+                    game_message("{rYou are DEAD!");
+                }
             }
         }
 
