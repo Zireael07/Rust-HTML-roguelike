@@ -27,7 +27,6 @@ use std::fmt;
 
 //3rd party vendored in
 mod fastnoise;
-use fastnoise::*;
 
 mod map;
 use map::*;
@@ -244,10 +243,10 @@ pub struct Universe {
 //it's outside Universe because we're careful not to pass 'self' to it
 pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize) -> (usize, usize) {
     //call A*
-    let path = a_star_search(xy_idx(x as i32, y as i32) as i32, player_position as i32, &map);
+    let path = a_star_search(map.xy_idx(x as i32, y as i32) as i32, player_position as i32, &map);
     if path.success {
         let idx = path.steps[1];
-        let idx_pos = idx_xy(idx as usize);
+        let idx_pos = map.idx_xy(idx as usize);
         if !map.is_tile_blocked(idx) {
             let old_idx = (y * map.width as usize) + x;
             //mark as blocked for pathfinding
@@ -257,7 +256,7 @@ pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize)
             return (idx_pos.0 as usize, idx_pos.1 as usize);
         }
     }
-    log!("{}", &format!("No path found sx {} sy {} tx {} ty {}", x, y, idx_xy(player_position).0, idx_xy(player_position).1));
+    log!("{}", &format!("No path found sx {} sy {} tx {} ty {}", x, y, map.idx_xy(player_position).0, map.idx_xy(player_position).1));
     (x,y) //dummy
 }
 
@@ -268,59 +267,22 @@ impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{
             map: Map::new(20,20), //{width:20, height:20},
-            player_position: xy_idx(1, 1),
+            player_position: 0, //dummy
             fov: FovRecursiveShadowCasting::new(),
             fov_data: MapData::new(20,20),
             ecs_world: World::new(),
         };
     
+        state.player_position = state.map.xy_idx(1,1);
+
         //mapgen
+        state.map = Map::build_map();
 
-        //noise
-        //generate noise
-        let mut rng = rand::thread_rng();
-        let mut noise = FastNoise::seeded(10001 as u64);
-        //let mut noise = FastNoise::seeded(rng.gen_range(1, 65537) as u64);
-        noise.set_noise_type(NoiseType::SimplexFractal);
-        noise.set_fractal_type(FractalType::FBM);
-        noise.set_fractal_octaves(1);
-        noise.set_fractal_gain(0.5);
-        noise.set_fractal_lacunarity(2.0);
-        //noise.set_frequency(0.085);
-        noise.set_frequency(0.45);
-
-        for x in 0..20 {
-            for y in 0..20 {
-                let mut n = noise.get_noise(x as f32, y as f32);
-                n = n*-255 as f32; //because defaults are vanishingly small
-                log!("{}", &format!("Noise: x{}y{} {}", x, y, n));
-                if n > 125.0 || n < -125.0 {
-                    state.map.tiles[xy_idx(x,y)] = Cell::Wall as u8;
-                    // opaque
-                    state.fov_data.set_transparent(x as usize, y as usize, false);
-                } else {
-                    //state.tiles[xy_idx(x,y)] = Cell:Floor as u8
-                }
-                //log!("{}", &format!("Tile: x{} y{} {}", x,y, state.tiles[xy_idx(x,y)]));
+        //build FOV cache
+        for (idx, tile) in state.map.tiles.iter().enumerate() {
+            if *tile == Cell::Wall as u8 {
+                state.fov_data.set_transparent(state.map.idx_xy(idx).0 as usize, state.map.idx_xy(idx).1 as usize, false);
             }
-        }
-      
-
-
-        // Make the boundaries walls
-        for x in 0..20 {
-            state.map.tiles[xy_idx(x, 0)] = Cell::Wall as u8;
-            state.map.tiles[xy_idx(x, 19)] = Cell::Wall as u8;
-            //mark 'em as opaque
-            state.fov_data.set_transparent(x as usize, 0 as usize, false);
-            state.fov_data.set_transparent(x as usize, 19 as usize, false);
-        }
-        for y in 0..20 {
-            state.map.tiles[xy_idx(0, y)] = Cell::Wall as u8;
-            state.map.tiles[xy_idx(19, y)] = Cell::Wall as u8;
-            //mark 'em as opaque
-            state.fov_data.set_transparent(0 as usize, y as usize, false);
-            state.fov_data.set_transparent(19 as usize, y as usize, false);
         }
     
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
@@ -362,7 +324,7 @@ impl Universe {
 
 
     pub fn player(&self) -> Vec<i32> {
-        let pos = idx_xy(self.player_position);
+        let pos = self.map.idx_xy(self.player_position);
         vec![pos.0, pos.1]
     }
 
@@ -371,7 +333,7 @@ impl Universe {
     }
 
     pub fn is_seen(&self, x: usize, y:usize) -> bool {
-        return self.map.revealed_tiles[xy_idx(x as i32, y as i32)];
+        return self.map.revealed_tiles[self.map.xy_idx(x as i32, y as i32)];
     }
 
     pub fn should_draw(&self, x: usize, y:usize) -> bool {
@@ -414,9 +376,9 @@ impl Universe {
             return;
         }
 
-        let current_position = idx_xy(self.player_position);
+        let current_position = self.map.idx_xy(self.player_position);
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
-        let new_idx = xy_idx(new_position.0, new_position.1);
+        let new_idx = self.map.xy_idx(new_position.0, new_position.1);
         if self.map.tiles[new_idx] == Cell::Floor as u8 {
             let blocker = self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize);
 
@@ -453,7 +415,7 @@ impl Universe {
     }
 
     pub fn get_item(&mut self) {
-        let current_position = idx_xy(self.player_position);
+        let current_position = self.map.idx_xy(self.player_position);
         let item = self.items_at(current_position.0 as usize, current_position.1 as usize);
 
         match item {
@@ -574,7 +536,7 @@ impl Universe {
                 //log!("{:?} is player", e);
                 saved.player = Some(*self.ecs_world.get::<Player>(e).unwrap());
                 //save player position
-                let current_position = idx_xy(self.player_position);
+                let current_position = self.map.idx_xy(self.player_position);
                 saved.point = Some(Point{x:current_position.0, y:current_position.1});
             }
             if self.ecs_world.get::<AI>(e).is_ok(){
@@ -656,7 +618,7 @@ impl Universe {
                 if e.player.is_some(){
                     builder.add(e.player.unwrap());
                     let point = e.point.unwrap();
-                    self.player_position = xy_idx(point.x, point.y);
+                    self.player_position = self.map.xy_idx(point.x, point.y);
                 }
                 if e.ai.is_some(){
                     builder.add(e.ai.unwrap());
@@ -691,7 +653,7 @@ impl Universe {
                 self.ecs_world.spawn_at(ent, builder.build());
             }
 
-            let current_position = idx_xy(self.player_position);
+            let current_position = self.map.idx_xy(self.player_position);
             // refresh FOV
             self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
             self.fov.compute_fov(&mut self.fov_data, current_position.0 as usize, current_position.1 as usize, 6, true);
@@ -916,7 +878,7 @@ impl Universe {
          {
             log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<String>(id).unwrap().to_string())); //just unwrapping isn't enough to format
             //if the player's immediately next to us, don't run costly A*
-            let player_pos = idx_xy(self.player_position);
+            let player_pos = self.map.idx_xy(self.player_position);
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
             if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));

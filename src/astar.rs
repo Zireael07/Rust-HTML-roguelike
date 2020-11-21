@@ -84,7 +84,7 @@ impl AStar {
     }
 
     fn distance_to_end(&self, idx :i32, map: &Map) -> f32 {
-        return distance2d(&Point{x:idx_xy(idx as usize).0, y:idx_xy(idx as usize).1}, &Point{x:idx_xy(self.end as usize).0, y:idx_xy(self.end as usize).1});
+        return distance2d(&Point{x:map.idx_xy(idx as usize).0, y:map.idx_xy(idx as usize).1}, &Point{x:map.idx_xy(self.end as usize).0, y:map.idx_xy(self.end as usize).1});
     }
 
     fn add_node(&mut self, q:Node, idx:i32, cost:f32, map: &Map) -> bool {

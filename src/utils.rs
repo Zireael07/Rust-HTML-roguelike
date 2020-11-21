@@ -13,19 +13,6 @@ impl Point {
     }
 }
 
-// We're storing all the tiles in one big array, so we need a way to map an X,Y coordinate to
-// a tile. Each row is stored sequentially (so 0..20, 21..40, etc.). This takes an x/y and returns
-// the array index.
-pub fn xy_idx(x: i32, y: i32) -> usize {
-    (y as usize * 20) + x as usize
-}
-
-// It's a great idea to have a reverse mapping for these coordinates. This is as simple as
-// index % 20 (mod 20), and index / 20
-pub fn idx_xy(idx: usize) -> (i32, i32) {
-    (idx as i32 % 20, idx as i32 / 20)
-}
-
 //aka Chebyshev
 pub fn distance2d_chessboard(sx: i32, sy: i32, tx: i32, ty: i32) -> i32 {
     return max((sy-sx).abs(), (ty-tx).abs());
