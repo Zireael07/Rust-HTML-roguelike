@@ -36,7 +36,8 @@ mod astar;
 use astar::*;
 mod utils;
 use utils::*;
-
+mod map_builders;
+use map_builders::*;
 
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
@@ -276,7 +277,7 @@ impl Universe {
         state.player_position = state.map.xy_idx(1,1);
 
         //mapgen
-        state.map = Map::build_map();
+        state.map = map_builders::build_noise_map();
 
         //build FOV cache
         for (idx, tile) in state.map.tiles.iter().enumerate() {
