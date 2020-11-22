@@ -5,7 +5,7 @@ use super::fastnoise::*;
 pub struct NoiseMapBuilder {}
 
 impl MapBuilder for NoiseMapBuilder {
-    fn build() -> Map {
+    fn build_map(&mut self) -> Map {
         let mut map = Map::new(20,20);
         NoiseMapBuilder::noise_build(&mut map);
         map

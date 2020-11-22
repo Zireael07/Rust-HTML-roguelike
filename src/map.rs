@@ -11,7 +11,7 @@ pub enum Cell {
     Wall = 1,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Map {
     pub tiles: Vec<u8>, //Vec<u8> can be passed by wasm_bindgen
     pub width: u32,

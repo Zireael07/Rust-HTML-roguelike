@@ -36,6 +36,8 @@ mod astar;
 use astar::*;
 mod utils;
 use utils::*;
+mod rect;
+use rect::*;
 mod map_builders;
 use map_builders::*;
 
@@ -274,10 +276,13 @@ impl Universe {
             ecs_world: World::new(),
         };
     
-        state.player_position = state.map.xy_idx(1,1);
+        state.player_position = state.map.xy_idx(3,1);
 
         //mapgen
-        state.map = map_builders::build_noise_map();
+        let mut builder = map_builders::random_builder();
+        state.map = builder.build_map();
+        //state.map = map_builders::build_noise_map();
+
 
         //build FOV cache
         for (idx, tile) in state.map.tiles.iter().enumerate() {
