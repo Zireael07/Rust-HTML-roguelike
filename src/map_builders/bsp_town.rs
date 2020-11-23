@@ -1,65 +1,64 @@
-use super::{MapBuilder, Map, Cell, Rect};
+use super::{InitialMapBuilder, BuilderMap, Map, Cell, Rect};
 //RNG
 use rand::Rng;
 
 const MIN_ROOM_SIZE : i32 = 6; //8
 
 pub struct BSPTownBuilder {
-    map: Map,
+    //map: Map,
     rooms: Vec<Rect>,
     rects: Vec<Rect>
 }
 
-impl MapBuilder for BSPTownBuilder {
+impl InitialMapBuilder for BSPTownBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self) -> Map {
-        let map = self.build();
-        map
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
+        self.build(build_data);
     }
 }
 
 impl BSPTownBuilder {
     #[allow(dead_code)]
-    pub fn new() -> BSPTownBuilder {
-        BSPTownBuilder{
-            map : Map::new(20,20),
+    pub fn new() -> Box<BSPTownBuilder> {
+        Box::new(BSPTownBuilder{
+            //map : Map::new(20,20),
             rooms: Vec::new(),
             rects: Vec::new()
-        }
+        })
     }
 
-    fn build(&mut self) -> Map {
+    fn build(&mut self, build_data : &mut BuilderMap) {
         let mut rooms : Vec<Rect> = Vec::new();
 
         //fill with floors
-        for y in 1..self.map.height-1 {
-            for x in 1..self.map.width-1 {
-                let idx = self.map.xy_idx(x as i32, y as i32);
-                self.map.tiles[idx] = Cell::Floor as u8;
+        for y in 1..build_data.map.height-1 {
+            for x in 1..build_data.map.width-1 {
+                let idx = build_data.map.xy_idx(x as i32, y as i32);
+                build_data.map.tiles[idx] = Cell::Floor as u8;
             }
         }
 
 
         //place walls around
         //Rust is weird, ranges are inclusive at the beginning but exclusive at the end
-        for x in 0 ..self.map.width{
-            let mut idx = self.map.xy_idx(x as i32, 0);
-            self.map.tiles[idx] = Cell::Wall as u8;
-            idx = self.map.xy_idx(x as i32, self.map.height as i32-1);
-            self.map.tiles[idx] = Cell::Wall as u8;
+        for x in 0 ..build_data.map.width{
+            let mut idx = build_data.map.xy_idx(x as i32, 0);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
+            idx = build_data.map.xy_idx(x as i32, build_data.map.height as i32-1);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
         }
-        for y in 0 ..self.map.height{
-            let mut idx = self.map.xy_idx(0, y as i32);
-            self.map.tiles[idx] = Cell::Wall as u8;
-            idx = self.map.xy_idx(self.map.width as i32-1, y as i32);
-            self.map.tiles[idx] = Cell::Wall as u8;
+        for y in 0 ..build_data.map.height{
+            let mut idx = build_data.map.xy_idx(0, y as i32);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
+            idx = build_data.map.xy_idx(build_data.map.width as i32-1, y as i32);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
         }
 
         //self.take_snapshot();
 
         //BSP now
         self.rects.clear();
-        self.rects.push( Rect::new(1, 1, self.map.width as i32-2, self.map.height as i32-2) ); // Start with a single map-sized rectangle
+        self.rects.push( Rect::new(1, 1, build_data.map.width as i32-2, build_data.map.height as i32-2) ); // Start with a single map-sized rectangle
         let first_room = self.rects[0];
         self.add_subrects(first_room); // Divide the first room
 
@@ -76,7 +75,7 @@ impl BSPTownBuilder {
                 let candidate = self.get_random_sub_rect(rect);
                 //console::log(format!("rect candidate: {:?}", candidate));
 
-                if self.is_possible(candidate, &rooms) {
+                if self.is_possible(candidate, &build_data, &rooms) {
                     rooms.push(candidate);
                     self.add_subrects(rect);
                     //buildings added further on
@@ -95,9 +94,9 @@ impl BSPTownBuilder {
             //rooms.push(room);
             for y in room.y1 .. room.y2 {
                 for x in room.x1 .. room.x2 {
-                    let idx = self.map.xy_idx(x, y);
-                    if idx > 0 && idx < ((self.map.width * self.map.height)-1) as usize {
-                        self.map.tiles[idx] = Cell::Wall as u8;
+                    let idx = build_data.map.xy_idx(x, y);
+                    if idx > 0 && idx < ((build_data.map.width * build_data.map.height)-1) as usize {
+                        build_data.map.tiles[idx] = Cell::Wall as u8;
                     }
                 }
             }
@@ -105,15 +104,15 @@ impl BSPTownBuilder {
 
             for y in room.y1+1 .. room.y2-1 {
                 for x in room.x1+1 .. room.x2-1 {
-                    let idx = self.map.xy_idx(x, y);
-                    if idx > 0 && idx < ((self.map.width * self.map.height)-1) as usize {
-                        self.map.tiles[idx] = Cell::Floor as u8;
+                    let idx = build_data.map.xy_idx(x, y);
+                    if idx > 0 && idx < ((build_data.map.width * build_data.map.height)-1) as usize {
+                        build_data.map.tiles[idx] = Cell::Floor as u8;
                     }
                 }
             }
             //self.take_snapshot();
         }
-        self.map.clone()
+        //self.map.clone()
     }
 
     //taken from BSP dungeon...
@@ -166,7 +165,7 @@ impl BSPTownBuilder {
         result
     }
 
-    fn is_possible(&self, rect : Rect, rooms: &Vec<Rect>) -> bool {
+    fn is_possible(&self, rect : Rect, build_data : &BuilderMap, rooms: &Vec<Rect>) -> bool {
         //expanding prevents overlapping rooms
         let mut expanded = rect;
         expanded.x1 -= 2;
@@ -185,13 +184,13 @@ impl BSPTownBuilder {
 
         for y in expanded.y1 ..= expanded.y2 {
             for x in expanded.x1 ..= expanded.x2 {
-                if x > self.map.width as i32-2 { can_build = false; }
-                if y > self.map.height as i32-2 { can_build = false; }
+                if x > build_data.map.width as i32-2 { can_build = false; }
+                if y > build_data.map.height as i32-2 { can_build = false; }
                 if x < 1 { can_build = false; }
                 if y < 1 { can_build = false; }
                 if can_build {
-                    let idx = self.map.xy_idx(x, y);
-                    if self.map.tiles[idx] != Cell::Floor as u8 { //key change
+                    let idx = build_data.map.xy_idx(x, y);
+                    if build_data.map.tiles[idx] != Cell::Floor as u8 { //key change
                         //console::log(&format!("Candidate {:?} failed the tile check!", rect));
                         can_build = false; 
                     }

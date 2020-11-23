@@ -1,19 +1,23 @@
 
-use super::{MapBuilder, Map, Cell};
+use super::{InitialMapBuilder, BuilderMap, Map, Cell};
 use super::fastnoise::*;
 
 pub struct NoiseMapBuilder {}
 
-impl MapBuilder for NoiseMapBuilder {
-    fn build_map(&mut self) -> Map {
-        let mut map = Map::new(20,20);
-        NoiseMapBuilder::noise_build(&mut map);
-        map
+impl InitialMapBuilder for NoiseMapBuilder {
+    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+        //let mut map = Map::new(20,20);
+        self.noise_build(build_data);
     }
 }
 
 impl NoiseMapBuilder {
-    fn noise_build(map: &mut Map) {
+    #[allow(dead_code)]
+    pub fn new() -> Box<NoiseMapBuilder> {
+        Box::new(NoiseMapBuilder{})
+    }
+
+    fn noise_build(&mut self, build_data : &mut BuilderMap) {
         //noise
         //generate noise
         let mut rng = rand::thread_rng();
@@ -27,14 +31,14 @@ impl NoiseMapBuilder {
         //noise.set_frequency(0.085);
         noise.set_frequency(0.45);
 
-        for x in 0..20 {
-            for y in 0..20 {
+        for x in 0..build_data.map.width-1 {
+            for y in 0..build_data.map.height-1 {
                 let mut n = noise.get_noise(x as f32, y as f32);
                 n = n*-255 as f32; //because defaults are vanishingly small
                 //log!("{}", &format!("Noise: x{}y{} {}", x, y, n));
                 if n > 125.0 || n < -125.0 {
-                    let idx = map.xy_idx(x,y);
-                    map.tiles[idx] = Cell::Wall as u8;
+                    let idx = build_data.map.xy_idx(x as i32,y as i32);
+                    build_data.map.tiles[idx] = Cell::Wall as u8;
                 } else {
                     //state.tiles[xy_idx(x,y)] = Cell:Floor as u8
                 }
@@ -45,17 +49,17 @@ impl NoiseMapBuilder {
 
 
         // Make the boundaries walls
-        for x in 0..20 {
-            let mut idx = map.xy_idx(x, 0);
-            map.tiles[idx] = Cell::Wall as u8;
-            idx = map.xy_idx(x, 19);
-            map.tiles[idx] = Cell::Wall as u8;
+        for x in 0..build_data.map.width-1 {
+            let mut idx = build_data.map.xy_idx(x as i32, 0);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
+            idx = build_data.map.xy_idx(x as i32, 19);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
         }
-        for y in 0..20 {
-            let mut idx = map.xy_idx(0, y); 
-            map.tiles[idx] = Cell::Wall as u8;
-            idx = map.xy_idx(19, y);
-            map.tiles[idx] = Cell::Wall as u8;
+        for y in 0..build_data.map.height-1 {
+            let mut idx = build_data.map.xy_idx(0, y as i32); 
+            build_data.map.tiles[idx] = Cell::Wall as u8;
+            idx = build_data.map.xy_idx(19, y as i32);
+            build_data.map.tiles[idx] = Cell::Wall as u8;
         }
 
         //map

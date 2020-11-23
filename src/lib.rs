@@ -280,7 +280,8 @@ impl Universe {
 
         //mapgen
         let mut builder = map_builders::random_builder();
-        state.map = builder.build_map();
+        builder.build_map();
+        state.map = builder.build_data.map.clone();
         //state.map = map_builders::build_noise_map();
 
 
