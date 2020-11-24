@@ -82,5 +82,6 @@ pub fn random_builder(width: i32, height: i32) -> BuilderChain {
     //builder.start_with(BSPTownBuilder::new());
     builder.start_with(NoiseMapBuilder::new());
     builder.with(RectBuilder::new());
+    builder.with(BSPTownBuilder::new());
     builder
 }

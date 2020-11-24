@@ -1,4 +1,4 @@
-use super::{InitialMapBuilder, BuilderMap, Map, Cell, Rect};
+use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, Map, Cell, Rect};
 //RNG
 use rand::Rng;
 
@@ -17,6 +17,21 @@ impl InitialMapBuilder for BSPTownBuilder {
     }
 }
 
+impl MetaMapBuilder for BSPTownBuilder {
+    #[allow(dead_code)]
+    fn build_map(&mut self, build_data : &mut BuilderMap) {
+        //meta version panics if no submaps
+        let submaps : Vec<Rect>;
+        if let Some(submaps_builder) = &build_data.submaps {
+            submaps = submaps_builder.clone();
+        } else {
+            panic!("Using BSP town as meta requires a builder with submap structures");
+        }
+
+        self.build(build_data);
+    }
+}
+
 impl BSPTownBuilder {
     #[allow(dead_code)]
     pub fn new() -> Box<BSPTownBuilder> {
@@ -30,9 +45,28 @@ impl BSPTownBuilder {
     fn build(&mut self, build_data : &mut BuilderMap) {
         let mut rooms : Vec<Rect> = Vec::new();
 
+        //we work with submap bounds if we have them, else we work with the whole map
+        let mut submaps : Vec<Rect> = Vec::new();
+        if let Some(submaps_builder) = &build_data.submaps {
+            submaps = submaps_builder.clone();
+        }
+
+        let mut sx = 1;
+        let mut sy = 1;
+        let mut endx = build_data.map.width as i32-1;
+        let mut endy = build_data.map.height as i32-1;
+
+        if submaps.len() > 0{
+            sx = submaps[0].x1;
+            sy = submaps[0].y1;
+            endx = submaps[0].x2;
+            endy = submaps[0].y2;
+
+        }
+
         //fill with floors
-        for y in 1..build_data.map.height-1 {
-            for x in 1..build_data.map.width-1 {
+        for y in sy..endy {
+            for x in sx..endx {
                 let idx = build_data.map.xy_idx(x as i32, y as i32);
                 build_data.map.tiles[idx] = Cell::Floor as u8;
             }
@@ -41,18 +75,18 @@ impl BSPTownBuilder {
 
         //place walls around
         //Rust is weird, ranges are inclusive at the beginning but exclusive at the end
-        for x in 0 ..build_data.map.width{
-            let mut idx = build_data.map.xy_idx(x as i32, 0);
-            build_data.map.tiles[idx] = Cell::Wall as u8;
-            idx = build_data.map.xy_idx(x as i32, build_data.map.height as i32-1);
-            build_data.map.tiles[idx] = Cell::Wall as u8;
-        }
-        for y in 0 ..build_data.map.height{
-            let mut idx = build_data.map.xy_idx(0, y as i32);
-            build_data.map.tiles[idx] = Cell::Wall as u8;
-            idx = build_data.map.xy_idx(build_data.map.width as i32-1, y as i32);
-            build_data.map.tiles[idx] = Cell::Wall as u8;
-        }
+        // for x in 0 ..build_data.map.width{
+        //     let mut idx = build_data.map.xy_idx(x as i32, 0);
+        //     build_data.map.tiles[idx] = Cell::Wall as u8;
+        //     idx = build_data.map.xy_idx(x as i32, build_data.map.height as i32-1);
+        //     build_data.map.tiles[idx] = Cell::Wall as u8;
+        // }
+        // for y in 0 ..build_data.map.height{
+        //     let mut idx = build_data.map.xy_idx(0, y as i32);
+        //     build_data.map.tiles[idx] = Cell::Wall as u8;
+        //     idx = build_data.map.xy_idx(build_data.map.width as i32-1, y as i32);
+        //     build_data.map.tiles[idx] = Cell::Wall as u8;
+        // }
 
         //self.take_snapshot();
 
@@ -111,8 +145,30 @@ impl BSPTownBuilder {
                 }
             }
             //self.take_snapshot();
+
+            //build doors
+            let cent = room.center();
+            let mut rng = rand::thread_rng();
+            let door_direction = rng.gen_range(1, 4);
+            match door_direction {
+                1 => { 
+                    let idx = build_data.map.xy_idx(cent.0, room.y1); //north
+                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                }
+                2 => { 
+                    let idx = build_data.map.xy_idx(cent.0, room.y2-1); //south
+                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                }
+                3 => { 
+                    let idx = build_data.map.xy_idx(room.x1, cent.1); //west
+                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                }
+                _ => { 
+                    let idx = build_data.map.xy_idx(room.x2-1, cent.1); //east
+                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                }
+            }
         }
-        //self.map.clone()
     }
 
     //taken from BSP dungeon...
@@ -147,16 +203,17 @@ impl BSPTownBuilder {
         //let h = i32::max(3, rng.roll_dice(1, i32::min(rect_height, 10))-1) + 1;
         let mut rng = rand::thread_rng();
         
-        let w = rng.gen_range(4,6);
-        let h = rng.gen_range(4,6);
+        //let w = rng.gen_range(4,6);
+        //let h = rng.gen_range(4,6);
         
-        //let w = rng.gen_range(6,12);
-        //let h = rng.gen_range(6,12);
+        let w = rng.gen_range(6,10);
+        let h = rng.gen_range(6,10);
         //let w = rng.roll_dice(2,4)+4;
         //let h = rng.roll_dice(2,4)+4;
 
-        result.x1 += rng.gen_range(2,4); //8
-        result.y1 += rng.gen_range(2,4);
+        //offset
+        result.x1 += rng.gen_range(1,3); //8
+        result.y1 += rng.gen_range(1,3);
         //result.x1 += rng.roll_dice(2, 4);
         //result.y1 += rng.roll_dice(2, 4);
         result.x2 = result.x1 + w;
