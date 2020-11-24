@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 pub enum Cell {
     Floor = 0,
     Wall = 1,
+    Grass = 2,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -61,7 +62,8 @@ impl Map {
 
     pub fn is_tile_walkable(&self, x:i32, y:i32) -> bool {
         let idx = (y * self.width as i32) + x;
-        return self.tiles[idx as usize] == Cell::Floor as u8;
+        let walkables = vec![Cell::Floor as u8, Cell::Grass as u8];
+        return walkables.contains(&self.tiles[idx as usize]);
     }
 
     pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {

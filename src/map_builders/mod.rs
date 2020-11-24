@@ -7,9 +7,13 @@ use noise_map::NoiseMapBuilder;
 mod bsp_town;
 use bsp_town::BSPTownBuilder;
 
+mod rectangle_builder;
+use rectangle_builder::RectBuilder;
+
 
 pub struct BuilderMap {
     pub map : Map,
+    pub submaps: Option<Vec<Rect>>,
 }
 
 pub struct BuilderChain {
@@ -25,6 +29,7 @@ impl BuilderChain {
             builders: Vec::new(),
             build_data : BuilderMap {
                 map: Map::new(width as u32, height as u32),
+                submaps: None,
             }
         }
     }
@@ -76,5 +81,6 @@ pub fn random_builder(width: i32, height: i32) -> BuilderChain {
     let mut builder = BuilderChain::new(width, height);
     //builder.start_with(BSPTownBuilder::new());
     builder.start_with(NoiseMapBuilder::new());
+    builder.with(RectBuilder::new());
     builder
 }

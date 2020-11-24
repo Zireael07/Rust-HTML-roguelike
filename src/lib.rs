@@ -387,7 +387,7 @@ impl Universe {
         let current_position = self.map.idx_xy(self.player_position);
         let new_position = (current_position.0 + delta_x, current_position.1 + delta_y);
         let new_idx = self.map.xy_idx(new_position.0, new_position.1);
-        if self.map.tiles[new_idx] == Cell::Floor as u8 {
+        if self.map.is_tile_walkable(new_position.0, new_position.1) {
             let blocker = self.blocking_creatures_at(new_position.0 as usize, new_position.1 as usize);
 
             match blocker {
