@@ -269,21 +269,22 @@ pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize)
 impl Universe {
     pub fn new() -> Universe {
         let mut state = Universe{
-            map: Map::new(20,20), //{width:20, height:20},
+            map: Map::new(2,2), //dummy
             player_position: 0, //dummy
             fov: FovRecursiveShadowCasting::new(),
-            fov_data: MapData::new(20,20),
+            fov_data: MapData::new(2,2), //dummy
             ecs_world: World::new(),
         };
     
         state.player_position = state.map.xy_idx(3,1);
 
         //mapgen
-        let mut builder = map_builders::random_builder();
+        let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
         state.map = builder.build_data.map.clone();
         //state.map = map_builders::build_noise_map();
 
+        state.fov_data = MapData::new(80,60);
 
         //build FOV cache
         for (idx, tile) in state.map.tiles.iter().enumerate() {

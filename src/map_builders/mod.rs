@@ -19,12 +19,12 @@ pub struct BuilderChain {
 }
 
 impl BuilderChain {
-    pub fn new() -> BuilderChain {
+    pub fn new(width: i32, height: i32) -> BuilderChain {
         BuilderChain{
             starter: None,
             builders: Vec::new(),
             build_data : BuilderMap {
-                map: Map::new(20,20),
+                map: Map::new(width as u32, height as u32),
             }
         }
     }
@@ -72,8 +72,9 @@ pub trait MetaMapBuilder {
 }
 
 //Factory function for builder
-pub fn random_builder() -> BuilderChain {
-    let mut builder = BuilderChain::new();
-    builder.start_with(BSPTownBuilder::new());
+pub fn random_builder(width: i32, height: i32) -> BuilderChain {
+    let mut builder = BuilderChain::new(width, height);
+    //builder.start_with(BSPTownBuilder::new());
+    builder.start_with(NoiseMapBuilder::new());
     builder
 }

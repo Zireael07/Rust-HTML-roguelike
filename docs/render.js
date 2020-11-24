@@ -2,7 +2,7 @@
 import * as rust from './rust_web_roguelike.js';
 
 var term, eng, inventoryOverlay; // Can't be initialized yet because DOM is not ready
-var universe, g_wasm, map, player, entities_mem; // Can't be initialized yet because WASM is not ready
+var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
@@ -17,14 +17,14 @@ var FLOOR = new ut.Tile('.', 50, 50, 50);
 
 //JS stub logic starts here
 
-//absolutely needs to match Rust logic in utils.rs!!!
+//absolutely needs to match Rust logic in map.rs!!!
 const getIndex = (x, y) => {
-    return y * 20 + x;
+    return y * w + x;
 };
 
 //inverse of the above
 const getPos = (ind) => {
-    return [ind % 20, ind / 20];
+    return [ind % w, ind / w];
 }
 
 //wrappers for Rust functions
@@ -250,11 +250,14 @@ function initRenderer(wasm) {
     player = universe.player();
     g_wasm = wasm;
 
+    w = universe.width();
+    h = universe.height();
+
     window.setInterval(tick, 50); // Animation
 	// Initialize Viewport, i.e. the place where the characters are displayed
 	term = new ut.Viewport(document.getElementById("game"), 40, 25, "dom");
 	// Initialize Engine, i.e. the Tile manager
-    eng = new ut.Engine(term, getRenderTile, 20, 20);
+    eng = new ut.Engine(term, getRenderTile, w, h); //w,h
     //use fov
     eng.setMaskFunc(shouldDraw);
 

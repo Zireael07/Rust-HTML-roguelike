@@ -52,13 +52,13 @@ impl NoiseMapBuilder {
         for x in 0..build_data.map.width-1 {
             let mut idx = build_data.map.xy_idx(x as i32, 0);
             build_data.map.tiles[idx] = Cell::Wall as u8;
-            idx = build_data.map.xy_idx(x as i32, 19);
+            idx = build_data.map.xy_idx(x as i32, build_data.map.height as i32-1);
             build_data.map.tiles[idx] = Cell::Wall as u8;
         }
         for y in 0..build_data.map.height-1 {
             let mut idx = build_data.map.xy_idx(0, y as i32); 
             build_data.map.tiles[idx] = Cell::Wall as u8;
-            idx = build_data.map.xy_idx(19, y as i32);
+            idx = build_data.map.xy_idx(build_data.map.width as i32-1, y as i32);
             build_data.map.tiles[idx] = Cell::Wall as u8;
         }
 
