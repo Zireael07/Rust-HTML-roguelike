@@ -214,7 +214,7 @@ function handleError(e) {
 }
 /**
 */
-export const Cell = Object.freeze({ Floor:0,Wall:1, });
+export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2, });
 /**
 */
 export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2, });
