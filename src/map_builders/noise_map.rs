@@ -1,6 +1,7 @@
 
 use super::{InitialMapBuilder, BuilderMap, Map, Cell};
 use super::fastnoise::*;
+use super::log; //macro
 
 pub struct NoiseMapBuilder {}
 

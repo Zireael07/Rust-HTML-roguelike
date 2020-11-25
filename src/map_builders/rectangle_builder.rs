@@ -1,4 +1,5 @@
 use super::{MetaMapBuilder, BuilderMap, Cell, Rect};
+use super::log; //macro
 
 pub struct RectBuilder {}
 
@@ -142,7 +143,7 @@ impl RectBuilder {
                 stack.push(i);
             }
         }
-        //console::log(&format!("x {:?} y {:?} h {:?} w {:?}  = area: {:?} ", answer.3, answer.4, answer.1, answer.2, answer.0));
+        //log!("{}", &format!("x {:?} y {:?} h {:?} w {:?}  = area: {:?} ", answer.3, answer.4, answer.1, answer.2, answer.0));
         answer
     }
 

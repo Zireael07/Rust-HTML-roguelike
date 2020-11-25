@@ -1,5 +1,6 @@
 use super::{Map, Cell, Rect};
 use super::fastnoise;
+use super::log;
 
 mod noise_map;
 use noise_map::NoiseMapBuilder;

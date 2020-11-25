@@ -1,4 +1,5 @@
 use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, Map, Cell, Rect};
+use super::log; //macro
 //RNG
 use rand::Rng;
 
@@ -107,7 +108,7 @@ impl BSPTownBuilder {
             let rect_height = i32::abs(rect.y1 - rect.y2);
             if rect_width > MIN_ROOM_SIZE && rect_height > MIN_ROOM_SIZE { 
                 let candidate = self.get_random_sub_rect(rect);
-                //console::log(format!("rect candidate: {:?}", candidate));
+                //log!("{}", format!("rect candidate: {:?}", candidate));
 
                 if self.is_possible(candidate, &build_data, &rooms) {
                     rooms.push(candidate);
