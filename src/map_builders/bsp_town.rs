@@ -93,7 +93,7 @@ impl BSPTownBuilder {
 
         //BSP now
         self.rects.clear();
-        self.rects.push( Rect::new(1, 1, build_data.map.width as i32-2, build_data.map.height as i32-2) ); // Start with a single map-sized rectangle
+        self.rects.push( Rect::new(sx, sy, endx-1, endy-1) ); // Start with a single (sub)map-sized rectangle
         let first_room = self.rects[0];
         self.add_subrects(first_room); // Divide the first room
 

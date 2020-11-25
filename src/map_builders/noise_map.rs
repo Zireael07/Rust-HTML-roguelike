@@ -43,11 +43,14 @@ impl NoiseMapBuilder {
         for x in 0..build_data.map.width-1 {
             for y in 0..build_data.map.height-1 {
                 let mut n = noise.get_noise(x as f32, y as f32);
-                n = n*-255 as f32; //because defaults are vanishingly small
+                n = n*255 as f32; //because defaults are vanishingly small
                 //log!("{}", &format!("Noise: x{}y{} {}", x, y, n));
                 let idx = build_data.map.xy_idx(x as i32,y as i32);
-                if n > 125.0 || n < -125.0 {
-                    build_data.map.tiles[idx] = Cell::Wall as u8;
+                // range from -255 to +255
+                //for small map
+                //if n > 125.0 || n < -125.0 {
+                if n > 140.0 {    
+                    build_data.map.tiles[idx] = Cell::Tree as u8;
                 } else {
                     build_data.map.tiles[idx] = Cell::Grass as u8;
                 }

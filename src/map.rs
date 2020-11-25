@@ -10,6 +10,7 @@ pub enum Cell {
     Floor = 0,
     Wall = 1,
     Grass = 2,
+    Tree = 3,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
