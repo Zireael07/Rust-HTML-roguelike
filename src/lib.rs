@@ -277,13 +277,21 @@ impl Universe {
             ecs_world: World::new(),
         };
     
-        state.player_position = state.map.xy_idx(3,1);
+        state.player_position = state.map.xy_idx(1,1); //default
 
         //mapgen
         let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
         state.map = builder.build_data.map.clone();
-        //state.map = map_builders::build_noise_map();
+
+        //spawn
+        match builder.build_data.starting_position {
+            None => {},
+            Some(point) => {
+                state.player_position = state.map.xy_idx(point.x, point.y);
+            }
+        }
+
 
         state.fov_data = MapData::new(80,60);
 
@@ -295,7 +303,7 @@ impl Universe {
         }
     
         state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
-        state.fov.compute_fov(&mut state.fov_data, 1, 1, 6, true);
+        state.fov.compute_fov(&mut state.fov_data, state.map.idx_xy(state.player_position).0 as usize, state.map.idx_xy(state.player_position).1 as usize, 6, true);
         //reveal tiles
         for (idx, b) in state.fov_data.fov.iter().enumerate() {
             if *b {

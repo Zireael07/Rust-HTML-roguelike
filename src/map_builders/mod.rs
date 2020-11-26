@@ -1,4 +1,4 @@
-use super::{Map, Cell, Rect};
+use super::{Map, Cell, Rect, Point};
 use super::fastnoise;
 use super::log;
 
@@ -15,6 +15,7 @@ use rectangle_builder::RectBuilder;
 pub struct BuilderMap {
     pub map : Map,
     pub submaps: Option<Vec<Rect>>,
+    pub starting_position : Option<Point>,
 }
 
 pub struct BuilderChain {
@@ -31,6 +32,7 @@ impl BuilderChain {
             build_data : BuilderMap {
                 map: Map::new(width as u32, height as u32),
                 submaps: None,
+                starting_position: None,
             }
         }
     }

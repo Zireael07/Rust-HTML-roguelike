@@ -1,4 +1,4 @@
-use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, Map, Cell, Rect};
+use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, Map, Cell, Rect, Point};
 use super::log; //macro
 //RNG
 use rand::Rng;
@@ -31,6 +31,13 @@ impl MetaMapBuilder for BSPTownBuilder {
 
         self.build(build_data);
     }
+}
+
+#[derive(Debug)]
+enum BuildingTag {
+    Pub,
+    Hovel,
+    Unassigned,
 }
 
 impl BSPTownBuilder {
@@ -141,7 +148,7 @@ impl BSPTownBuilder {
                 for x in room.x1+1 .. room.x2-1 {
                     let idx = build_data.map.xy_idx(x, y);
                     if idx > 0 && idx < ((build_data.map.width * build_data.map.height)-1) as usize {
-                        build_data.map.tiles[idx] = Cell::Floor as u8;
+                        build_data.map.tiles[idx] = Cell::FloorIndoor as u8;
                     }
                 }
             }
@@ -169,8 +176,62 @@ impl BSPTownBuilder {
                     build_data.map.tiles[idx] = Cell::Floor as u8;
                 }
             }
+            //build_data.take_snapshot();
+        }
+
+        let building_size = self.sort_buildings(&rooms_copy);
+        log!("{}", &format!("Buildings sorted: {:?}", building_size));
+        self.building_factory(build_data, &rooms_copy, &building_size);
+    }
+
+    fn sort_buildings(&mut self, buildings: &Vec<Rect>) -> Vec<(usize, i32, BuildingTag)> 
+    {
+        let mut building_size : Vec<(usize, i32, BuildingTag)> = Vec::new();
+        for (i,building) in buildings.iter().enumerate() {
+            let rect_width = i32::abs(building.x1 - building.x2);
+            let rect_height = i32::abs(building.y1 - building.y2);
+            building_size.push((
+                i,
+                rect_height * rect_width,
+                BuildingTag::Unassigned
+            ));
+        }
+        building_size.sort_by(|a,b| b.1.cmp(&a.1));
+        building_size[0].2 = BuildingTag::Pub;
+        for b in building_size.iter_mut().skip(1) {
+            b.2 = BuildingTag::Hovel;
+        }
+
+        building_size
+    }
+
+    fn building_factory(&mut self, 
+        build_data : &mut BuilderMap, 
+        buildings: &Vec<Rect>, 
+        building_index : &[(usize, i32, BuildingTag)]) 
+    {
+        for (i,building) in buildings.iter().enumerate() {
+            let build_type = &building_index[i].2;
+            match build_type {
+                BuildingTag::Pub => self.build_pub(&building, build_data),
+                _ => {}
+            }
         }
     }
+
+    fn build_pub(&mut self, building: &Rect, build_data : &mut BuilderMap) 
+    {
+        // Place the player
+        let cent = building.center();
+        build_data.starting_position = Some(Point{
+            x : cent.0,
+            y : cent.1
+        });
+        let player_idx = build_data.map.xy_idx(cent.0, cent.1);
+    
+        // TODO: Place other items
+    }
+
 
     //taken from BSP dungeon...
     //BSP subdivision happens here
