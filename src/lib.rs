@@ -327,6 +327,10 @@ impl Universe {
         state
     }
 
+    pub fn on_game_start(&self) {
+        game_message(&format!("{{cWelcome to Neon Twilight!"));
+    }
+
     pub fn width(&self) -> u32 {
         self.map.width
     }

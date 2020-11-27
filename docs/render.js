@@ -270,7 +270,10 @@ function initRenderer(wasm) {
     inventoryOverlay = createInventoryOverlay();
 
 	// Initialize input
-	ut.initInput(onKeyDown);
+    ut.initInput(onKeyDown);
+    
+    //handle post-start
+    universe.on_game_start();
 }
 
 export { initRenderer }
