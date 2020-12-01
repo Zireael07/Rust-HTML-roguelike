@@ -14,7 +14,8 @@ var MED = new ut.Tile("!", 255, 0, 0);
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
 var GRASS = new ut.Tile(',', 0, 255, 0);
-
+var TREE = new ut.Tile('♣', 0, 153, 0);
+var FLOOR_INDOOR = new ut.Tile('.', 0, 128, 128);
 
 //JS stub logic starts here
 
@@ -58,6 +59,8 @@ function getDungeonTile(x, y) {
     if (v == 0 ) { return FLOOR };
     if (v == 1 ) { return WALL };
     if (v == 2 ) { return GRASS };
+    if (v == 3 ) { return TREE };
+    if (v == 4 ) { return FLOOR_INDOOR};
   	
 	if (t === '#') return WALL;
 	if (t === '.') return FLOOR;
@@ -267,7 +270,10 @@ function initRenderer(wasm) {
     inventoryOverlay = createInventoryOverlay();
 
 	// Initialize input
-	ut.initInput(onKeyDown);
+    ut.initInput(onKeyDown);
+    
+    //handle post-start
+    universe.on_game_start();
 }
 
 export { initRenderer }

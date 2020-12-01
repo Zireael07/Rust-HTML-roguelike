@@ -214,7 +214,7 @@ function handleError(e) {
 }
 /**
 */
-export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2, });
+export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4, });
 /**
 */
 export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2, });
@@ -244,6 +244,11 @@ export class Universe {
     static new() {
         var ret = wasm.universe_new();
         return Universe.__wrap(ret);
+    }
+    /**
+    */
+    on_game_start() {
+        wasm.universe_on_game_start(this.ptr);
     }
     /**
     * @returns {number}
