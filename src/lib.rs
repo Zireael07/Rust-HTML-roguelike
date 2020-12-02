@@ -915,26 +915,30 @@ impl Universe {
                 }
                 
             } else {
-                let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
-                // move or attack            
-                if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
-                    game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
-                    //get player entity
-                    let mut play: Option<Entity> = None;
-                    for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
-                        play = Some(id);
+                //can we see the player? (assumes symmetric FOV)
+                if self.is_visible(point.x as usize, point.y as usize) {
+                    let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
+                    // move or attack            
+                    if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+                        game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<&str>(id).unwrap().to_string()));
+                        //get player entity
+                        let mut play: Option<Entity> = None;
+                        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+                            play = Some(id);
+                        }
+                        match play {
+                            Some(entity) => self.attack(&entity),
+                            None => {},
+                        }
+    
+                    } else {
+                        //actually move
+                        point.x = new_pos.0 as i32;
+                        point.y = new_pos.1 as i32;
+                        //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
                     }
-                    match play {
-                        Some(entity) => self.attack(&entity),
-                        None => {},
-                    }
-
-                } else {
-                    //actually move
-                    point.x = new_pos.0 as i32;
-                    point.y = new_pos.1 as i32;
-                    //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
                 }
+               
             }
 
         }
