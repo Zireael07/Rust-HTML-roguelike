@@ -123,6 +123,7 @@ pub enum Renderable {
     Thug = 0,
     Knife = 1,
     Medkit = 2,
+    Barkeep = 3,
 }
 
 //for ECS
@@ -137,6 +138,17 @@ pub struct CombatStats {
     pub defense : i32,
     pub power : i32
 }
+
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
+pub enum FactionType { Enemy, Townsfolk }
+
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct Faction {
+    pub typ: FactionType
+}
+
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Item{}
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -212,6 +224,7 @@ pub struct SaveData {
     player: Option<Player>,
     ai: Option<AI>,
     combat: Option<CombatStats>,
+    faction: Option<Faction>,
     item: Option<Item>,
     backpack: Option<InBackpack>,
     consumable: Option<Consumable>,
@@ -316,9 +329,10 @@ impl Universe {
         let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
 
         //spawn entities
-        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
 
         //debug
         log!("We have a universe");
@@ -405,9 +419,15 @@ impl Universe {
 
             match blocker {
                 Some(entity) => { 
-                    //this assumes the blocker has a name!
-                    game_message(&format!("{{gPlayer kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
-                    self.attack(&entity);
+                    let fact = self.ecs_world.get::<Faction>(entity).unwrap().typ;
+                    if fact == FactionType::Enemy {
+                            //this assumes the blocker has a name!
+                            game_message(&format!("{{gPlayer kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
+                            self.attack(&entity);
+                    } else if fact == FactionType::Townsfolk {
+                            game_message(&format!("The man says hi"));
+                    }
+
                     //enemy turn
                     self.get_AI();
                     self.remove_dead();
@@ -532,6 +552,7 @@ impl Universe {
                 name: self.ecs_world.get::<String>(e).unwrap().to_string(),
                 player: None,
                 ai: None,
+                faction: None,
                 combat: None,
                 item: None,
                 backpack: None,
@@ -562,6 +583,9 @@ impl Universe {
             }
             if self.ecs_world.get::<AI>(e).is_ok(){
                 saved.ai = Some(*self.ecs_world.get::<AI>(e).unwrap());
+            }
+            if self.ecs_world.get::<Faction>(e).is_ok(){
+                saved.faction = Some(*self.ecs_world.get::<Faction>(e).unwrap());
             }
             if self.ecs_world.get::<CombatStats>(e).is_ok(){
                 saved.combat = Some(*self.ecs_world.get::<CombatStats>(e).unwrap());
@@ -643,6 +667,9 @@ impl Universe {
                 }
                 if e.ai.is_some(){
                     builder.add(e.ai.unwrap());
+                }
+                if e.faction.is_some() {
+                    builder.add(e.faction.unwrap());
                 }
                 if e.combat.is_some(){
                     builder.add(e.combat.unwrap());
