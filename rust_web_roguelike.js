@@ -214,13 +214,13 @@ function handleError(e) {
 }
 /**
 */
-export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4, });
-/**
-*/
-export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2, });
+export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2,Barkeep:3, });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5,SaveGame:6, });
+/**
+*/
+export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4, });
 /**
 */
 export class Universe {
@@ -423,9 +423,6 @@ function init(module) {
     imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
         takeObject(arg0);
     };
-    imports.wbg.__widl_f_log_1_ = function(arg0) {
-        console.log(getObject(arg0));
-    };
     imports.wbg.__widl_instanceof_Window = function(arg0) {
         var ret = getObject(arg0) instanceof Window;
         return ret;
@@ -487,6 +484,9 @@ function init(module) {
     imports.wbg.__widl_f_document_Window = function(arg0) {
         var ret = getObject(arg0).document;
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__widl_f_log_1_ = function(arg0) {
+        console.log(getObject(arg0));
     };
     imports.wbg.__wbg_call_12b949cfc461d154 = function(arg0, arg1) {
         try {
