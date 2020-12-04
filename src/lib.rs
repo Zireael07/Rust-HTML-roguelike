@@ -425,7 +425,7 @@ impl Universe {
                             game_message(&format!("{{gPlayer kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
                             self.attack(&entity);
                     } else if fact == FactionType::Townsfolk {
-                            game_message(&format!("The man says hi"));
+                            game_message(&format!("The man says 🇪 🇸: hola!"));
                     }
 
                     //enemy turn
