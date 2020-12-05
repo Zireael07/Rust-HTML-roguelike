@@ -161,19 +161,19 @@ impl BSPTownBuilder {
             match door_direction {
                 1 => { 
                     let idx = build_data.map.xy_idx(cent.0, room.y1); //north
-                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                    build_data.map.tiles[idx] = Cell::Door as u8;
                 }
                 2 => { 
                     let idx = build_data.map.xy_idx(cent.0, room.y2-1); //south
-                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                    build_data.map.tiles[idx] = Cell::Door as u8;
                 }
                 3 => { 
                     let idx = build_data.map.xy_idx(room.x1, cent.1); //west
-                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                    build_data.map.tiles[idx] = Cell::Door as u8;
                 }
                 _ => { 
                     let idx = build_data.map.xy_idx(room.x2-1, cent.1); //east
-                    build_data.map.tiles[idx] = Cell::Floor as u8;
+                    build_data.map.tiles[idx] = Cell::Door as u8;
                 }
             }
             //build_data.take_snapshot();

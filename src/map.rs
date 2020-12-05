@@ -12,6 +12,7 @@ pub enum Cell {
     Grass = 2,
     Tree = 3,
     FloorIndoor = 4,
+    Door = 5,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -64,7 +65,7 @@ impl Map {
 
     pub fn is_tile_walkable(&self, x:i32, y:i32) -> bool {
         let idx = (y * self.width as i32) + x;
-        let walkables = vec![Cell::Floor as u8, Cell::FloorIndoor as u8, Cell::Grass as u8];
+        let walkables = vec![Cell::Floor as u8, Cell::FloorIndoor as u8, Cell::Grass as u8, Cell::Door as u8];
         return walkables.contains(&self.tiles[idx as usize]);
     }
 
