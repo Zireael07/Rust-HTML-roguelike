@@ -41,6 +41,10 @@ use rect::*;
 mod map_builders;
 use map_builders::*;
 
+//lisp-y
+mod lispy;
+use lispy::*;
+
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 #[macro_export]
 macro_rules! log {
@@ -336,6 +340,9 @@ impl Universe {
 
         //debug
         log!("We have a universe");
+
+        //lispy test
+        parse_script();
 
         // We'll return the state with the short-hand
         state
