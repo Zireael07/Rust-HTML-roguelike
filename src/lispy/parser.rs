@@ -4,7 +4,7 @@
 //! parser and tiny [lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language)) interpreter.
 //! Lisp is a simple type of language made up of Atoms and Lists, forming easily parsable trees.
 
-extern crate nom;
+//extern crate nom;
 
 use nom::{
   branch::alt,
