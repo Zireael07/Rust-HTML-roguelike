@@ -1,12 +1,13 @@
 use super::log;
 
 mod parser;
+mod eval;
 
 pub fn eval_str(s: &str) {
     log!(
         "\"{}\"\nevaled gives us: {:?}",
         s,
-        parser::eval_from_str(s)
+        eval::eval_from_str(s)
       );
 }
 
