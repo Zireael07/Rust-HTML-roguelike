@@ -1,5 +1,7 @@
 use super::log;
 
+mod types;
+use types::*;
 mod parser;
 mod eval;
 
