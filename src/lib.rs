@@ -109,6 +109,11 @@ pub fn game_message(string: &str)
         string = string.replace("}", "</span>");
     }
 
+    if string.contains("🇪 🇸"){
+        //parse country flag
+        string = string.replace("🇪 🇸", "<img src=\"./es.svg\" alt=\"\" style=\"height:14px\">");
+    }
+
 
     line.set_inner_html(&string); //wants &str
     messages.append_child(&line).unwrap(); //implicitly converts to Node
