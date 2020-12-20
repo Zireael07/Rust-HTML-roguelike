@@ -1,6 +1,9 @@
 //JS starts here
 import * as rust from './rust_web_roguelike.js';
 
+//JS Lisp implementation
+import {res} from './mal.js';
+
 var term, eng, inventoryOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 
@@ -278,6 +281,11 @@ function initRenderer(wasm) {
     
     //handle post-start
     universe.on_game_start();
+
+    //test JS Lisp
+    var line = "{ + 4 {* 3 4} }"
+    res(line);
+
 }
 
 export { initRenderer }
