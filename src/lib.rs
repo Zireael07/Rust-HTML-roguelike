@@ -387,6 +387,10 @@ impl Universe {
         return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
+    pub fn spawn(&mut self, x:i32, y:i32) {
+        self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+    }
+
     pub fn process(&mut self, input: Option<Command>) {
         // New: handle keyboard inputs.
         match input {
