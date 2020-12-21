@@ -314,6 +314,13 @@ export class Universe {
         return ret !== 0;
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    */
+    spawn(x, y) {
+        wasm.universe_spawn(this.ptr, x, y);
+    }
+    /**
     * @param {number | undefined} input
     */
     process(input) {
