@@ -305,6 +305,8 @@ impl Universe {
         let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
         state.map = builder.build_data.map.clone();
+        //spawn anything listed
+        state.spawn_entities(builder.build_data.list_spawns);
 
         //spawn
         match builder.build_data.starting_position {
@@ -341,7 +343,7 @@ impl Universe {
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
-        let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
+        //let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
 
         //debug
         log!("We have a universe");
@@ -387,8 +389,13 @@ impl Universe {
         return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
-    pub fn spawn(&mut self, x:i32, y:i32) {
-        self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+    pub fn spawn(&mut self, x:i32, y:i32, name:String) {
+        //TODO: should be a dict lookup
+        if name == "Barkeep".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
+        } else {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        }
     }
 
     pub fn process(&mut self, input: Option<Command>) {
@@ -735,6 +742,14 @@ impl Universe {
 
 //Methods not exposed to JS
 impl Universe {
+    pub fn spawn_entities(&mut self, list_spawns:Vec<(usize, String)>) {
+        for entity in list_spawns.iter() {
+            let pos = self.map.idx_xy(entity.0);
+            self.spawn(pos.0, pos.1, entity.1.clone());
+        }
+    }
+
+
     pub fn blocking_creatures_at(&self, x: usize, y: usize) -> Option<Entity> {
         let mut blocked: Option<Entity> = None;
         for (id, (point, combat)) in self.ecs_world.query::<(&Point, &CombatStats)>().iter() {

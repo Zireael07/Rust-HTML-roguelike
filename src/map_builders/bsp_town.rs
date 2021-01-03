@@ -229,7 +229,20 @@ impl BSPTownBuilder {
         });
         let player_idx = build_data.map.xy_idx(cent.0, cent.1);
     
-        // TODO: Place other items
+        // Place NPC
+        let mut to_place : Vec<&str> = vec!["Barkeep"]; //, "Shady Salesman", "Patron", "Patron",
+        let mut rng = rand::thread_rng();
+        // TODO: place props
+        for y in building.y1 .. building.y2 {
+            for x in building.x1 .. building.x2 {
+                let idx = build_data.map.xy_idx(x, y);
+                if build_data.map.tiles[idx] == Cell::FloorIndoor as u8 && idx != player_idx && rng.gen_range(1, 3)==1 && !to_place.is_empty() {
+                    let entity_tag = to_place[0];
+                    to_place.remove(0);
+                    build_data.list_spawns.push((idx, entity_tag.to_string()));
+                }
+            }
+        }
     }
 
 

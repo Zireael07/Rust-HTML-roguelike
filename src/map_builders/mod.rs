@@ -16,6 +16,7 @@ pub struct BuilderMap {
     pub map : Map,
     pub submaps: Option<Vec<Rect>>,
     pub starting_position : Option<Point>,
+    pub list_spawns : Vec<(usize, String)>,
 }
 
 pub struct BuilderChain {
@@ -33,6 +34,7 @@ impl BuilderChain {
                 map: Map::new(width as u32, height as u32),
                 submaps: None,
                 starting_position: None,
+                list_spawns: Vec::new(),
             }
         }
     }
@@ -63,13 +65,19 @@ impl BuilderChain {
             metabuilder.build_map(&mut self.build_data);
         }
     }
+
+    // pub fn spawn_entities(&mut self) {
+    //     for entity in self.build_data.list_spawns.iter() {
+    //         //spawner::spawn_entity(ecs, &(&entity.0, &entity.1));
+    //     }
+    // }
 }
 
 //Rust's interface - unfortunately, no variables allowed here!
-pub trait MapBuilder {
-    fn build_map(&mut self);
-    //fn get_map(&mut self) -> Map;
-}
+// pub trait MapBuilder {
+//     fn build_map(&mut self);
+//     //fn get_map(&mut self) -> Map;
+// }
 
 pub trait InitialMapBuilder {
     fn build_map(&mut self, build_data : &mut BuilderMap);

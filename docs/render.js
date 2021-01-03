@@ -286,7 +286,7 @@ function initRenderer(wasm) {
     var line = "{ + 4 {* 3 4} }"
     res(line);
 
-    universe.spawn(player[0]+2, player[1]+2);
+    universe.spawn(player[0]+2, player[1]+2, "Thug");
 
 }
 
