@@ -15,6 +15,9 @@ var KNIFE = new ut.Tile("/", 0, 255, 255);
 var MED = new ut.Tile("!", 255, 0, 0);
 var BARKEEP = new ut.Tile("☺", 0, 128, 255);
 
+var TABLE = new ut.Tile("╦", 170, 170, 170);
+var CHAIR = new ut.Tile("└", 170, 170, 170);
+
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
 var GRASS = new ut.Tile(',', 0, 255, 0);
@@ -123,6 +126,8 @@ function tick() {
         if (tile == 1) { tile = KNIFE; }
         if (tile == 2) { tile = MED; }
         if (tile == 3) { tile = BARKEEP; }
+        if (tile == 4) { tile = TABLE; }
+        if (tile == 5) { tile = CHAIR; }
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
