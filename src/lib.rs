@@ -133,6 +133,8 @@ pub enum Renderable {
     Knife = 1,
     Medkit = 2,
     Barkeep = 3,
+    Table = 4,
+    Chair = 5
 }
 
 //for ECS
@@ -391,7 +393,14 @@ impl Universe {
 
     pub fn spawn(&mut self, x:i32, y:i32, name:String) {
         //TODO: should be a dict lookup
-        if name == "Barkeep".to_string() {
+        // props
+        if name == "Table".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Table as u8));
+        } else if name == "Chair".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Chair as u8));
+        }
+        //NPCs
+        else if name == "Barkeep".to_string() {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
         } else {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
