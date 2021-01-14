@@ -873,7 +873,7 @@ impl Universe {
     //a very simple test, akin to flipping a coin or throwing a d2
     fn make_test_d2(&self, skill: u32) -> Vec<bool> {
         let mut rolls = Vec::new();
-        for _ in 0..20-skill { // exclusive of end
+        for _ in 0..10-skill { // exclusive of end
             rolls.push(rand::random()) // generates a boolean
         }
         return rolls
