@@ -433,9 +433,6 @@ function init(module) {
     imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
         takeObject(arg0);
     };
-    imports.wbg.__widl_f_log_1_ = function(arg0) {
-        console.log(getObject(arg0));
-    };
     imports.wbg.__widl_instanceof_Window = function(arg0) {
         var ret = getObject(arg0) instanceof Window;
         return ret;
@@ -497,6 +494,9 @@ function init(module) {
     imports.wbg.__widl_f_document_Window = function(arg0) {
         var ret = getObject(arg0).document;
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__widl_f_log_1_ = function(arg0) {
+        console.log(getObject(arg0));
     };
     imports.wbg.__wbg_self_86b4b13392c7af56 = function() {
         try {
