@@ -444,6 +444,14 @@ function init(module) {
             handleError(e)
         }
     };
+    imports.wbg.__widl_f_toggle_DOMTokenList = function(arg0, arg1, arg2) {
+        try {
+            var ret = getObject(arg0).toggle(getStringFromWasm0(arg1, arg2));
+            return ret;
+        } catch (e) {
+            handleError(e)
+        }
+    };
     imports.wbg.__widl_f_create_element_Document = function(arg0, arg1, arg2) {
         try {
             var ret = getObject(arg0).createElement(getStringFromWasm0(arg1, arg2));
@@ -455,6 +463,10 @@ function init(module) {
     imports.wbg.__widl_f_get_element_by_id_Document = function(arg0, arg1, arg2) {
         var ret = getObject(arg0).getElementById(getStringFromWasm0(arg1, arg2));
         return isLikeNone(ret) ? 0 : addHeapObject(ret);
+    };
+    imports.wbg.__widl_f_class_list_Element = function(arg0) {
+        var ret = getObject(arg0).classList;
+        return addHeapObject(ret);
     };
     imports.wbg.__widl_f_set_inner_html_Element = function(arg0, arg1, arg2) {
         getObject(arg0).innerHTML = getStringFromWasm0(arg1, arg2);

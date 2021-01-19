@@ -4,7 +4,7 @@ import * as rust from './rust_web_roguelike.js';
 //JS Lisp implementation
 import {res} from './mal.js';
 
-var term, eng, inventoryOverlay; // Can't be initialized yet because DOM is not ready
+var term, eng, inventoryOverlay, vendorOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 
 // The tile palette is precomputed in order to not have to create
@@ -219,7 +219,17 @@ function showInventory() {
 	//return;
 }
 
-
+// vendor 
+function vendorClick(button) {
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+    //console.log("ID: ", i);
+    vendorOverlay.classList.toggle('visible', false); //close the listing
+    //var item = universe.inventory_items()[i];
+	console.log("Pressed vendor button " + button.innerHTML); //, " id: ", item);
+}
 
 // Key press handler - movement & collision handling
 //Just converts to rust commands
@@ -280,6 +290,9 @@ function initRenderer(wasm) {
 
     //more game init
     inventoryOverlay = createInventoryOverlay();
+    vendorOverlay = document.getElementById("vendor");
+    //anonymous function
+    vendorOverlay.firstElementChild.onclick = function(e) { vendorClick(e.target); }
 
 	// Initialize input
     ut.initInput(onKeyDown);
