@@ -159,6 +159,10 @@ pub struct Faction {
     pub typ: FactionType
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Vendor {
+    //pub categories : Vec<String>
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Item{}
@@ -401,7 +405,7 @@ impl Universe {
         }
         //NPCs
         else if name == "Barkeep".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } else {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         }
@@ -457,7 +461,16 @@ impl Universe {
                             game_message(&format!("{{gPlayer kicked the {}", self.ecs_world.get::<String>(entity).unwrap().to_string()));
                             self.attack(&entity);
                     } else if fact == FactionType::Townsfolk {
+                        if self.ecs_world.get::<Vendor>(entity).is_ok() {
+                            //game_message(&format!("You talk to the vendor"));
+                            //GUI
+                            let window = web_sys::window().expect("global window does not exists");    
+                            let document = window.document().expect("expecting a document on window");                        
+                            let vendor = document.get_element_by_id("vendor").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                            let list = vendor.class_list().toggle("visible");
+                        } else {
                             game_message(&format!("The man says 🇪 🇸: hola!"));
+                        }
                     }
 
                     //enemy turn
