@@ -397,6 +397,17 @@ export class Universe {
         wasm.universe_use_item_ext(this.ptr, low0, high0);
     }
     /**
+    * @param {number} val
+    */
+    change_money(val) {
+        wasm.universe_change_money(this.ptr, val);
+    }
+    /**
+    */
+    give_item() {
+        wasm.universe_give_item(this.ptr);
+    }
+    /**
     * @returns {string}
     */
     save_game() {
