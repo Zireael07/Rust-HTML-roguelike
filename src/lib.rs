@@ -150,9 +150,13 @@ pub struct CombatStats {
     pub power : i32
 }
 
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub struct Money {
+    pub money: f32
+}
+
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum FactionType { Enemy, Townsfolk }
-
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Faction {
@@ -343,7 +347,7 @@ impl Universe {
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
-        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}));
+        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}));
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
@@ -581,6 +585,29 @@ impl Universe {
         }
     }
 
+    pub fn change_money(&mut self, val: f32) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let mut purse = self.ecs_world.get_mut::<Money>(entity).unwrap();
+                purse.money = purse.money - val;
+            },
+            None => {},
+        }
+    }
+
+    pub fn give_item(&mut self) {
+        let current_position = self.map.idx_xy(self.player_position);
+        let it = self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, Consumable{}, ToRemove{yes:false}));
+        //puts the item in backpack
+        self.pickup_item(&it);
+    }
+
+    //save/load
     pub fn save_game(&self) -> String {
         log!("Saving game...");
         //iterate over all entities
