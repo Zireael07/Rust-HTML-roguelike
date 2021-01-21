@@ -140,6 +140,12 @@ pub enum Renderable {
 //for ECS
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Player{}
+
+pub struct Needs{
+    pub hunger: i32,
+    pub thirst: i32,
+}
+
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct AI {}
 #[derive(Clone, Copy, Serialize, Deserialize)]
@@ -173,11 +179,16 @@ pub struct Item{}
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct InBackpack{}
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Consumable{}
+pub struct Consumable{} //in the sense that it is limited use only
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ProvidesHealing {
     pub heal_amount : i32
 }
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ProvidesFood {}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct ProvidesQuench {}
+
 
 //don't need to be serialized
 pub struct WantsToUseItem {
@@ -347,7 +358,7 @@ impl Universe {
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
-        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}));
+        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}));
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
@@ -480,6 +491,7 @@ impl Universe {
                     //enemy turn
                     self.get_AI();
                     self.remove_dead();
+                    self.survival_tick();
                 },
                 None => {
                     self.player_position = new_idx;
@@ -495,6 +507,7 @@ impl Universe {
                     //enemy turn
                     self.get_AI();
                     self.remove_dead();
+                    self.survival_tick();
                 }
             }
                  
@@ -602,7 +615,7 @@ impl Universe {
 
     pub fn give_item(&mut self) {
         let current_position = self.map.idx_xy(self.player_position);
-        let it = self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, Consumable{}, ToRemove{yes:false}));
+        let it = self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, ProvidesFood{}, ProvidesQuench{}, Consumable{}, ToRemove{yes:false}));
         //puts the item in backpack
         self.pickup_item(&it);
     }
@@ -860,6 +873,14 @@ impl Universe {
             } else {
                 log!("Item doesn't provide healing");
             }
+
+            // food or drink?
+            if self.ecs_world.get::<ProvidesQuench>(wantstouse.item).is_ok(){
+                game_message(&format!("{{gYou drink the {}", self.ecs_world.get::<String>(*it).unwrap().to_string()));
+            } else if self.ecs_world.get::<ProvidesFood>(wantstouse.item).is_ok(){
+                game_message(&format!("{{gYou eat the {}", self.ecs_world.get::<String>(*it).unwrap().to_string()));
+            }
+
             // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
             if self.ecs_world.get::<Equippable>(wantstouse.item).is_ok() {
                 let can_equip = self.ecs_world.get::<Equippable>(wantstouse.item).unwrap();
@@ -963,6 +984,22 @@ impl Universe {
             None => { dead = true },
         }
         return dead;
+    }
+
+    fn survival_tick(&mut self) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let mut needs = self.ecs_world.get_mut::<Needs>(entity).unwrap();
+                needs.hunger -= 1;
+                needs.thirst -= 1;
+            },
+            None => {},
+        }
     }
 
 
