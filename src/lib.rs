@@ -140,7 +140,7 @@ pub enum Renderable {
 //for ECS
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Player{}
-
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Needs{
     pub hunger: i32,
     pub thirst: i32,
@@ -169,7 +169,7 @@ pub struct Faction {
     pub typ: FactionType
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vendor {
     //pub categories : Vec<String>
 }
@@ -252,13 +252,18 @@ pub struct SaveData {
     point: Option<Point>,
     render: Option<u8>,
     player: Option<Player>,
+    needs: Option<Needs>,
+    money: Option<Money>,
     ai: Option<AI>,
+    vendor: Option<Vendor>,
     combat: Option<CombatStats>,
     faction: Option<Faction>,
     item: Option<Item>,
     backpack: Option<InBackpack>,
     consumable: Option<Consumable>,
     heals: Option<ProvidesHealing>,
+    food: Option<ProvidesFood>,
+    quench: Option<ProvidesQuench>,
     equippable: Option<Equippable>,
     meleebonus: Option<MeleeBonus>,
     equip: Option<Equipped>,
@@ -653,15 +658,20 @@ impl Universe {
                 entity: e.to_bits(),
                 point: None,
                 render: None,
-                name: self.ecs_world.get::<String>(e).unwrap().to_string(),
+                name: "".to_string(), //because props don't have names //self.ecs_world.get::<String>(e).unwrap().to_string(),
                 player: None,
+                needs: None,
                 ai: None,
+                money: None,
                 faction: None,
+                vendor: None,
                 combat: None,
                 item: None,
                 backpack: None,
                 consumable: None,
                 heals: None,
+                food: None,
+                quench: None,
                 equippable: None,
                 meleebonus: None,
                 equip : None,
@@ -676,7 +686,10 @@ impl Universe {
             if self.ecs_world.get::<u8>(e).is_ok() {
                 saved.render = Some(*self.ecs_world.get::<u8>(e).unwrap());
             }
-
+            //props don't have names
+            if self.ecs_world.get::<String>(e).is_ok(){
+                saved.name = self.ecs_world.get::<String>(e).unwrap().to_string()
+            }
             //those aren't guaranteed
             if self.ecs_world.get::<Player>(e).is_ok() {
                 //log!("{:?} is player", e);
@@ -688,8 +701,17 @@ impl Universe {
             if self.ecs_world.get::<AI>(e).is_ok(){
                 saved.ai = Some(*self.ecs_world.get::<AI>(e).unwrap());
             }
+            if self.ecs_world.get::<Needs>(e).is_ok(){
+                saved.needs = Some(*self.ecs_world.get::<Needs>(e).unwrap());
+            }
+            if self.ecs_world.get::<Money>(e).is_ok(){
+                saved.money = Some(*self.ecs_world.get::<Money>(e).unwrap());
+            }
             if self.ecs_world.get::<Faction>(e).is_ok(){
                 saved.faction = Some(*self.ecs_world.get::<Faction>(e).unwrap());
+            }
+            if self.ecs_world.get::<Vendor>(e).is_ok(){
+                saved.vendor = Some(*self.ecs_world.get::<Vendor>(e).unwrap());
             }
             if self.ecs_world.get::<CombatStats>(e).is_ok(){
                 saved.combat = Some(*self.ecs_world.get::<CombatStats>(e).unwrap());
@@ -705,6 +727,12 @@ impl Universe {
             }
             if self.ecs_world.get::<ProvidesHealing>(e).is_ok(){
                 saved.heals = Some(*self.ecs_world.get::<ProvidesHealing>(e).unwrap());
+            }
+            if self.ecs_world.get::<ProvidesFood>(e).is_ok(){
+                saved.food = Some(*self.ecs_world.get::<ProvidesFood>(e).unwrap());
+            }
+            if self.ecs_world.get::<ProvidesQuench>(e).is_ok(){
+                saved.quench = Some(*self.ecs_world.get::<ProvidesQuench>(e).unwrap());
             }
             if self.ecs_world.get::<Equippable>(e).is_ok() {
                 saved.equippable = Some(*self.ecs_world.get::<Equippable>(e).unwrap());
@@ -769,11 +797,20 @@ impl Universe {
                     let point = e.point.unwrap();
                     self.player_position = self.map.xy_idx(point.x, point.y);
                 }
+                if e.needs.is_some(){
+                    builder.add(e.needs.unwrap());
+                }
                 if e.ai.is_some(){
                     builder.add(e.ai.unwrap());
                 }
+                if e.money.is_some() {
+                    builder.add(e.money.unwrap());
+                }
                 if e.faction.is_some() {
                     builder.add(e.faction.unwrap());
+                }
+                if e.vendor.is_some() {
+                    builder.add(e.vendor.unwrap());
                 }
                 if e.combat.is_some(){
                     builder.add(e.combat.unwrap());
@@ -789,6 +826,12 @@ impl Universe {
                 }
                 if e.heals.is_some(){
                     builder.add(e.heals.unwrap());
+                }
+                if e.food.is_some(){
+                    builder.add(e.food.unwrap());
+                }
+                if e.quench.is_some(){
+                    builder.add(e.quench.unwrap());
                 }
                 if e.equippable.is_some(){
                     builder.add(e.equippable.unwrap());
