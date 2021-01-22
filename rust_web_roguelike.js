@@ -403,9 +403,12 @@ export class Universe {
         wasm.universe_change_money(this.ptr, val);
     }
     /**
+    * @param {string} name
     */
-    give_item() {
-        wasm.universe_give_item(this.ptr);
+    give_item(name) {
+        var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.universe_give_item(this.ptr, ptr0, len0);
     }
     /**
     * @returns {string}

@@ -228,7 +228,7 @@ function vendorClick(button) {
     //console.log("ID: ", i);
     vendorOverlay.classList.toggle('visible', false); //close the listing
     universe.change_money(5.0);
-    universe.give_item();
+    universe.give_item("Protein shake");
     //var item = universe.inventory_items()[i];
 	console.log("Pressed vendor button " + button.innerHTML); //, " id: ", item);
 }
