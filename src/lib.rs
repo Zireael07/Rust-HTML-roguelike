@@ -359,6 +359,9 @@ impl Universe {
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
         let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}));
+        //starting inventory
+        state.give_item("Protein shake".to_string());
+        state.give_item("Medkit".to_string());
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
@@ -613,11 +616,25 @@ impl Universe {
         }
     }
 
-    pub fn give_item(&mut self) {
+    pub fn give_item(&mut self, name: String) {
         let current_position = self.map.idx_xy(self.player_position);
-        let it = self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, ProvidesFood{}, ProvidesQuench{}, Consumable{}, ToRemove{yes:false}));
-        //puts the item in backpack
-        self.pickup_item(&it);
+
+        let mut item: Option<Entity> = None;
+        //TODO: should be a dict lookup
+        if name == "Protein shake".to_string() {
+            item = Some(self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, ProvidesFood{}, ProvidesQuench{}, Consumable{}, ToRemove{yes:false})));
+        }
+        if name == "Medkit".to_string() {
+            item = Some(self.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5})));
+        }
+        match item {
+            Some(it) => {
+                //puts the item in backpack
+                self.pickup_item(&it);
+            },
+            None => {},
+        }
+
     }
 
     //save/load
