@@ -326,8 +326,6 @@ impl Universe {
         let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
         state.map = builder.build_data.map.clone();
-        //spawn anything listed
-        state.spawn_entities(builder.build_data.list_spawns);
 
         //spawn
         match builder.build_data.starting_position {
@@ -362,6 +360,10 @@ impl Universe {
         //starting inventory
         state.give_item("Protein shake".to_string());
         state.give_item("Medkit".to_string());
+
+
+        //spawn anything listed
+        state.spawn_entities(builder.build_data.list_spawns);
 
         //spawn entities
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
