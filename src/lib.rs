@@ -273,6 +273,7 @@ pub struct SaveData {
 //input
 #[wasm_bindgen]
 pub enum Command {
+//    None = -1, //unfortunately we can't use -1 in wasm_bindgen...
     MoveLeft,
     MoveRight,
     MoveDown,
@@ -439,7 +440,7 @@ impl Universe {
     pub fn process(&mut self, input: Option<Command>) {
         // New: handle keyboard inputs.
         match input {
-            None => {} // Nothing happened
+            None => {}, // Nothing happened
             Some(input) => {
                 // A key is pressed or held
                 match input {

@@ -266,10 +266,13 @@ function onKeyDown(k) {
             universe.load_save(value.save);
         });
     }
-    // update Rust
-    universe.process(cmd);
-    // update display
-	tick();
+    if (cmd != -1) {
+        // update Rust
+        universe.process(cmd);
+        // update display
+        tick();
+    }
+
 }
 
 function initRenderer(wasm) {
