@@ -243,8 +243,11 @@ function onKeyDown(k) {
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
     else if (k == ut.KEY_I) {
-        cmd = rust.Command.Inventory //dummy
-        showInventory() //do our thing
+        if (!vendorOverlay.classList.contains('visible')) {
+            cmd = rust.Command.Inventory //dummy
+            showInventory() //do our thing
+        }
+
     } 
     else if (k == ut.KEY_S) {
         cmd = rust.Command.SaveGame; //dummy
@@ -266,10 +269,20 @@ function onKeyDown(k) {
             universe.load_save(value.save);
         });
     }
-    // update Rust
-    universe.process(cmd);
-    // update display
-	tick();
+    else if (k == 27) // escape
+    {
+        if (vendorOverlay.classList.contains('visible')) {
+            vendorOverlay.classList.toggle('visible', false); //close the listing
+        }
+    }
+
+    if (cmd != -1) {
+        // update Rust
+        universe.process(cmd);
+        // update display
+        tick();
+    }
+
 }
 
 function initRenderer(wasm) {
