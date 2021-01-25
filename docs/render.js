@@ -10,10 +10,10 @@ var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
 var AT = new ut.Tile("@", 255, 255, 255);
-var THUG = new ut.Tile("t", 255, 0, 0);
+var THUG = new ut.Tile("t", 55, 0, 0, 255, 0, 0); //red bg means hostile
 var KNIFE = new ut.Tile("/", 0, 255, 255);
 var MED = new ut.Tile("!", 255, 0, 0);
-var BARKEEP = new ut.Tile("☺", 0, 128, 255);
+var BARKEEP = new ut.Tile("☺", 0, 128, 255, 255, 255, 0); //yellow bg means neutral
 
 var TABLE = new ut.Tile("╦", 170, 170, 170);
 var CHAIR = new ut.Tile("└", 170, 170, 170);
