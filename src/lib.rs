@@ -146,6 +146,22 @@ pub struct Needs{
     pub thirst: i32,
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct Attribute {
+    pub base : i32, // equal to what would've been the modifier in d20
+    pub bonus : i32
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub struct Attributes {
+    pub strength : Attribute,
+    pub dexterity : Attribute,
+    pub constitution : Attribute,
+    pub intelligence : Attribute,
+    pub wisdom : Attribute,
+    pub charisma : Attribute,
+}
+
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct AI {}
 #[derive(Clone, Copy, Serialize, Deserialize)]
@@ -362,7 +378,9 @@ impl Universe {
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
-        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}));
+        // 15, 14, 13, 12, 10, 8 aka elite array
+        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
+        Attributes{strength:Attribute{base:2, bonus:0}, dexterity:Attribute{base:1, bonus:0}, constitution:Attribute{base:2, bonus:0}, intelligence:Attribute{base:1,bonus:0}, wisdom:Attribute{base:-1,bonus:0}, charisma:Attribute{base:0,bonus:0}}));
         //starting inventory
         state.give_item("Protein shake".to_string());
         state.give_item("Medkit".to_string());
@@ -378,6 +396,8 @@ impl Universe {
         //let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
 
         //debug
+        log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
+       
         log!("We have a universe");
 
         //lispy test
