@@ -233,6 +233,38 @@ function vendorClick(button) {
 	console.log("Pressed vendor button " + button.innerHTML); //, " id: ", item);
 }
 
+function creationSelect(el) {
+    //console.log("ID: " + el.id + " " + el.selectedIndex);
+    // check for duplicates
+    if (el.selectedIndex != 0) {
+        var lines = document.getElementById("creation").getElementsByTagName("li");
+        for (var i = 0, len = lines.length; i < len; i++ ) {
+            if (i != el.id) {
+                //console.log("Other: " + i + " " + lines[i].children[0].selectedIndex);
+                if (lines[i].children[0].selectedIndex == el.selectedIndex) {
+                    lines[i].children[0].selectedIndex = 0 //set it to --
+                }
+            }
+        }
+    }
+
+}
+
+function confirmCreation() {
+    var allow = true;
+    var lines = document.getElementById("creation").getElementsByTagName("li");
+    for (var i = 0, len = lines.length; i < len; i++ ) {
+        if (lines[i].children[0].selectedIndex == 0) {
+            allow = false;
+        }
+    }
+
+    if (allow) {
+        document.getElementById("creation").classList.toggle('visible', false); //close the listing
+    }
+}
+
+
 // Key press handler - movement & collision handling
 //Just converts to rust commands
 function onKeyDown(k) {
@@ -314,6 +346,14 @@ function initRenderer(wasm) {
     
     //handle post-start
     universe.on_game_start();
+    // character creation screen
+    document.getElementById("creation").classList.toggle('visible', true);
+    var lines = document.getElementById("creation").getElementsByTagName("li");
+    for (var i = 0, len = lines.length; i < len; i++ ) {
+        lines[i].children[0].onchange = function(e) { creationSelect(e.target); }
+    }
+    var button = document.getElementById("confirm")
+    button.onclick = function(e) { confirmCreation() }
 
     //test JS Lisp
     var line = "{ + 4 {* 3 4} }"
