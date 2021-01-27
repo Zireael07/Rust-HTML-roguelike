@@ -253,14 +253,23 @@ function creationSelect(el) {
 function confirmCreation() {
     var allow = true;
     var lines = document.getElementById("creation").getElementsByTagName("li");
+    var stats = [];
     for (var i = 0, len = lines.length; i < len; i++ ) {
-        if (lines[i].children[0].selectedIndex == 0) {
+        var sel = lines[i].children[0] 
+        if (sel.selectedIndex == 0) {
             allow = false;
+        }
+        else {
+            stats[i] = sel.options[sel.selectedIndex].text;
         }
     }
 
     if (allow) {
         document.getElementById("creation").classList.toggle('visible', false); //close the listing
+        //assign the stats
+        universe.set_player_stats(stats);
+        //handle post-start
+        universe.on_game_start();
     }
 }
 
@@ -345,7 +354,7 @@ function initRenderer(wasm) {
     ut.initInput(onKeyDown);
     
     //handle post-start
-    universe.on_game_start();
+    //universe.on_game_start();
     // character creation screen
     document.getElementById("creation").classList.toggle('visible', true);
     var lines = document.getElementById("creation").getElementsByTagName("li");

@@ -396,7 +396,7 @@ impl Universe {
         //let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
 
         //debug
-        log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
+        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
        
         log!("We have a universe");
 
@@ -663,6 +663,28 @@ impl Universe {
             None => {},
         }
 
+    }
+
+    pub fn set_player_stats(&mut self, new_stats: Vec<i32>) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let mut stats = self.ecs_world.get_mut::<Attributes>(entity).unwrap();
+                stats.strength.base = new_stats[0];
+                stats.dexterity.base = new_stats[1];
+                stats.constitution.base = new_stats[2];
+                stats.intelligence.base = new_stats[3];
+                stats.wisdom.base = new_stats[4];
+                stats.charisma.base = new_stats[5];
+
+                log!("{}", &format!("Player stats: {:?}", *stats));
+            },
+            None => {},
+        }
     }
 
     //save/load
