@@ -203,6 +203,21 @@ function getArrayU64FromWasm0(ptr, len) {
 const u32CvtShim = new Uint32Array(2);
 
 const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
+
+let cachegetUint32Memory0 = null;
+function getUint32Memory0() {
+    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachegetUint32Memory0;
+}
+
+function passArray32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4);
+    getUint32Memory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
 /**
 */
 export function start() {
@@ -409,6 +424,14 @@ export class Universe {
         var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
         wasm.universe_give_item(this.ptr, ptr0, len0);
+    }
+    /**
+    * @param {Int32Array} new_stats
+    */
+    set_player_stats(new_stats) {
+        var ptr0 = passArray32ToWasm0(new_stats, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.universe_set_player_stats(this.ptr, ptr0, len0);
     }
     /**
     * @returns {string}
