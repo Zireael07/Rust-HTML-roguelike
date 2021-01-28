@@ -134,7 +134,10 @@ pub enum Renderable {
     Medkit = 2,
     Barkeep = 3,
     Table = 4,
-    Chair = 5
+    Chair = 5,
+    Boots = 6,
+    Jacket = 7,
+    Jeans = 8
 }
 
 //for ECS
@@ -214,7 +217,7 @@ pub struct WantsToUseItem {
 pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
 
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
-pub enum EquipmentSlot { Melee }
+pub enum EquipmentSlot { Melee, Torso, Legs, Feet }
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Equippable {
     pub slot : EquipmentSlot
@@ -227,6 +230,11 @@ pub struct Equipped {
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct MeleeBonus {
     pub bonus : i32
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct DefenseBonus {
+    pub bonus : f32
 }
 
 //make a struct so that....
@@ -393,6 +401,11 @@ impl Universe {
         let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let boots = state.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        
+        
         //let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
 
         //debug
