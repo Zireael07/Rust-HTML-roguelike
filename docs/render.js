@@ -112,7 +112,6 @@ function tick() {
 	var cam_y = player[1]-term.cy;
 
     eng.update(player[0], player[1]); // Update tiles in viewport
-    term.put(AT, term.cx, term.cy); // Player character centered for free by JS
     
     //draw entities
     entities_mem = universe.draw_entities();
@@ -144,6 +143,9 @@ function tick() {
 		term.put(tile, tilex, tiley);
     }
     
+    // draw player AFTER everything else
+    term.put(AT, term.cx, term.cy); // Player character centered for free by JS
+
     term.render(); // Render
 
 }
