@@ -398,12 +398,21 @@ impl Universe {
         state.spawn_entities(builder.build_data.list_spawns);
 
         //spawn entities
-        let a = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        let th = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        //their starting equipment
+        let boots = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = state.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = state.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        state.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
+        state.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
+        state.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
+
         let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
         let boots = state.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
         let l_jacket = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
         let jeans = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        
         
         
         //let b = state.ecs_world.spawn((Point{x:6, y: 18}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}));
@@ -466,7 +475,14 @@ impl Universe {
         else if name == "Barkeep".to_string() {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } else {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+            let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+            //their starting equipment
+            let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let l_jacket = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let jeans = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+            self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
+            self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
+            self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
         }
     }
 
@@ -583,7 +599,7 @@ impl Universe {
         // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
         let mut js_drawn = Vec::new();
         for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
-        .without::<InBackpack>() //no ref/pointer here!
+        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
         .iter() {
             if self.is_visible(point.x as usize, point.y as usize) {
                 js_drawn.push(point.x as u8);
@@ -944,7 +960,7 @@ impl Universe {
     pub fn items_at(&self, x: usize, y: usize) -> Option<Entity> {
         let mut item: Option<Entity> = None;
         for (id, (point, it)) in self.ecs_world.query::<(&Point, &Item)>()
-        .without::<InBackpack>() //no ref/pointer here!!!
+        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!!!
         .iter() {
             if point.x as usize == x && point.y as usize == y {
                 item = Some(id);
@@ -1124,6 +1140,7 @@ impl Universe {
     fn remove_dead(&mut self) {
         // Here we query entities with 0 or less hp and despawn them
         let mut to_remove: Vec<Entity> = Vec::new();
+        let mut to_drop : Vec<(Entity, Point)> = Vec::new();
         for (id, stats) in &mut self.ecs_world.query::<&CombatStats>() {
             if stats.hp <= 0 {
                 if id.id() > 0 { 
@@ -1143,11 +1160,33 @@ impl Universe {
         }
 
         for entity in to_remove {
+            // not item
             if self.ecs_world.get::<Item>(entity).is_err() {
+                //drop their stuff
+                let pos = self.ecs_world.get::<Point>(entity).unwrap();
+                for (ent_id, (equipped)) in self.ecs_world.query::<(&Equipped)>()
+                .with::<String>()
+                .iter()
+                {
+                    let owner = hecs::Entity::from_bits(equipped.owner);
+                    if owner == entity {
+                        to_drop.push((ent_id, *pos));
+                    }
+                }
+
                 game_message(&format!("{{grAI {} is dead", self.ecs_world.get::<String>(entity).unwrap().to_string()));
             }
             
             self.ecs_world.despawn(entity).unwrap();
+        }
+
+        // deferred some actions because we can't add or remove components when iterating
+        for it in to_drop.iter() {
+            self.ecs_world.remove_one::<Equipped>(it.0);
+            let mut pt = self.ecs_world.get_mut::<Point>(it.0).unwrap();
+            pt.x = it.1.x;
+            pt.y = it.1.y;
+            //log!("{}", &format!("Dropping item {} x {} y {} ", self.ecs_world.get::<String>(it.0).unwrap().to_string(), pt.x, pt.y));
         }
     }
     
