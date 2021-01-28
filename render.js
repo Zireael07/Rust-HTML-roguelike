@@ -15,6 +15,11 @@ var KNIFE = new ut.Tile("/", 0, 255, 255);
 var MED = new ut.Tile("!", 255, 0, 0);
 var BARKEEP = new ut.Tile("☺", 0, 128, 255, 255, 255, 0); //yellow bg means neutral
 
+var BOOTS = new ut.Tile("]", 129, 77, 4, 255,255,255);
+var JACKET = new ut.Tile("]", 255,124,0, 255,255,255);
+var JEANS = new ut.Tile("]", 0, 23, 255, 255,255,255);
+
+
 var TABLE = new ut.Tile("╦", 170, 170, 170);
 var CHAIR = new ut.Tile("└", 170, 170, 170);
 
@@ -107,7 +112,6 @@ function tick() {
 	var cam_y = player[1]-term.cy;
 
     eng.update(player[0], player[1]); // Update tiles in viewport
-    term.put(AT, term.cx, term.cy); // Player character centered for free by JS
     
     //draw entities
     entities_mem = universe.draw_entities();
@@ -128,6 +132,9 @@ function tick() {
         if (tile == 3) { tile = BARKEEP; }
         if (tile == 4) { tile = TABLE; }
         if (tile == 5) { tile = CHAIR; }
+        if (tile == 6 ) { tile = BOOTS};
+        if (tile == 7 ) { tile = JACKET};
+        if (tile == 8 ) { tile = JEANS};
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
@@ -136,6 +143,9 @@ function tick() {
 		term.put(tile, tilex, tiley);
     }
     
+    // draw player AFTER everything else
+    term.put(AT, term.cx, term.cy); // Player character centered for free by JS
+
     term.render(); // Render
 
 }
