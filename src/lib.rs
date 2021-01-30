@@ -1079,25 +1079,30 @@ impl Universe {
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
         game_message(&format!("Test: {} sum: {{g{}", Rolls(res), sum));
 
-        //item bonuses
-        let mut offensive_bonus = 0;
-        for (id, (power_bonus, equipped_by)) in self.ecs_world.query::<(&MeleeBonus, &Equipped)>().iter() {
-            //if equipped_by.owner == attacker {
-                offensive_bonus += power_bonus.bonus;
-        }
+        if sum > 5 {
+            game_message(&format!("Attack hits!"));
+            //item bonuses
+            let mut offensive_bonus = 0;
+            for (id, (power_bonus, equipped_by)) in self.ecs_world.query::<(&MeleeBonus, &Equipped)>().iter() {
+                //if equipped_by.owner == attacker {
+                    offensive_bonus += power_bonus.bonus;
+            }
 
-        //deal damage
-        // the mut here is obligatory!!!
-        let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
-        stats.hp = stats.hp - 2 - offensive_bonus;
-        game_message(&format!("Dealt {{r{}}} damage", 2+offensive_bonus));
-        
-        //borrow checker doesn't allow this??
-        //if killed, despawn
-        // if stats.hp <= 0 {
-        //     self.ecs_world.despawn(*target).unwrap();
-        //     log!("{}", &format!("Target was killed!"));
-        // }
+            //deal damage
+            // the mut here is obligatory!!!
+            let mut stats = self.ecs_world.get_mut::<CombatStats>(*target).unwrap();
+            stats.hp = stats.hp - 2 - offensive_bonus;
+            game_message(&format!("Dealt {{r{}}} damage", 2+offensive_bonus));
+            
+            //borrow checker doesn't allow this??
+            //if killed, despawn
+            // if stats.hp <= 0 {
+            //     self.ecs_world.despawn(*target).unwrap();
+            //     log!("{}", &format!("Target was killed!"));
+            // }
+        } else {
+            game_message(&format!("Attack missed!"));
+        }
     }
 
     fn is_player_dead(&self) -> bool {
