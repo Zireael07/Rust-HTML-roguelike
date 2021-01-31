@@ -6,6 +6,7 @@ import {res} from './mal.js';
 
 var term, eng, inventoryOverlay, vendorOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
+var mouse = null
 
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
@@ -143,6 +144,13 @@ function tick() {
 		term.put(tile, tilex, tiley);
     }
     
+    // draw highlight under clicked tile
+    if (mouse) {
+        var t = term.get(mouse.x, mouse.y);
+        //dark highlight (one of the default colors offered by CSS picker)
+        term.put(new ut.Tile(t.ch, t.r, t.g, t.b, 63, 81, 181), mouse.x, mouse.y);
+    }
+
     // draw player AFTER everything else
     term.put(AT, term.cx, term.cy); // Player character centered for free by JS
 
@@ -336,6 +344,57 @@ function onKeyDown(k) {
 
 }
 
+//mouse/touch
+function getMousePos(e) {
+    return {x:e.clientX,y:e.clientY};
+}
+
+function relPos(e, gm) {
+	return {x: e.clientX-gm.offsetLeft, y: e.clientY-gm.offsetTop};
+}
+
+
+function termPos(e, gm) {
+	var rel = relPos(e, gm);
+	//hack
+	var gm_s = gm.getBoundingClientRect();
+	var tile_w = (gm_s.width)/term.w;
+	var tile_h = (gm_s.height)/term.h;
+	//console.log(tile_w + " " + tile_h);
+	var tx = Math.floor(rel.x/tile_w);
+	var ty = Math.floor(rel.y/tile_h);
+
+	//term.tw and term.th should be set by DOMRenderer's updateStyle() but it's not :(
+	return {x: tx, y: ty}
+}
+
+
+function worldPos(t_pos){
+	//console.log("Term pos: x" + t_pos.x + "y: " + t_pos.y);
+	// term.cx and term.cy always == player position
+	// this comes out to top left coordinates
+	var cam_x = player[0]-term.cx;
+	var cam_y = player[1]-term.cy;
+	//console.log("Cam pos: x: " + cam_x + "y: " + cam_y);
+	return {x: t_pos.x+cam_x, y: t_pos.y+cam_y}
+}
+
+function onClickH(w_pos) {
+	//ignore clicks outside of map
+	if (w_pos.x < 0 || w_pos.y < 0 || w_pos.x > w || w_pos.y > h) {
+		return;
+	} 
+
+    var dir_x = w_pos.x-player[0]
+    var dir_y = w_pos.y-player[1]
+	//move player
+	if (dir_x < 2 && dir_x > -2 && dir_y < 2 && dir_y > -2){
+        console.log("Move...", dir_x, dir_y);
+        //moveEntity(dir_x, dir_y, player);
+	}
+	tick();
+}
+
 function initRenderer(wasm) {
     universe = rust.Universe.new();
     // those are the map tiles, they don't change
@@ -363,6 +422,28 @@ function initRenderer(wasm) {
 	// Initialize input
     ut.initInput(onKeyDown);
     
+    // mouse and touch input
+	var gm = document.getElementById("game");
+	gm.addEventListener('mousedown', e => { 
+		e.preventDefault();
+		//var m_pos = getMousePos(e);
+		//console.log("Pressed mouse @ x: " + m_pos.x + " y: " + m_pos.y);
+		//var r_pos = relPos(e, gm);
+		//console.log("Position relative to gm: x: " + r_pos.x + " y:" + r_pos.y);
+		mouse = termPos(e, gm);
+		//console.log("Term pos: x: " + t_pos.x + " y: " + t_pos.y);
+		var w_pos = worldPos(mouse);
+		//console.log("World pos: x " + w_pos.x + " y: " + w_pos.y);
+		onClickH(w_pos);
+	});
+	gm.addEventListener('mouseup', e => { e.preventDefault() } );
+	gm.addEventListener('mousemove', e => { 
+		e.preventDefault();
+		mouse = termPos(e, gm);
+		//console.log(mouse);
+		tick();
+	});
+
     //handle post-start
     //universe.on_game_start();
     // character creation screen
