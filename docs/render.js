@@ -389,8 +389,7 @@ function onClickH(w_pos) {
     var dir_y = w_pos.y-player[1]
 	//move player
 	if (dir_x < 2 && dir_x > -2 && dir_y < 2 && dir_y > -2){
-        console.log("Move...", dir_x, dir_y);
-        //moveEntity(dir_x, dir_y, player);
+        universe.move_player(dir_x, dir_y);
 	}
 	tick();
 }
