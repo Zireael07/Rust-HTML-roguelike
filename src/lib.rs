@@ -148,6 +148,9 @@ pub struct Needs{
     pub hunger: i32,
     pub thirst: i32,
 }
+pub struct Path{
+    pub steps: Vec<i32> // see astar line 43
+}
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Attribute {
@@ -337,6 +340,14 @@ pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize)
     (x,y) //dummy
 }
 
+pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y: usize) -> Vec<i32> {
+    let path = a_star_search(player_position as i32, map.xy_idx(x as i32, y as i32) as i32, &map);
+    if path.success {
+        return path.steps;
+    }
+    log!("{}", &format!("No player path found, x {} y {}", x,y));
+    vec![player_position as i32] //dummy
+}
 
 /// Public methods, exported to JavaScript.
 #[wasm_bindgen]
@@ -512,6 +523,19 @@ impl Universe {
                 }
             }
         }
+    }
+
+    pub fn astar_path(&mut self, x:i32, y:i32) {
+        if self.is_player_dead() {
+            return;
+        }
+        let new_path = player_path_to_target(&mut self.map,  self.player_position, x as usize, y as usize);
+
+        //debugging
+        for i in new_path {
+            log!("{}", &format!("x {} y {}", self.map.idx_xy(i as usize).0, self.map.idx_xy(i as usize).1));
+        }
+
     }
 
     // Handle player movement. Delta X and Y are the relative move
@@ -1079,7 +1103,7 @@ impl Universe {
         let sum = res.iter().filter(|&&b| b).count(); //iter returns references and filter works with references too - double indirection
         game_message(&format!("Test: {} sum: {{g{}", Rolls(res), sum));
 
-        if sum > 5 {
+        if sum >= 5 {
             game_message(&format!("Attack hits!"));
             //item bonuses
             let mut offensive_bonus = 0;
