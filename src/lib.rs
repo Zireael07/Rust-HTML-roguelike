@@ -532,9 +532,11 @@ impl Universe {
         let new_path = player_path_to_target(&mut self.map,  self.player_position, x as usize, y as usize);
 
         //debugging
-        for i in new_path {
-            log!("{}", &format!("x {} y {}", self.map.idx_xy(i as usize).0, self.map.idx_xy(i as usize).1));
+        for i in &new_path {
+            log!("{}", &format!("x {} y {}", self.map.idx_xy(*i as usize).0, self.map.idx_xy(*i as usize).1));
         }
+
+        self.set_automove(new_path);
 
     }
 
@@ -600,6 +602,68 @@ impl Universe {
             log!("{}", &format!("Blocked move to {}, {} ", new_position.0,new_position.1))
         }
     }
+
+    pub fn set_automove(&mut self, path: Vec<i32>) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                self.ecs_world.insert_one(entity, Path{ steps: path});
+            },
+            None => { }
+        }
+    }
+
+    pub fn has_automove(&self) -> bool {
+        if self.is_player_dead() {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+
+    pub fn get_automove(&self) -> Vec<i32> {
+         //get player entity
+         let mut play: Option<Entity> = None;
+         for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+             play = Some(id);
+         }
+         match play {
+             Some(entity) => {
+                let path = self.ecs_world.get_mut::<Path>(entity);
+                if path.is_ok() {
+                    let mut steps = path.unwrap().steps.clone();
+                    steps.remove(0);
+                   return steps;
+                } else {
+                    return [].to_vec();
+                }
+             },
+             None => { return [].to_vec(); }
+            }
+    }
+
+    pub fn advance_automove(&mut self) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                self.ecs_world.get_mut::<Path>(entity).unwrap().steps.remove(0);
+                if self.ecs_world.get::<Path>(entity).unwrap().steps.len() < 1 {
+                    self.ecs_world.remove_one::<Path>(entity);
+                }
+            },
+            None => {}
+        }
+    }
+
 
     pub fn get_item(&mut self) {
         let current_position = self.map.idx_xy(self.player_position);

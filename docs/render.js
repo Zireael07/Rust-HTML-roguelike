@@ -7,6 +7,7 @@ import {res} from './mal.js';
 var term, eng, inventoryOverlay, vendorOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 var mouse = null
+var automoving = false;
 
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
@@ -40,7 +41,7 @@ const getIndex = (x, y) => {
 
 //inverse of the above
 const getPos = (ind) => {
-    return [ind % w, ind / w];
+    return [Math.round(ind % w), Math.round(ind / w) ];
 }
 
 //wrappers for Rust functions
@@ -391,8 +392,8 @@ function onClickH(w_pos) {
 	if (dir_x < 2 && dir_x > -2 && dir_y < 2 && dir_y > -2){
         universe.move_player(dir_x, dir_y);
 	} else {
-        universe.astar_path(w_pos.x, w_pos.y);
         // store target and/or path on Rust side
+        universe.astar_path(w_pos.x, w_pos.y);
     }
 	tick();
 }
@@ -442,7 +443,27 @@ function initRenderer(wasm) {
 	gm.addEventListener('mousemove', e => { 
 		e.preventDefault();
 		mouse = termPos(e, gm);
-		//console.log(mouse);
+        //console.log(mouse);
+
+        //trigger automove
+        if (universe.has_automove() && universe.get_automove().length > 0 && !automoving) {
+            console.log("We have automove...");
+            automoving = true;
+            setTimeout(function() { 
+                //alert("After 1 seconds!"); 
+                var steps = universe.get_automove();
+                //pop the first step
+                var pos = getPos(steps[0])
+                var dir_x = pos[0]-player[0]
+                var dir_y = pos[1]-player[1]
+                universe.move_player(dir_x, dir_y);
+                universe.advance_automove();
+                //redraw
+                tick();
+                automoving = false;
+            }, 1000);
+        }
+        //to redraw the highlight
 		tick();
 	});
 
