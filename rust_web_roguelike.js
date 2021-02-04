@@ -345,6 +345,13 @@ export class Universe {
         wasm.universe_process(this.ptr, isLikeNone(input) ? 7 : input);
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    */
+    astar_path(x, y) {
+        wasm.universe_astar_path(this.ptr, x, y);
+    }
+    /**
     * @param {number} delta_x
     * @param {number} delta_y
     */

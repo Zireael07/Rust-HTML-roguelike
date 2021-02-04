@@ -390,7 +390,10 @@ function onClickH(w_pos) {
 	//move player
 	if (dir_x < 2 && dir_x > -2 && dir_y < 2 && dir_y > -2){
         universe.move_player(dir_x, dir_y);
-	}
+	} else {
+        universe.astar_path(w_pos.x, w_pos.y);
+        // store target and/or path on Rust side
+    }
 	tick();
 }
 
