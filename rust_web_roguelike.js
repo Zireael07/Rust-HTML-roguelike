@@ -188,6 +188,21 @@ function isLikeNone(x) {
     return x === undefined || x === null;
 }
 
+let cachegetUint32Memory0 = null;
+function getUint32Memory0() {
+    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
+    }
+    return cachegetUint32Memory0;
+}
+
+function passArray32ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 4);
+    getUint32Memory0().set(arg, ptr / 4);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
 let cachegetUint64Memory0 = null;
 function getUint64Memory0() {
     if (cachegetUint64Memory0 === null || cachegetUint64Memory0.buffer !== wasm.memory.buffer) {
@@ -203,21 +218,6 @@ function getArrayU64FromWasm0(ptr, len) {
 const u32CvtShim = new Uint32Array(2);
 
 const uint64CvtShim = new BigUint64Array(u32CvtShim.buffer);
-
-let cachegetUint32Memory0 = null;
-function getUint32Memory0() {
-    if (cachegetUint32Memory0 === null || cachegetUint32Memory0.buffer !== wasm.memory.buffer) {
-        cachegetUint32Memory0 = new Uint32Array(wasm.memory.buffer);
-    }
-    return cachegetUint32Memory0;
-}
-
-function passArray32ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 4);
-    getUint32Memory0().set(arg, ptr / 4);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
 /**
 */
 export function start() {
@@ -229,13 +229,13 @@ function handleError(e) {
 }
 /**
 */
+export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4,Door:5, });
+/**
+*/
 export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2,Barkeep:3,Table:4,Chair:5,Boots:6,Jacket:7,Jeans:8, });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5,SaveGame:6, });
-/**
-*/
-export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4,Door:5, });
 /**
 */
 export class Universe {
@@ -357,6 +357,37 @@ export class Universe {
     */
     move_player(delta_x, delta_y) {
         wasm.universe_move_player(this.ptr, delta_x, delta_y);
+    }
+    /**
+    * @param {Int32Array} path
+    */
+    set_automove(path) {
+        var ptr0 = passArray32ToWasm0(path, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.universe_set_automove(this.ptr, ptr0, len0);
+    }
+    /**
+    * @returns {boolean}
+    */
+    has_automove() {
+        var ret = wasm.universe_has_automove(this.ptr);
+        return ret !== 0;
+    }
+    /**
+    * @returns {Int32Array}
+    */
+    get_automove() {
+        wasm.universe_get_automove(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayI32FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 4);
+        return v0;
+    }
+    /**
+    */
+    advance_automove() {
+        wasm.universe_advance_automove(this.ptr);
     }
     /**
     */
