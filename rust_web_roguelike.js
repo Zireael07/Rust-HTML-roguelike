@@ -472,6 +472,13 @@ export class Universe {
         wasm.universe_set_player_stats(this.ptr, ptr0, len0);
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    */
+    describe(x, y) {
+        wasm.universe_describe(this.ptr, x, y);
+    }
+    /**
     * @returns {string}
     */
     save_game() {

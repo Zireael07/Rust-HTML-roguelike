@@ -388,6 +388,10 @@ function onClickH(w_pos) {
 
     var dir_x = w_pos.x-player[0]
     var dir_y = w_pos.y-player[1]
+
+    //test
+    universe.describe(w_pos.x, w_pos.y);
+
 	//move player
 	if (dir_x < 2 && dir_x > -2 && dir_y < 2 && dir_y > -2){
         universe.move_player(dir_x, dir_y);
