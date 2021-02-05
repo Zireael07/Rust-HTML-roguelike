@@ -804,6 +804,11 @@ impl Universe {
         }
     }
 
+    pub fn describe(&self, x:i32, y:i32) {
+        let current_position = self.map.idx_xy(self.player_position);
+        log!("{}", &format!("Direction: {:?}", dir(&Point{x:current_position.0, y:current_position.1}, &Point{x:x, y:y})));
+    }
+
     //save/load
     pub fn save_game(&self) -> String {
         log!("Saving game...");
