@@ -700,6 +700,29 @@ impl Universe {
         return js_drawn;
     }
 
+    pub fn view_list(&self) -> Vec<u64> {
+        let mut list = Vec::new();
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        .with::<String>()
+        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        .iter() {
+            if self.is_visible(point.x as usize, point.y as usize) {
+                list.push(id.to_bits())
+            }
+        }
+        return list;
+    }
+
+    pub fn view_string_for_id(&self, id: u64) -> String {
+        let ent = hecs::Entity::from_bits(id); //restore
+
+        let player_pos = self.map.idx_xy(self.player_position);
+        let point = self.ecs_world.get::<Point>(ent).unwrap();
+        let direction = dir(&Point{x:player_pos.0, y:player_pos.1}, &Point{x:point.x, y:point.y});
+        let dist = distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1);
+        let name = self.ecs_world.get::<String>(ent).unwrap().to_string();
+        return format!("{} - {} {:?}", name, dist, direction);
+    }
 
     pub fn inventory_size(&self) -> usize {
         return self.items_in_inventory().len()
