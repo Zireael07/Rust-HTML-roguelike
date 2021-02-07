@@ -4,7 +4,7 @@ import * as rust from './rust_web_roguelike.js';
 //JS Lisp implementation
 import {res} from './mal.js';
 
-var term, eng, inventoryOverlay, vendorOverlay; // Can't be initialized yet because DOM is not ready
+var term, eng, inventoryOverlay, vendorOverlay, viewOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 var mouse = null
 var automoving = false;
@@ -292,6 +292,54 @@ function confirmCreation() {
     }
 }
 
+//view listing
+function createViewListOverlay() {
+    const overlay = document.querySelector("#viewlist");
+    let visible = false;
+
+    function draw() {
+        let html = `<div>VIEW LISTING</div><ul>`;
+        let empty = true;
+
+        let viewlist = universe.view_list();
+
+        let len = viewlist.length;
+		for (var i = 0; i < len; ++i) {
+            var item = viewlist[i];
+            html += `<li> ${universe.view_string_for_id(item)}</li>`;
+			empty = false;
+        } //);
+        html += `</ul>`;
+        // if (empty) {
+        //     html = `<div>Your inventory is empty. Press <kbd>I</kbd> again to cancel.</div>${html}`;
+        // } else {
+        //     html = `<div>Select an item to use it, or <kbd>I</kbd> again to cancel.</div>${html}`;
+        // }
+		overlay.innerHTML = html;
+    }
+
+    return {
+        get visible() { return visible; },
+        setVisibility(visibility) {
+            visible = visibility;
+            overlay.classList.toggle('visible', visibility);
+            if (visible) draw();
+        },
+    };
+}
+
+
+function showViewList() {
+	//var set = inventoryOverlay.visible? false : true;
+	if (viewOverlay.visible) {
+		viewOverlay.setVisibility(false);
+	}
+	else if (!viewOverlay.visible) {
+		viewOverlay.setVisibility(true);
+	}
+	//return;
+}
+
 
 // Key press handler - movement & collision handling
 //Just converts to rust commands
@@ -308,6 +356,9 @@ function onKeyDown(k) {
             showInventory() //do our thing
         }
 
+    }
+    else if (k == ut.KEY_V) {
+        showViewList()
     } 
     else if (k == ut.KEY_S) {
         cmd = rust.Command.SaveGame; //dummy
@@ -419,6 +470,7 @@ function initRenderer(wasm) {
 
     //more game init
     inventoryOverlay = createInventoryOverlay();
+    viewOverlay = createViewListOverlay();
     vendorOverlay = document.getElementById("vendor");
     //anonymous function
     vendorOverlay.firstElementChild.onclick = function(e) { vendorClick(e.target); }

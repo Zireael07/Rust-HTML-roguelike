@@ -406,6 +406,34 @@ export class Universe {
         return v0;
     }
     /**
+    * @returns {BigUint64Array}
+    */
+    view_list() {
+        wasm.universe_view_list(8, this.ptr);
+        var r0 = getInt32Memory0()[8 / 4 + 0];
+        var r1 = getInt32Memory0()[8 / 4 + 1];
+        var v0 = getArrayU64FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 8);
+        return v0;
+    }
+    /**
+    * @param {BigInt} id
+    * @returns {string}
+    */
+    view_string_for_id(id) {
+        try {
+            uint64CvtShim[0] = id;
+            const low0 = u32CvtShim[0];
+            const high0 = u32CvtShim[1];
+            wasm.universe_view_string_for_id(8, this.ptr, low0, high0);
+            var r0 = getInt32Memory0()[8 / 4 + 0];
+            var r1 = getInt32Memory0()[8 / 4 + 1];
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_free(r0, r1);
+        }
+    }
+    /**
     * @returns {number}
     */
     inventory_size() {
