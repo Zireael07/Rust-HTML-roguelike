@@ -713,6 +713,7 @@ impl Universe {
         return list;
     }
 
+    //we store a list of ids and get the actual strings with this separate function
     pub fn view_string_for_id(&self, id: u64) -> String {
         let ent = hecs::Entity::from_bits(id); //restore
 
@@ -827,9 +828,30 @@ impl Universe {
         }
     }
 
-    pub fn describe(&self, x:i32, y:i32) {
+    //i32 because that's what JS sends in
+    pub fn describe(&self, x:i32, y:i32) -> String {
         let current_position = self.map.idx_xy(self.player_position);
-        log!("{}", &format!("Direction: {:?}", dir(&Point{x:current_position.0, y:current_position.1}, &Point{x:x, y:y})));
+
+        let ent = self.entities_at(x as usize, y as usize);
+
+        let mut desc = "".to_string();
+        match ent {
+            Some(entity) => {
+                // display name and faction if any 
+                desc = self.ecs_world.get::<String>(entity).unwrap().to_string();
+                if self.ecs_world.get::<Faction>(entity).is_ok() {
+                    desc = desc + &format!("\n{:?}", self.ecs_world.get::<Faction>(entity).unwrap().typ);
+                }
+            },
+            None => { }
+        }
+        return format!("Direction: {:?}\n {}", dir(&Point{x:current_position.0, y:current_position.1}, &Point{x:x, y:y}), desc);
+
+        //log!("{}", &format!("Direction: {:?}", dir(&Point{x:current_position.0, y:current_position.1}, &Point{x:x, y:y})));
+    }
+
+    pub fn get_description(&self, x:i32, y:i32) -> String {
+        return self.describe(x,y);
     }
 
     //save/load
@@ -1071,6 +1093,19 @@ impl Universe {
             }
         }
         return blocked;
+    }
+
+    pub fn entities_at(&self, x: usize, y: usize) -> Option<Entity> {
+        let mut ent: Option<Entity> = None;
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        .iter() {
+            if point.x as usize == x && point.y as usize == y {
+                ent = Some(id);
+                break;
+            }
+        }
+        return ent;
     }
 
     pub fn items_at(&self, x: usize, y: usize) -> Option<Entity> {
