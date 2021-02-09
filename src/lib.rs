@@ -590,6 +590,22 @@ impl Universe {
                             self.map.revealed_tiles[idx] = true;
                         }
                     }
+
+                    //test MUD-style description
+                    let area_desc = "This area appears to be a town that hugs a forest.";
+                    let mut terrain_desc = "";
+                    if (self.map.tiles[new_idx] == Cell::Grass as u8){
+                        terrain_desc = "You feel the grass under your feet.";
+                    }
+                    else if (self.map.tiles[new_idx] == Cell::Floor as u8) {
+                        terrain_desc = " You walk on paved ground of the town.";
+                    }
+                    else if (self.map.tiles[new_idx] == Cell::FloorIndoor as u8) {
+                        terrain_desc = " You entered one of the buildings.";
+                    }
+                    game_message(&format!("{} {}", area_desc, terrain_desc));
+
+
                     //enemy turn
                     self.get_AI();
                     self.remove_dead();
