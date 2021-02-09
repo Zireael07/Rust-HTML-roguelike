@@ -340,6 +340,20 @@ function showViewList() {
 	//return;
 }
 
+function showDescription() {
+    if (!document.getElementById("description").classList.contains('visible')) {
+        document.getElementById("description").classList.toggle('visible', true);
+        var w_pos = worldPos(mouse);
+        //draw
+        let html = "<div>DESCRIPTION</div><p style='white-space: pre-line'>"; //this style makes HTML understand /n linebreaks
+        html += universe.get_description(w_pos.x, w_pos.y) + '</p>';
+        document.getElementById("description").innerHTML = html;
+    }
+    else {
+        document.getElementById("description").classList.toggle('visible', false); //close the listing
+    }
+        
+}
 
 // Key press handler - movement & collision handling
 //Just converts to rust commands
@@ -356,6 +370,9 @@ function onKeyDown(k) {
             showInventory() //do our thing
         }
 
+    }
+    else if (k == ut.KEY_E) {
+        showDescription()
     }
     else if (k == ut.KEY_V) {
         showViewList()
@@ -517,8 +534,8 @@ function initRenderer(wasm) {
             }, 1000);
         }
         //to redraw the highlight
-		var w_pos = worldPos(mouse);
-        universe.describe(w_pos.x, w_pos.y);
+		//var w_pos = worldPos(mouse);
+        //universe.describe(w_pos.x, w_pos.y);
         tick();
 	});
 

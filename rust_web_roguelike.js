@@ -502,9 +502,32 @@ export class Universe {
     /**
     * @param {number} x
     * @param {number} y
+    * @returns {string}
     */
     describe(x, y) {
-        wasm.universe_describe(this.ptr, x, y);
+        try {
+            wasm.universe_describe(8, this.ptr, x, y);
+            var r0 = getInt32Memory0()[8 / 4 + 0];
+            var r1 = getInt32Memory0()[8 / 4 + 1];
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_free(r0, r1);
+        }
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {string}
+    */
+    get_description(x, y) {
+        try {
+            wasm.universe_get_description(8, this.ptr, x, y);
+            var r0 = getInt32Memory0()[8 / 4 + 0];
+            var r1 = getInt32Memory0()[8 / 4 + 1];
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_free(r0, r1);
+        }
     }
     /**
     * @returns {string}
