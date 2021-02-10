@@ -1,10 +1,14 @@
+// those work on module level, too - https://stackoverflow.com/a/39269962
+#![allow(unused_must_use)]
+#![allow(unused_parens)]
+#![allow(non_snake_case)]
+
 extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
 //the websys bindings uses it
 use wasm_bindgen::JsCast; // for dyn_into
-use std::f64;
 
 //better panics
 extern crate console_error_panic_hook;

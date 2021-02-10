@@ -128,7 +128,7 @@ impl RectBuilder {
                 while h < &v[stack.last().unwrap().clone()] {
                     let last_bar = v[stack.pop().unwrap().clone()];
                     //unlike the more popular version, we don't need to have a case for empty stack here
-                    let width = (idx - 1 - stack.last().unwrap().clone() as i32);
+                    let width = idx - 1 - stack.last().unwrap().clone() as i32;
                     let area = last_bar * width;
 
                     if area > max_area {

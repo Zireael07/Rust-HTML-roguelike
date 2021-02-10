@@ -5,6 +5,8 @@
 // Original code: https://github.com/Auburns/FastNoise
 // The original is MIT licensed, so this is compatible.
 
+#![allow(dead_code)]
+
 use rand::{Rng, RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256PlusPlus;
 
