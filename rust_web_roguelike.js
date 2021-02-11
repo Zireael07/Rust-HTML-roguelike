@@ -333,6 +333,16 @@ export class Universe {
     * @param {number} y
     * @param {string} name
     */
+    spawn_ex(x, y, name) {
+        var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.universe_spawn_ex(this.ptr, x, y, ptr0, len0);
+    }
+    /**
+    * @param {number} x
+    * @param {number} y
+    * @param {string} name
+    */
     spawn(x, y, name) {
         var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
