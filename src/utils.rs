@@ -36,7 +36,7 @@ impl Point {
 
 //aka Chebyshev
 pub fn distance2d_chessboard(sx: i32, sy: i32, tx: i32, ty: i32) -> i32 {
-    return max((sy-sx).abs(), (ty-tx).abs());
+    return max((sx-tx).abs(), (sy-ty).abs());
 }
 
 
