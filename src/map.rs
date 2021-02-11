@@ -3,6 +3,10 @@ extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
 
+use std::cmp::{max, min};
+use crate::utils::*;
+use crate::log;
+
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,6 +77,40 @@ impl Map {
         if x < 1 || x > self.width as i32-1 || y < 1 || y > self.height as i32-1 { return false; }
         let idx = (y * self.width as i32) + x;
         return !self.is_tile_blocked(idx);
+    }
+
+    //helpers
+    pub fn find_grid_in_range(&self, sx: i32, sy:i32, dist:i32) -> Vec<DistPos> {
+        log!("{}", &format!("Find grid in range {} sx {} sy {} ", dist, sx, sy));
+        let mut coords = Vec::new();
+        for x in sx-dist/2..sx + dist/2 {
+            for y in sy-dist/2..sy + dist/2 {
+                if x > 0 && x <= self.width as i32 && y > 0 && y <= self.height as i32 {
+                    let distance = distance2d_chessboard(sx,sy, x,y);
+                    //log!("{}", &format!("Distance of {} {} to sx {} sy {} dist {}", x,y,sx,sy,distance));
+                    let coord = DistPos{x:x, y:y, dist:distance};
+                    coords.push(coord);
+                }
+            }
+        }
+
+        //sort
+        //default is smallest to largest
+        coords.sort_by(|a,b| a.dist.cmp(&b.dist));
+        //log!("{}", &format!("{:?}", coords));
+
+        return coords;
+    }
+
+    pub fn free_grid_in_range(&self, sx:i32, sy:i32, dist:i32) -> Point {
+        let grids = self.find_grid_in_range(sx,sy, dist);
+        for i in 0..grids.len()-1 {
+            if self.is_tile_walkable(grids[i].x, grids[i].y) {
+                let pos = &grids[i];
+                return Point{x:pos.x, y:pos.y}; //return the first walkable found
+            }
+        }
+        return Point{x:sx,y:sy} //dummy
     }
 
 }

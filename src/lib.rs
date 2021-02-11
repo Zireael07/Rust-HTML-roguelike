@@ -478,6 +478,13 @@ impl Universe {
         return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
+
+    pub fn spawn_ex(&mut self, x:i32, y:i32, name:String) {
+        let pos = self.map.free_grid_in_range(x,y,4);
+        return self.spawn(pos.x,pos.y,name);
+    }
+
+
     pub fn spawn(&mut self, x:i32, y:i32, name:String) {
         //TODO: should be a dict lookup
         // props

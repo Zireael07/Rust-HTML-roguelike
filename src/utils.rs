@@ -34,6 +34,13 @@ impl Point {
     }
 }
 
+#[derive(Debug)]
+pub struct DistPos {
+    pub x: i32,
+    pub y: i32,
+    pub dist: i32,
+}
+
 //aka Chebyshev
 pub fn distance2d_chessboard(sx: i32, sy: i32, tx: i32, ty: i32) -> i32 {
     return max((sx-tx).abs(), (sy-ty).abs());
