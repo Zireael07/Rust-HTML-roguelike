@@ -747,7 +747,7 @@ impl Universe {
         let player_pos = self.map.idx_xy(self.player_position);
         let point = self.ecs_world.get::<Point>(ent).unwrap();
         let direction = dir(&Point{x:player_pos.0, y:player_pos.1}, &Point{x:point.x, y:point.y});
-        let dist = distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1);
+        let dist = distance2d_chessboard(point.x, point.y, player_pos.0, player_pos.1);
         let name = self.ecs_world.get::<String>(ent).unwrap().to_string();
         return format!("{} - {} {:?}", name, dist, direction);
     }
@@ -1385,7 +1385,7 @@ impl Universe {
             //if the player's immediately next to us, don't run costly A*
             let player_pos = self.map.idx_xy(self.player_position);
             //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
-            if distance2d_chessboard(point.x, player_pos.0, point.y, player_pos.1) < 2 {
+            if distance2d_chessboard(point.x, point.y, player_pos.0, player_pos.1) < 2 {
                 //log!("{}", &format!("AI next to player, attack!"));
                 game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
                 //get player entity
@@ -1404,6 +1404,7 @@ impl Universe {
                     let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
                     // move or attack            
                     if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+                        //log!("{}", &format!("new: {} {} player: {} {}", new_pos.0, new_pos.1, player_pos.0, player_pos.1));
                         game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
                         //get player entity
                         let mut play: Option<Entity> = None;
