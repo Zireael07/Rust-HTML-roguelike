@@ -50,3 +50,4 @@ rand_xoshiro = { version = "0.4.0" }
 
 # Parsing
 nom = "6.0"
+_funty = { package = "funty", version = "=1.1.0"} # https://github.com/bitvecto-rs/bitvec/issues/105
