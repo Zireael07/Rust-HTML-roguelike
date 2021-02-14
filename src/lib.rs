@@ -1195,26 +1195,39 @@ impl Universe {
 
             // If it is equippable, then we want to equip it - and unequip whatever else was in that slot
             if self.ecs_world.get::<Equippable>(wantstouse.item).is_ok() {
-                let can_equip = self.ecs_world.get::<Equippable>(wantstouse.item).unwrap();
-                let target_slot = can_equip.slot;
-        
-                // Remove any items the target has in the item's slot
-                //let mut to_unequip : Vec<Entity> = Vec::new();
-
-                //find items in slot
-                for (ent_id, (equipped)) in self.ecs_world.query::<(&Equipped)>()
-                .with::<String>()
-                .iter()
-                {
+                //if it's equipped already...
+                if self.ecs_world.get::<Equipped>(wantstouse.item).is_ok(){
+                    let equipped = self.ecs_world.get::<Equipped>(wantstouse.item).unwrap();
                     let owner = hecs::Entity::from_bits(equipped.owner);
-                    if owner == *user && equipped.slot == target_slot {
-                        to_unequip.push(ent_id);
+                    if owner == *user {
+                        to_unequip.push(wantstouse.item);
                         //if target == *player_entity {
-                        game_message(&format!("{{rYou unequip {}.", self.ecs_world.get::<String>(ent_id).unwrap().to_string()));
-                    }   
+                        game_message(&format!("{{rYou unequip {}.", self.ecs_world.get::<String>(wantstouse.item).unwrap().to_string()));
+                    }
                 }
-                wants.push(wantstouse.item);
-                game_message(&format!("{{g{} equips {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
+                else {
+                    let can_equip = self.ecs_world.get::<Equippable>(wantstouse.item).unwrap();
+                    let target_slot = can_equip.slot;
+            
+                    // Remove any items the target has in the item's slot
+                    //let mut to_unequip : Vec<Entity> = Vec::new();
+    
+                    //find items in slot
+                    for (ent_id, (equipped)) in self.ecs_world.query::<(&Equipped)>()
+                    .with::<String>()
+                    .iter()
+                    {
+                        let owner = hecs::Entity::from_bits(equipped.owner);
+                        if owner == *user && equipped.slot == target_slot {
+                            to_unequip.push(ent_id);
+                            //if target == *player_entity {
+                            game_message(&format!("{{rYou unequip {}.", self.ecs_world.get::<String>(ent_id).unwrap().to_string()));
+                        }   
+                    }
+                    wants.push(wantstouse.item);
+                    game_message(&format!("{{g{} equips {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
+                }
+               
             }
 
             if self.ecs_world.get::<Consumable>(wantstouse.item).is_ok() {
