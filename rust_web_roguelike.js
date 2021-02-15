@@ -488,6 +488,15 @@ export class Universe {
         wasm.universe_use_item_ext(this.ptr, low0, high0);
     }
     /**
+    * @param {BigInt} id
+    */
+    drop_item_ext(id) {
+        uint64CvtShim[0] = id;
+        const low0 = u32CvtShim[0];
+        const high0 = u32CvtShim[1];
+        wasm.universe_drop_item_ext(this.ptr, low0, high0);
+    }
+    /**
     * @param {number} val
     */
     change_money(val) {

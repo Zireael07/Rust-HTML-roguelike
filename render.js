@@ -172,6 +172,18 @@ function clickFunction(button) {
 	universe.use_item_ext(item);
 }
 
+function dropclickFunc(button) {
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+    //console.log("ID: ", i);
+    inventoryOverlay.setVisibility(false); //close the inventory
+    var item = universe.inventory_items()[i];
+    console.log("Pressed drop button " + button.innerHTML, " id: ", item);
+    universe.drop_item_ext(item);
+}
+
 function display_name(item){
     return universe.inventory_name_for_id(item);
 }
@@ -190,7 +202,7 @@ function createInventoryOverlay() {
 		for (var i = 0; i < len; ++i) {
             //var item = player.inventory.items[i];
             var item = universe.inventory_items()[i];
-            html += `<li><button class="inv_button" id=item-${i}>${String.fromCharCode(65 + i)}</button> ${display_name(item)}</li>`;
+            html += `<li><button class="inv_button" id=item-${i}>${String.fromCharCode(65 + i)}</button> ${display_name(item)}<button class="drop_button" id=item-drop-${i}>d</button></li>`;
 			empty = false;
 			//not added yet!
 			//var button = document.querySelector(".inv_button");
@@ -211,7 +223,9 @@ function createInventoryOverlay() {
                 //var item = universe.inventory_items()[i];
                 //console.log(button, item);
                 //anonymous function
-				button.onclick = function(e) { clickFunction(e.target); }
+                button.onclick = function(e) { clickFunction(e.target); }
+                var dropb = document.querySelector('#item-drop-'+CSS.escape(i));
+                dropb.onclick = function(e) { dropclickFunc(e.target); }
 			//}
 		}
     }
