@@ -220,6 +220,9 @@ pub struct ProvidesQuench {}
 pub struct WantsToUseItem {
     pub item : Entity
 }
+pub struct WantsToDropItem {
+    pub item : Entity
+}
 // tells the engine to nuke us
 pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify entities when iterating
 
@@ -797,6 +800,29 @@ impl Universe {
         }
     }
 
+    pub fn drop_item_ext(&mut self, id: u64) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                //check dead
+                let hp = self.ecs_world.get::<CombatStats>(entity).unwrap().hp;
+                if hp <= 0 {
+                    return 
+                }
+
+                log!("Player drops item {}", id);
+                let item = hecs::Entity::from_bits(id); //restore
+                self.drop_item(&entity, &item);
+            },
+            None => {},
+        }
+    }
+
+
     pub fn change_money(&mut self, val: f32) {
         //get player entity
         let mut play: Option<Entity> = None;
@@ -1253,6 +1279,32 @@ impl Universe {
             //self.ecs_world.remove_one::<InBackpack>(*item);
         }
 
+    }
+
+    fn drop_item(&mut self, user: &Entity, it: &Entity) {
+        // The indirection is here to make it possible for non-player Entities to drop items
+        //tell the engine that we want to drop the item
+        self.ecs_world.insert_one(*user, WantsToDropItem{item:*it});
+
+        //message
+        game_message(&format!("{} drops {}", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<String>(*it).unwrap().to_string()));
+        //scope to get around borrow checker
+        {
+            let user_pos = self.map.idx_xy(self.player_position);
+            //for NPCs
+            //let user_pos = self.ecs_world.get::<Point>(*user).unwrap();
+            for (id, (wantstodrop)) in self.ecs_world.query::<(&WantsToDropItem)>().iter(){
+                let mut pos = self.ecs_world.get_mut::<Point>(wantstodrop.item).unwrap();
+                pos.x = user_pos.0;
+                pos.y = user_pos.1;
+                //for NPCs
+                //pos.x = user_pos.x;
+                //pos.y = user_pos.y; 
+            }
+        }
+
+        self.ecs_world.remove_one::<InBackpack>(*it);
+        
     }
 
 
