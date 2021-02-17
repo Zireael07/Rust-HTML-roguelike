@@ -67,6 +67,9 @@ pub fn game_message(string: &str)
     let document = window.document().expect("expecting a document on window");
     
     let messages = document.get_element_by_id("messages").unwrap();
+
+    let log_history = document.get_element_by_id("log-history").unwrap();
+
     let line = document.create_element("div").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap(); //dyn_into for style() to work
 
     //apply CSS to whole line
@@ -121,6 +124,11 @@ pub fn game_message(string: &str)
 
     line.set_inner_html(&string); //wants &str
     messages.append_child(&line).unwrap(); //implicitly converts to Node
+
+    //clone to place a copy
+    let ln = line.clone_node().unwrap().dyn_into::<web_sys::HtmlElement>().unwrap(); //Rust version for some reason doesn't have the deep parameter?
+    ln.set_inner_html(&string); //because clone_node doesn't do it for some reason
+    log_history.append_child(&ln).unwrap();
 
     //axe the first if more than 5
     while messages.child_element_count() > 5 {
