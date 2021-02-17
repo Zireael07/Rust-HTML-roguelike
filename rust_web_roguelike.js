@@ -647,6 +647,14 @@ function init(module) {
             handleError(e)
         }
     };
+    imports.wbg.__widl_f_clone_node_Node = function(arg0) {
+        try {
+            var ret = getObject(arg0).cloneNode();
+            return addHeapObject(ret);
+        } catch (e) {
+            handleError(e)
+        }
+    };
     imports.wbg.__widl_f_remove_child_Node = function(arg0, arg1) {
         try {
             var ret = getObject(arg0).removeChild(getObject(arg1));

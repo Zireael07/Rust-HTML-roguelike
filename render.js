@@ -4,7 +4,7 @@ import * as rust from './rust_web_roguelike.js';
 //JS Lisp implementation
 import {res} from './mal.js';
 
-var term, eng, inventoryOverlay, vendorOverlay, viewOverlay; // Can't be initialized yet because DOM is not ready
+var term, eng, inventoryOverlay, vendorOverlay, viewOverlay,logOverlay; // Can't be initialized yet because DOM is not ready
 var universe, g_wasm, map, player, entities_mem,w,h; // Can't be initialized yet because WASM is not ready
 var mouse = null
 var automoving = false;
@@ -369,12 +369,22 @@ function showDescription() {
         
 }
 
+//log view
+function showLogHistory() {
+	if (!document.getElementById("log-history").classList.contains('visible')) {
+		document.getElementById("log-history").classList.toggle('visible', true);
+	}
+	// else {
+	// 	document.getElementById("log-history").classList.toggle('visible', false); //close the listing
+	// }
+}
+
 // Key press handler - movement & collision handling
 //Just converts to rust commands
 function onKeyDown(k) {
     var cmd = -1;
 	if (k === ut.KEY_LEFT || k === ut.KEY_H) cmd = rust.Command.MoveLeft;
-	else if (k === ut.KEY_RIGHT || k === ut.KEY_L) cmd = rust.Command.MoveRight;
+	else if (k === ut.KEY_RIGHT || (k === ut.KEY_L && !ut.isKeyPressed(ut.KEY_SHIFT))) cmd = rust.Command.MoveRight;
 	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
@@ -391,6 +401,11 @@ function onKeyDown(k) {
     else if (k == ut.KEY_V) {
         showViewList()
     } 
+    //the usual way would be event.shiftkey but ut exposes only (k)eycodes, not the whole event
+    else if (k == ut.KEY_L && ut.isKeyPressed(ut.KEY_SHIFT)) {
+        showLogHistory();
+        console.log("Pressed Shift+L");
+    }
     else if (k == ut.KEY_S) {
         cmd = rust.Command.SaveGame; //dummy
         let save = universe.save_game();
@@ -415,6 +430,9 @@ function onKeyDown(k) {
     {
         if (vendorOverlay.classList.contains('visible')) {
             vendorOverlay.classList.toggle('visible', false); //close the listing
+        }
+        if (logOverlay.classList.contains('visible')) {
+            document.getElementById("log-history").classList.toggle('visible', false); //close the listing
         }
     }
 
@@ -503,6 +521,7 @@ function initRenderer(wasm) {
     inventoryOverlay = createInventoryOverlay();
     viewOverlay = createViewListOverlay();
     vendorOverlay = document.getElementById("vendor");
+    logOverlay = document.getElementById("log-history");
     //anonymous function
     vendorOverlay.firstElementChild.onclick = function(e) { vendorClick(e.target); }
 

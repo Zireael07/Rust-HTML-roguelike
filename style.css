@@ -24,7 +24,7 @@
     background: black;
     color: white; /* Default - overwritten by gameMessage */
     margin: 0;
-    padding: 0.5em 1em;
+    padding: 0.5em 1em; /*1 em seems to be 12.8px*/
     text-align: left;
     z-index: 1;
     max-width: 30.2em;
@@ -42,6 +42,7 @@
     opacity: 0;
     background: black;
     color: white;
+    max-width: 30.2em;
 }
 .overlay.visible {
     z-index: 2;
@@ -51,4 +52,9 @@
 
 .overlay li {
     text-align: left;
+}
+
+.overlay.scrolling {
+    max-height: 10em; /* 9 lines of text? */
+    overflow-y: scroll; /*for log overlay */
 }
