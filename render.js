@@ -379,6 +379,31 @@ function showLogHistory() {
 	// }
 }
 
+//tabs
+function openTab(evt) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    //Get tabname
+    var tabName = evt.target.id.replace('tab-', '');
+  
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+  
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+  
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+  }
+
 // Key press handler - movement & collision handling
 //Just converts to rust commands
 function onKeyDown(k) {
@@ -518,12 +543,20 @@ function initRenderer(wasm) {
     eng.setMaskFunc(shouldDraw);
 
     //more game init
+    //init UI stuff
     inventoryOverlay = createInventoryOverlay();
     viewOverlay = createViewListOverlay();
     vendorOverlay = document.getElementById("vendor");
     logOverlay = document.getElementById("log-history");
     //anonymous function
     vendorOverlay.firstElementChild.onclick = function(e) { vendorClick(e.target); }
+    var c = document.getElementById("tabs").children
+    for (i = 0; i < c.length; i++) {
+        c[i].onclick = function(e) {openTab(e) } //, c[i].id.replace('tab-', '')); }
+    }
+
+    //default to ASCII map open
+    document.getElementById("game").style.display = "block";
 
 	// Initialize input
     ut.initInput(onKeyDown);

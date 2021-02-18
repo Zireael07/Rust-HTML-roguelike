@@ -17,7 +17,12 @@
   <script type="module" src="bootstrap.js"></script>
 
   <div class="centerer">
-    <div id="game">Enable JavaScript and reload the page.</div>
+    <div id="tabs">
+      <button id="tab-game" class="tablinks">ASCII map</button>
+      <button id="tab-game-desc" class="tablinks">Description</button>
+    </div>
+    <div id="game" class="tabcontent">Enable JavaScript and reload the page.</div>
+    <div id="game-desc" style="color:white; display:none" class="tabcontent">Test</div>
     <div id="messages"></div>
     <div id="log-history" class="overlay scrolling"></div>
     <div id="inventory" class="overlay"></div>
