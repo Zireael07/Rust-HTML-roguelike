@@ -136,6 +136,18 @@ pub fn game_message(string: &str)
     }
 }	
 
+pub fn game_describe(string: &str) {
+    //convert
+    //let mut string = string.to_string();
+    let window = web_sys::window().expect("global window does not exists");    
+    let document = window.document().expect("expecting a document on window");
+
+    let desc = document.get_element_by_id("game-desc").unwrap();
+    //let line = document.create_element("div").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap(); //dyn_into for style() to work
+
+    desc.set_inner_html(string);
+}
+
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -625,7 +637,7 @@ impl Universe {
                     else if (self.map.tiles[new_idx] == Cell::FloorIndoor as u8) {
                         terrain_desc = " You entered one of the buildings.";
                     }
-                    game_message(&format!("{} {}", area_desc, terrain_desc));
+                    game_describe(&format!("{} {}", area_desc, terrain_desc));
 
 
                     //enemy turn

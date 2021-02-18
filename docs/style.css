@@ -4,14 +4,31 @@
     text-align: center;
     display: grid; /* Picked up from redblobgames, ensures other elements fit size */
     justify-content: center; /* Centers the above */
-    grid-template-areas: "game" "message-area";
+    grid-template-areas: "tabs" "game" "message-area";
 }
 
-#game {
+#tabs {
+    grid-area: tabs;
+    z-index: 1;
+}
+
+#game-desc, #game {
 	font-size: 16px; 
     background-color: #000;
     grid-area: game;
 	z-index: 1;
+}
+
+#game-desc {
+    font-family: "DejaVuSansMono", "DejaVu Sans Mono", monospace;
+    font-size: 0.8em;
+    line-height: 1.0;
+    background: black;
+    color: white; /* Default - overwritten by gameMessage */
+    margin: 0;
+    text-align: left;
+    max-width: 30.2em;
+    min-height: 20em;
 }
 
 #messages {
@@ -28,6 +45,7 @@
     text-align: left;
     z-index: 1;
     max-width: 30.2em;
+    /*overflow-y: visible; */
 }
 
 .overlay {
