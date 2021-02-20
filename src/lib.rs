@@ -637,7 +637,29 @@ impl Universe {
                     else if (self.map.tiles[new_idx] == Cell::FloorIndoor as u8) {
                         terrain_desc = " You entered one of the buildings.";
                     }
-                    game_describe(&format!("{} {}", area_desc, terrain_desc));
+
+                    //describe the doors/walls in sight
+                    let mut other_desc = "".to_string();
+                    for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
+                        if *b {
+                            //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
+                            if (self.map.tiles[idx] == Cell::Door as u8) {
+                                let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+                                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                                other_desc = format!(" You see a door {} away to {:?}", dist, direction);  
+                            }
+                            if (self.map.tiles[idx] == Cell::Wall as u8) {
+                                let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+                                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                                let tmp = format!(" You see a wall {} away to {:?}", dist, direction);
+                                other_desc = format!("{} {}", other_desc, tmp);
+                            }
+                        }
+                    }
+
+                    game_describe(&format!("{} {} {}", area_desc, terrain_desc, other_desc));
 
 
                     //enemy turn
