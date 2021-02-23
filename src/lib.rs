@@ -659,7 +659,14 @@ impl Universe {
                         }
                     }
 
-                    game_describe(&format!("{} {} {}", area_desc, terrain_desc, other_desc));
+                    //describe entities in view
+                    let mut ent_desc = "You see here:".to_string();
+                    for (id) in self.view_list().iter() {
+                        let tmp = self.view_string_for_id(*id);
+                        ent_desc = format!("{} {}", ent_desc, tmp);
+                    }
+
+                    game_describe(&format!("{} {} {}\n {}", area_desc, terrain_desc, other_desc, ent_desc));
 
 
                     //enemy turn
