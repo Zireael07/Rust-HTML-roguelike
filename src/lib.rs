@@ -166,6 +166,11 @@ pub enum Renderable {
 
 //for ECS
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct GameState{
+    pub turns: i32,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Player{}
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Needs{
@@ -306,6 +311,7 @@ pub struct SaveData {
     point: Option<Point>,
     render: Option<u8>,
     player: Option<Player>,
+    gamestate: Option<GameState>,
     needs: Option<Needs>,
     money: Option<Money>,
     ai: Option<AI>,
@@ -425,7 +431,7 @@ impl Universe {
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
         // 15, 14, 13, 12, 10, 8 aka elite array
-        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
+        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, GameState{turns:0}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
         Attributes{strength:Attribute{base:2, bonus:0}, dexterity:Attribute{base:1, bonus:0}, constitution:Attribute{base:2, bonus:0}, intelligence:Attribute{base:1,bonus:0}, wisdom:Attribute{base:-1,bonus:0}, charisma:Attribute{base:0,bonus:0}}));
         //starting inventory
         state.give_item("Protein shake".to_string());
@@ -612,6 +618,7 @@ impl Universe {
                     self.get_AI();
                     self.remove_dead();
                     self.survival_tick();
+                    self.calendar_time();
                 },
                 None => {
                     self.player_position = new_idx;
@@ -673,6 +680,7 @@ impl Universe {
                     self.get_AI();
                     self.remove_dead();
                     self.survival_tick();
+                    self.calendar_time();
                 }
             }
                  
@@ -972,6 +980,7 @@ impl Universe {
                 render: None,
                 name: "".to_string(), //because props don't have names //self.ecs_world.get::<String>(e).unwrap().to_string(),
                 player: None,
+                gamestate: None,
                 needs: None,
                 ai: None,
                 money: None,
@@ -1009,6 +1018,9 @@ impl Universe {
                 //save player position
                 let current_position = self.map.idx_xy(self.player_position);
                 saved.point = Some(Point{x:current_position.0, y:current_position.1});
+            }
+            if self.ecs_world.get::<GameState>(e).is_ok(){
+                saved.gamestate = Some(*self.ecs_world.get::<GameState>(e).unwrap());
             }
             if self.ecs_world.get::<AI>(e).is_ok(){
                 saved.ai = Some(*self.ecs_world.get::<AI>(e).unwrap());
@@ -1108,6 +1120,9 @@ impl Universe {
                     builder.add(e.player.unwrap());
                     let point = e.point.unwrap();
                     self.player_position = self.map.xy_idx(point.x, point.y);
+                }
+                if e.gamestate.is_some(){
+                    builder.add(e.gamestate.unwrap());
                 }
                 if e.needs.is_some(){
                     builder.add(e.needs.unwrap());
@@ -1431,6 +1446,23 @@ impl Universe {
             },
             None => {},
         }
+    }
+
+    fn calendar_time(&mut self) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                gs.turns += 1;
+                game_message(&format!("Turns passed: {}", gs.turns));
+            },
+            None => {},
+        }
+
     }
 
 
