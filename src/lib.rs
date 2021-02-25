@@ -652,16 +652,23 @@ impl Universe {
                             //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
                             if (self.map.tiles[idx] == Cell::Door as u8) {
                                 let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                                other_desc = format!(" You see a door {} away to {:?}.", dist, direction);  
+                                // the range of the viewport to each side is x 20 y 12
+                                if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                                    let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                                    let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                                    other_desc = format!(" You see a door {} away to {:?}.", dist, direction);  
+                                }
+
                             }
                             if (self.map.tiles[idx] == Cell::Wall as u8) {
                                 let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                                let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
-                                other_desc = format!("{} {}", other_desc, tmp);
+                                // the range of the viewport to each side is x 20 y 12
+                                if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                                    let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                                    let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                                    let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
+                                    other_desc = format!("{} {}", other_desc, tmp);
+                                }
                             }
                         }
                     }
