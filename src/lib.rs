@@ -615,10 +615,7 @@ impl Universe {
                     }
 
                     //enemy turn
-                    self.get_AI();
-                    self.remove_dead();
-                    self.survival_tick();
-                    self.calendar_time();
+                    self.end_turn();
                 },
                 None => {
                     self.player_position = new_idx;
@@ -666,6 +663,7 @@ impl Universe {
                                 if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
                                     let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
                                     let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                                    //TODO: don't repeat "You see a wall" for subsequent walls
                                     let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
                                     other_desc = format!("{} {}", other_desc, tmp);
                                 }
@@ -684,10 +682,7 @@ impl Universe {
 
 
                     //enemy turn
-                    self.get_AI();
-                    self.remove_dead();
-                    self.survival_tick();
-                    self.calendar_time();
+                    self.end_turn();
                 }
             }
                  
@@ -858,7 +853,7 @@ impl Universe {
                 log!("Player uses item {}", id);
                 let item = hecs::Entity::from_bits(id); //restore
                 self.use_item(&entity, &item);
-                self.remove_dead(); //in case we used a consumable item
+                self.end_turn();
             },
             None => {},
         }
@@ -1439,6 +1434,13 @@ impl Universe {
         return dead;
     }
 
+    fn end_turn(&mut self) {
+        self.get_AI();
+        self.remove_dead();
+        self.survival_tick();
+        self.calendar_time();
+    }
+
     fn survival_tick(&mut self) {
         //get player entity
         let mut play: Option<Entity> = None;
@@ -1465,6 +1467,7 @@ impl Universe {
             Some(entity) => {
                 let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
                 gs.turns += 1;
+                //TODO: prettify formatting of this message
                 game_message(&format!("Turns passed: {}", gs.turns));
             },
             None => {},
