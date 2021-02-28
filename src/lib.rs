@@ -27,6 +27,9 @@ use serde_json::json;
 
 use std::fmt;
 
+//time
+use chrono::{NaiveTime, Timelike, Duration};
+
 //our stuff
 
 //3rd party vendored in
@@ -167,7 +170,7 @@ pub enum Renderable {
 //for ECS
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GameState{
-    pub turns: i32,
+    pub turns: i64, //to fit chrono
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -1467,8 +1470,10 @@ impl Universe {
             Some(entity) => {
                 let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
                 gs.turns += 1;
-                //TODO: prettify formatting of this message
-                game_message(&format!("Turns passed: {}", gs.turns));
+                //t is a tuple (NaiveTime, i64)
+                let t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                let f = t.0.format("%H:%M:%S").to_string();
+                game_message(&format!("Time: {}", f));
             },
             None => {},
         }
