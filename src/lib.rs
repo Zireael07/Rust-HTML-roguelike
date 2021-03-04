@@ -276,6 +276,11 @@ pub struct DefenseBonus {
     pub bonus : f32
 }
 
+pub struct Conversation {
+    pub text: String,
+    pub answers: Vec<String>
+}
+
 //make a struct so that....
 pub struct Rolls(Vec<bool>);
 
@@ -527,7 +532,8 @@ impl Universe {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } 
         else if name == "Patron".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
+            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
+            let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
         } else {
             let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
             //their starting equipment
@@ -612,7 +618,26 @@ impl Universe {
                             let document = window.document().expect("expecting a document on window");                        
                             let vendor = document.get_element_by_id("vendor").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
                             let list = vendor.class_list().toggle("visible");
-                        } else {
+                        } 
+                        else if self.ecs_world.get::<Conversation>(entity).is_ok() {
+                            let conv = self.ecs_world.get::<Conversation>(entity).unwrap();
+                            //display convo
+                            let window = web_sys::window().expect("global window does not exists");    
+                            let document = window.document().expect("expecting a document on window");                        
+                            let view = document.get_element_by_id("conversation").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                            
+                            let text = &format!("<div> {} </div>", conv.text);
+                            let mut replies = "".to_string();
+                            for a in &conv.answers {
+                                let tmp = format!("<span style=\"color:rgb(0,255,0)\"> {} <span>", a);
+                                replies = format!("{} \n {}", replies, tmp);
+                            }  
+
+                            view.set_inner_html(&format!("{} {}", text, replies));
+                            
+                            let list = view.class_list().toggle("visible");
+                        }
+                        else {
                             game_message(&format!("The man says 🇪 🇸: hola!"));
                         }
                     }

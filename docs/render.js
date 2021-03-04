@@ -461,6 +461,9 @@ function onKeyDown(k) {
         if (logOverlay.classList.contains('visible')) {
             document.getElementById("log-history").classList.toggle('visible', false); //close the listing
         }
+        if (document.getElementById("conversation").classList.contains('visible')) {
+            document.getElementById("conversation").classList.toggle('visible', false); //close the conversation
+        }
     }
 
     if (cmd != -1) {
