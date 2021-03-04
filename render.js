@@ -16,6 +16,7 @@ var THUG = new ut.Tile("t", 55, 0, 0, 255, 0, 0); //red bg means hostile
 var KNIFE = new ut.Tile("/", 0, 255, 255);
 var MED = new ut.Tile("!", 255, 0, 0);
 var BARKEEP = new ut.Tile("☺", 0, 128, 255, 255, 255, 0); //yellow bg means neutral
+var PATRON = new ut.Tile("☺", 100, 100, 100, 255, 255, 0);
 
 var BOOTS = new ut.Tile("]", 129, 77, 4, 255,255,255);
 var JACKET = new ut.Tile("]", 255,124,0, 255,255,255);
@@ -137,6 +138,7 @@ function tick() {
         if (tile == 6 ) { tile = BOOTS};
         if (tile == 7 ) { tile = JACKET};
         if (tile == 8 ) { tile = JEANS};
+        if (tile == 9) { tile = PATRON};
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
@@ -459,6 +461,9 @@ function onKeyDown(k) {
         if (logOverlay.classList.contains('visible')) {
             document.getElementById("log-history").classList.toggle('visible', false); //close the listing
         }
+        if (document.getElementById("conversation").classList.contains('visible')) {
+            document.getElementById("conversation").classList.toggle('visible', false); //close the conversation
+        }
     }
 
     if (cmd != -1) {
@@ -620,7 +625,7 @@ function initRenderer(wasm) {
     var line = "{ + 4 {* 3 4} }"
     res(line);
 
-    universe.spawn_ex(player[0]+2, player[1]+2, "Thug");
+    universe.spawn_ex(player[0]+2, player[1]+2, "Patron");
 
 }
 

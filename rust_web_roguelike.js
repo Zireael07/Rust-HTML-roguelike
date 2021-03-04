@@ -232,7 +232,7 @@ function handleError(e) {
 export const Cell = Object.freeze({ Floor:0,Wall:1,Grass:2,Tree:3,FloorIndoor:4,Door:5, });
 /**
 */
-export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2,Barkeep:3,Table:4,Chair:5,Boots:6,Jacket:7,Jeans:8, });
+export const Renderable = Object.freeze({ Thug:0,Knife:1,Medkit:2,Barkeep:3,Table:4,Chair:5,Boots:6,Jacket:7,Jeans:8,Patron:9, });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,MoveRight:1,MoveDown:2,MoveUp:3,GetItem:4,Inventory:5,SaveGame:6, });
