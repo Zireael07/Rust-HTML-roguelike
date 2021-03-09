@@ -532,7 +532,7 @@ impl Universe {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } 
         else if name == "Patron".to_string() {
-            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
+            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
             let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
         } else {
             let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
@@ -1568,29 +1568,42 @@ impl Universe {
         .iter()
          {
             log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<String>(id).unwrap().to_string())); //just unwrapping isn't enough to format
-            //if the player's immediately next to us, don't run costly A*
-            let player_pos = self.map.idx_xy(self.player_position);
-            //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
-            if distance2d_chessboard(point.x, point.y, player_pos.0, player_pos.1) < 2 {
-                //log!("{}", &format!("AI next to player, attack!"));
-                game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
-                //get player entity
-                let mut play: Option<Entity> = None;
-                for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
-                    play = Some(id);
-                }
-                match play {
-                    Some(entity) => self.attack(&entity),
-                    None => {},
-                }
-                
-            } else {
-                //can we see the player? (assumes symmetric FOV)
-                if self.is_visible(point.x as usize, point.y as usize) {
-                    let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
-                    // move or attack            
-                    if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
-                        //log!("{}", &format!("new: {} {} player: {} {}", new_pos.0, new_pos.1, player_pos.0, player_pos.1));
+            
+            // exact movement depends on faction
+            if self.ecs_world.get::<Faction>(id).is_ok() {
+                let fact = self.ecs_world.get::<Faction>(id).unwrap().typ;
+                // townsfolk and NOT vendor
+                if fact == FactionType::Townsfolk && self.ecs_world.get::<Vendor>(id).is_err() {
+                    //random movement
+                    let mut x = point.x;
+                    let mut y = point.y;
+                    //FIXME: don't create rng on every call!
+                    let mut rng = rand::thread_rng();
+                    let move_roll = rng.gen_range(1, 5);
+                    match move_roll {
+                        1 => x -= 1,
+                        2 => x += 1,
+                        3 => y -= 1,
+                        4 => y += 1,
+                        _ => {}
+                    }
+
+                    //move
+                    //let dest_idx = self.map.xy_idx(x, y);
+                    if self.map.is_tile_walkable(x,y) {
+                        //actually move
+                        point.x = x;
+                        point.y = y;
+                    }
+
+                } else if fact == FactionType::Enemy {
+                    //TODO: extract to a function: self.is_visible is the problem here... (map and player position can be passed quite easily)
+
+                    //if the player's immediately next to us, don't run costly A*
+                    let player_pos = self.map.idx_xy(self.player_position);
+                    //log!("{}", &format!("Player pos x {} y {}", player_pos.0, player_pos.1));
+                    if distance2d_chessboard(point.x, point.y, player_pos.0, player_pos.1) < 2 {
+                        //log!("{}", &format!("AI next to player, attack!"));
                         game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
                         //get player entity
                         let mut play: Option<Entity> = None;
@@ -1601,16 +1614,38 @@ impl Universe {
                             Some(entity) => self.attack(&entity),
                             None => {},
                         }
-    
+                        
                     } else {
-                        //actually move
-                        point.x = new_pos.0 as i32;
-                        point.y = new_pos.1 as i32;
-                        //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+                        //can we see the player? (assumes symmetric FOV)
+                        if self.is_visible(point.x as usize, point.y as usize) {
+                            let new_pos = path_to_player(&mut self.map, point.x as usize, point.y as usize, self.player_position);
+                            // move or attack            
+                            if new_pos.0 == player_pos.0 as usize && new_pos.1 == player_pos.1 as usize {
+                                //log!("{}", &format!("new: {} {} player: {} {}", new_pos.0, new_pos.1, player_pos.0, player_pos.1));
+                                game_message(&format!("{{rAI {} kicked at the player", self.ecs_world.get::<String>(id).unwrap().to_string()));
+                                //get player entity
+                                let mut play: Option<Entity> = None;
+                                for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+                                    play = Some(id);
+                                }
+                                match play {
+                                    Some(entity) => self.attack(&entity),
+                                    None => {},
+                                }
+
+                            } else {
+                                //actually move
+                                point.x = new_pos.0 as i32;
+                                point.y = new_pos.1 as i32;
+                                //log!("{}", &format!("AI post move x {} y {}",  point.x, point.y));
+                            }
+                        }
+                        
                     }
+                    
                 }
-               
             }
+
 
         }
     }
