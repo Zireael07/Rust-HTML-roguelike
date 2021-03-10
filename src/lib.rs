@@ -361,6 +361,7 @@ pub struct Universe {
     fov_data: MapData,
     ecs_world: World,
 }
+//can't store rng here because of wasm_bindgen
 
 //it's outside Universe because we're careful not to pass 'self' to it
 pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize) -> (usize, usize) {
@@ -1577,7 +1578,7 @@ impl Universe {
                     //random movement
                     let mut x = point.x;
                     let mut y = point.y;
-                    //FIXME: don't create rng on every call!
+                    //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
                     let mut rng = rand::thread_rng();
                     let move_roll = rng.gen_range(1, 5);
                     match move_roll {
@@ -1589,8 +1590,8 @@ impl Universe {
                     }
 
                     //move
-                    //let dest_idx = self.map.xy_idx(x, y);
-                    if self.map.is_tile_walkable(x,y) {
+                    let dest_idx = self.map.xy_idx(x, y);
+                    if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx as i32) {
                         //actually move
                         point.x = x;
                         point.y = y;

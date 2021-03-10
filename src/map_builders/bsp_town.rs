@@ -230,7 +230,7 @@ impl BSPTownBuilder {
         let player_idx = build_data.map.xy_idx(cent.0, cent.1);
     
         // Place NPC  
-        let mut to_place : Vec<&str> = vec!["Barkeep", //"Shady Salesman", "Patron", "Patron",
+        let mut to_place : Vec<&str> = vec!["Barkeep", "Patron", "Patron",
         // place props
         "Table", "Chair", "Table", "Chair"];
         let mut rng = rand::thread_rng();
