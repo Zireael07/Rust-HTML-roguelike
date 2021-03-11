@@ -480,6 +480,10 @@ impl Universe {
     }
 
     pub fn on_game_start(&self) {
+        //show MUD desc for initial position
+        let current_position = self.map.idx_xy(self.player_position);
+        self.text_description(self.player_position, current_position.0, current_position.1);
+        //greet the player
         game_message(&format!("{{cWelcome to Neon Twilight!"));
     }
 
@@ -658,57 +662,7 @@ impl Universe {
                         }
                     }
 
-                    //test MUD-style description
-                    let area_desc = "This area appears to be a town that hugs a forest.";
-                    let mut terrain_desc = "";
-                    if (self.map.tiles[new_idx] == Cell::Grass as u8){
-                        terrain_desc = "You feel the grass under your feet.";
-                    }
-                    else if (self.map.tiles[new_idx] == Cell::Floor as u8) {
-                        terrain_desc = " You walk on paved ground of the town.";
-                    }
-                    else if (self.map.tiles[new_idx] == Cell::FloorIndoor as u8) {
-                        terrain_desc = " You entered one of the buildings.\n";
-                    }
-
-                    //describe the doors/walls in sight
-                    let mut other_desc = "".to_string();
-                    for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
-                        if *b {
-                            //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
-                            if (self.map.tiles[idx] == Cell::Door as u8) {
-                                let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                                // the range of the viewport to each side is x 20 y 12
-                                if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
-                                    let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                                    let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                                    other_desc = format!(" You see a door {} away to {:?}.", dist, direction);  
-                                }
-
-                            }
-                            if (self.map.tiles[idx] == Cell::Wall as u8) {
-                                let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                                // the range of the viewport to each side is x 20 y 12
-                                if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
-                                    let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                                    let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                                    //TODO: don't repeat "You see a wall" for subsequent walls
-                                    let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
-                                    other_desc = format!("{} {}", other_desc, tmp);
-                                }
-                            }
-                        }
-                    }
-
-                    //describe entities in view
-                    let mut ent_desc = "You see here:".to_string();
-                    for (id) in self.view_list().iter() {
-                        let tmp = self.view_string_for_id(*id);
-                        ent_desc = format!("{} {}", ent_desc, tmp);
-                    }
-
-                    game_describe(&format!("{} {} {}\n {}", area_desc, terrain_desc, other_desc, ent_desc));
-
+                    self.text_description(new_idx, new_position.0, new_position.1);
 
                     //enemy turn
                     self.end_turn();
@@ -780,6 +734,63 @@ impl Universe {
             },
             None => {}
         }
+    }
+
+    //MUD-style description
+    pub fn text_description(&self, new_idx: usize, new_x: i32, new_y: i32){
+        let new_position = (new_x, new_y);
+
+
+        let area_desc = "This area appears to be a town that hugs a forest.";
+        let mut terrain_desc = "";
+        if (self.map.tiles[new_idx] == Cell::Grass as u8){
+            terrain_desc = "You feel the grass under your feet.";
+        }
+        else if (self.map.tiles[new_idx] == Cell::Floor as u8) {
+            terrain_desc = " You walk on paved ground of the town.";
+        }
+        else if (self.map.tiles[new_idx] == Cell::FloorIndoor as u8) {
+            terrain_desc = " You entered one of the buildings.\n";
+        }
+
+        //describe the doors/walls in sight
+        let mut other_desc = "".to_string();
+        for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
+            if *b {
+                //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
+                if (self.map.tiles[idx] == Cell::Door as u8) {
+                    let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+                    // the range of the viewport to each side is x 20 y 12
+                    if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                        let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                        let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                        other_desc = format!(" You see a door {} away to {:?}.", dist, direction);  
+                    }
+
+                }
+                if (self.map.tiles[idx] == Cell::Wall as u8) {
+                    let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+                    // the range of the viewport to each side is x 20 y 12
+                    if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                        let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                        let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                        //TODO: don't repeat "You see a wall" for subsequent walls
+                        let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
+                        other_desc = format!("{} {}", other_desc, tmp);
+                    }
+                }
+            }
+        }
+
+        //describe entities in view
+        let mut ent_desc = "You see here:".to_string();
+        for (id) in self.view_list().iter() {
+            let tmp = self.view_string_for_id(*id);
+            ent_desc = format!("{} {}", ent_desc, tmp);
+        }
+
+        game_describe(&format!("{} {} {}\n {}", area_desc, terrain_desc, other_desc, ent_desc));
+        
     }
 
 
@@ -995,6 +1006,7 @@ impl Universe {
         return self.describe(x,y);
     }
 
+    ///---------------------------------------------------------------------------------------------------
     //save/load
     pub fn save_game(&self) -> String {
         log!("Saving game...");
@@ -1222,6 +1234,7 @@ impl Universe {
 
 }
 
+///-------------------------------------------------------------------------------------------------------------
 //Methods not exposed to JS
 impl Universe {
     pub fn spawn_entities(&mut self, list_spawns:Vec<(usize, String)>) {
@@ -1560,8 +1573,8 @@ impl Universe {
         }
     }
     
-
-    
+    ///-------------------------------------------------------------------------------------
+    //AI logic lives here!
     pub fn get_AI(&mut self) {
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
         for (id, (ai, point)) in &mut self.ecs_world.query::<(&AI, &mut Point)>()
