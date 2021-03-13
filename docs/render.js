@@ -529,7 +529,20 @@ function onClickH(w_pos) {
 	tick();
 }
 
+//shuffled to Rust (see load_datafiles())
+//needs to be async to be able to use await
+// async function initGame(wasm) {
+//     //async/await again to load text data
+//     const res = await fetch("./npcs.ron");
+//     //console.log(res);
+//     const ron = await res.text();
+//     console.log(ron);
+//     initRenderer(wasm);
+// }
+
+
 function initRenderer(wasm) {
+    rust.load_datafile();
     universe = rust.Universe.new();
     // those are the map tiles, they don't change
     map = universe.get_tiles();

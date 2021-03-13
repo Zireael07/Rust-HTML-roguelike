@@ -15,7 +15,9 @@ serde_json = "1.0"
 
 # The `wasm-bindgen` crate provides the bare minimum functionality needed
 # to interact with JavaScript.
-wasm-bindgen = { version = "0.2.51", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.71", features = ["serde-serialize"] }
+
+wasm-bindgen-futures = "0.4.21"
 
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.
@@ -32,6 +34,11 @@ features = ["console",
   'HtmlImageElement',
   'Window',
   'DomTokenList',
+  'Headers',
+  'Request',
+  'RequestInit',
+  'RequestMode',
+  'Response',
 ]
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
@@ -50,6 +57,9 @@ rand_xoshiro = { version = "0.4.0" }
 
 # Date and time
 chrono = { version = "0.4", features = ["wasmbind"] }
+
+# Data files
+ron = "*"
 
 # Parsing
 nom = "6.0"
