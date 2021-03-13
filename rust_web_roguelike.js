@@ -400,6 +400,14 @@ export class Universe {
         wasm.universe_advance_automove(this.ptr);
     }
     /**
+    * @param {number} new_idx
+    * @param {number} new_x
+    * @param {number} new_y
+    */
+    text_description(new_idx, new_x, new_y) {
+        wasm.universe_text_description(this.ptr, new_idx, new_x, new_y);
+    }
+    /**
     */
     get_item() {
         wasm.universe_get_item(this.ptr);
@@ -549,6 +557,7 @@ export class Universe {
         }
     }
     /**
+    *---------------------------------------------------------------------------------------------------
     * @returns {string}
     */
     save_game() {
