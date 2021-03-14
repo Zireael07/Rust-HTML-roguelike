@@ -410,7 +410,8 @@ pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y:
 
 //async loader based on https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
 #[wasm_bindgen]
-pub async fn load_datafile() {
+// returning Universe as a workaround for https://github.com/rustwasm/wasm-bindgen/issues/1858
+pub async fn load_datafile(mut state: Universe) -> Universe {
     let mut opts = RequestInit::new();
     opts.method("GET");
     opts.mode(RequestMode::Cors);
@@ -437,9 +438,13 @@ pub async fn load_datafile() {
     log!("Loaded from rust: {}", &format!("{:?}", ron));
 
     let data : NPCPrefab = ron::from_str(&ron).expect("malformed file");
+    //debug
     log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.point, data.ai, data.faction, data.combat));
     //log!("{}", &format!("{:?}", data));
 
+    state.spawn_entities();
+
+    return state
 }
 
 
@@ -461,7 +466,7 @@ impl Universe {
         builder.build_map();
         state.map = builder.build_data.map.clone();
 
-        //spawn
+        //spawn player on start
         match builder.build_data.starting_position {
             None => {},
             Some(point) => {
@@ -497,29 +502,10 @@ impl Universe {
         state.give_item("Protein shake".to_string());
         state.give_item("Medkit".to_string());
 
-
         //spawn anything listed
-        state.spawn_entities(builder.build_data.list_spawns);
+        state.spawn_entities_list(builder.build_data.list_spawns);
+        //state.spawn_entities();
 
-        //spawn entities
-        let th = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-        //their starting equipment
-        let boots = state.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = state.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = state.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
-        state.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
-        state.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
-        state.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
-
-        let it = state.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
-        let med = state.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
-        let boots = state.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = state.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
-        
-        //debug
-        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
-       
         log!("We have a universe");
 
         //lispy test
@@ -529,13 +515,37 @@ impl Universe {
         state
     }
 
-    pub fn on_game_start(&self) {
+    pub fn on_game_start(&mut self) {
         //show MUD desc for initial position
         let current_position = self.map.idx_xy(self.player_position);
         self.text_description(self.player_position, current_position.0, current_position.1);
         //greet the player
         game_message(&format!("{{cWelcome to Neon Twilight!"));
     }
+
+    pub fn spawn_entities(&mut self) {
+        //spawn entities
+        let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        //their starting equipment
+        let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
+        self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
+        self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
+
+        let it = self.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
+        let med = self.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        
+        //debug
+        log!("Spawned entities!");
+        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
+               
+    }
+
 
     pub fn width(&self) -> u32 {
         self.map.width
@@ -1287,7 +1297,7 @@ impl Universe {
 ///-------------------------------------------------------------------------------------------------------------
 //Methods not exposed to JS
 impl Universe {
-    pub fn spawn_entities(&mut self, list_spawns:Vec<(usize, String)>) {
+    pub fn spawn_entities_list(&mut self, list_spawns:Vec<(usize, String)>) {
         for entity in list_spawns.iter() {
             let pos = self.map.idx_xy(entity.0);
             self.spawn(pos.0, pos.1, entity.1.clone());

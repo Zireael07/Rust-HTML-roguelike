@@ -7,7 +7,7 @@
 // eventually the manual initialization won't be required!
 import init from './rust_web_roguelike.js';
 
-import {initRenderer } from './render.js';
+import {initGame } from './render.js';
 
 async function run() {
     // First up we need to actually load the wasm file, so we use the
@@ -18,7 +18,7 @@ async function run() {
     // exports which is the same as importing the `*_bg` module in other
     // modes
     const wasm = await init('./rust_web_roguelike_bg.wasm');
-    initRenderer(wasm);
+    initGame(wasm);
 
 }
 
