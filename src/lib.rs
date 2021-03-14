@@ -315,6 +315,7 @@ impl fmt::Display for Rolls {
 }
 
 //what it says
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize)]
 pub struct NPCPrefab {
     name: String,
@@ -442,7 +443,7 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
     log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.point, data.ai, data.faction, data.combat));
     //log!("{}", &format!("{:?}", data));
 
-    state.spawn_entities();
+    state.spawn_entities(data);
 
     return state
 }
@@ -523,9 +524,11 @@ impl Universe {
         game_message(&format!("{{cWelcome to Neon Twilight!"));
     }
 
-    pub fn spawn_entities(&mut self) {
+    pub fn spawn_entities(&mut self, data: NPCPrefab) {
         //spawn entities
-        let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        let th = self.ecs_world.spawn((Point{x:5,y:5}, data.renderable as u8, data.name.to_string(), data.ai.unwrap(), data.faction.unwrap(), data.combat.unwrap()));
+
+        //let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         //their starting equipment
         let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
         let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
