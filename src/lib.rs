@@ -205,9 +205,9 @@ pub struct Attributes {
     pub charisma : Attribute,
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AI {}
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CombatStats {
     pub max_hp : i32,
     pub hp : i32,
@@ -223,7 +223,7 @@ pub struct Money {
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum FactionType { Enemy, Townsfolk }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Faction {
     pub typ: FactionType
 }
@@ -314,6 +314,16 @@ impl fmt::Display for Rolls {
     }
 }
 
+//what it says
+#[derive(Serialize, Deserialize)]
+pub struct NPCPrefab {
+    name: String,
+    point: Point,
+    renderable: Renderable,
+    ai: Option<AI>,
+    faction: Option<Faction>, 
+    combat: Option<CombatStats>,
+}
 
 
 // what it says on the tin
@@ -397,6 +407,7 @@ pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y:
 }
 
 /// Public methods, exported to JavaScript.
+
 //async loader based on https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
 #[wasm_bindgen]
 pub async fn load_datafile() {
@@ -420,10 +431,15 @@ pub async fn load_datafile() {
     assert!(resp_value.is_instance_of::<Response>());
     let resp: Response = resp_value.dyn_into().unwrap();
 
-    // Convert this other `Promise` into a rust `Future`.
-    let ron = JsFuture::from(resp.text().unwrap()).await.unwrap(); //?;
+    // Convert this other `Promise` into a rust `Future`, and then to string
+    let ron = JsFuture::from(resp.text().unwrap()).await.unwrap().as_string().unwrap(); //?;
 
     log!("Loaded from rust: {}", &format!("{:?}", ron));
+
+    let data : NPCPrefab = ron::from_str(&ron).expect("malformed file");
+    log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.point, data.ai, data.faction, data.combat));
+    //log!("{}", &format!("{:?}", data));
+
 }
 
 

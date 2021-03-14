@@ -1,7 +1,10 @@
+#![enable(implicit_some)]
+
 (
-    Point(x:7, y:7), 
-    Thug, 
-    "Thug", AI{}, 
-    Faction(typ: Enemy), 
-    CombatStats(hp:10, max_hp:10, defense:1, power:1)
+    point: Point(x:7, y:7), 
+    renderable: Thug, 
+    name: "Thug",
+    ai: AI(), //unit struct 
+    faction: (typ: Enemy), 
+    combat: CombatStats(hp:10, max_hp:10, defense:1, power:1)
 )
