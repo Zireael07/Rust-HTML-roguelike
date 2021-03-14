@@ -529,8 +529,28 @@ function onClickH(w_pos) {
 	tick();
 }
 
-function initRenderer(wasm) {
+//logic shuffled to Rust (see load_datafiles())
+//needs to be async to be able to use await
+async function initGame(wasm) {
     universe = rust.Universe.new();
+    //async/await again to load text data
+    //workaround
+    universe = await rust.load_datafile(universe);
+//     const res = await fetch("./npcs.ron");
+//     //console.log(res);
+//     const ron = await res.text();
+//     console.log(ron);
+     initRenderer(wasm);
+}
+
+
+function initRenderer(wasm) {
+    //universe = rust.Universe.new();
+    //workaround
+    //universe = await rust.load_datafile();
+
+    //rust.load_datafile(universe); //we can't use things created from Rust this way as it'll cause null pointer error
+
     // those are the map tiles, they don't change
     map = universe.get_tiles();
     player = universe.player();
@@ -629,4 +649,4 @@ function initRenderer(wasm) {
 
 }
 
-export { initRenderer }
+export { initGame }
