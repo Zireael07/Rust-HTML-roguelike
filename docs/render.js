@@ -630,6 +630,22 @@ function initRenderer(wasm) {
         tick();
 	});
 
+    //hidden console
+    document.getElementById("console-input").addEventListener('keyup', e => {
+        //console.log("Keyup:", e.target.value);
+        e.stopPropagation();
+    });
+    document.getElementById("console-input").addEventListener('keydown', e => {
+        //console.log("Keydown:", e.target.value);
+        e.stopPropagation();
+    });
+    //only fires when the value is committed
+    document.getElementById("console-input").addEventListener('change', e => {
+        //console.log("Console input", e.target.value);
+        universe.console_input(e.target.value);
+        e.target.value = null //empty the input after accepting it
+    });
+
     //handle post-start
     //universe.on_game_start();
     // character creation screen
