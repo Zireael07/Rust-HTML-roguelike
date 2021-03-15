@@ -822,6 +822,7 @@ impl Universe {
 
         //describe the doors/walls in sight
         let mut other_desc = "".to_string();
+        let mut has_walls = false;
         for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
             if *b {
                 //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
@@ -831,7 +832,9 @@ impl Universe {
                     if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
                         let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
                         let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                        other_desc = format!(" You see a door {} away to {:?}.", dist, direction);  
+                        // door is not necessarily the first thing you see, so we need to keep any existing other_desc
+                        let tmp = format!(" You see a door {} away to {:?}.", dist, direction); 
+                        other_desc = format!("{} {}", other_desc, tmp)
                     }
 
                 }
@@ -841,9 +844,12 @@ impl Universe {
                     if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
                         let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
                         let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                        //TODO: don't repeat "You see a wall" for subsequent walls
-                        let tmp = format!(" You see a wall {} away to {:?}.", dist, direction);
+                        let mut tmp = format!(" and {} away to {:?},", dist, direction);
+                        if !has_walls {
+                            tmp = format!(" You see a wall {} away to {:?},", dist, direction);
+                        }
                         other_desc = format!("{} {}", other_desc, tmp);
+                        has_walls = true;
                     }
                 }
             }
