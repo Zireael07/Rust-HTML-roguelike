@@ -443,6 +443,7 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
     log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.point, data.ai, data.faction, data.combat));
     //log!("{}", &format!("{:?}", data));
 
+    state.game_start();
     state.spawn_entities(data);
 
     return state
@@ -462,60 +463,64 @@ impl Universe {
     
         state.player_position = state.map.xy_idx(1,1); //default
 
+        //state.spawn_entities();
+
+        log!("We have a universe");
+
+        //lispy test
+        //parse_script();
+
+        // We'll return the state with the short-hand
+        state
+    }
+
+    pub fn game_start(&mut self) {
         //mapgen
         let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
-        state.map = builder.build_data.map.clone();
+        self.map = builder.build_data.map.clone();
 
         //spawn player on start
         match builder.build_data.starting_position {
             None => {},
             Some(point) => {
-                state.player_position = state.map.xy_idx(point.x, point.y);
+                self.player_position = self.map.xy_idx(point.x, point.y);
             }
         }
 
-
-        state.fov_data = MapData::new(80,60);
+        //FOV
+        self.fov_data = MapData::new(80,60);
 
         //build FOV cache
-        for (idx, tile) in state.map.tiles.iter().enumerate() {
+        for (idx, tile) in self.map.tiles.iter().enumerate() {
             if *tile == Cell::Wall as u8 {
-                state.fov_data.set_transparent(state.map.idx_xy(idx).0 as usize, state.map.idx_xy(idx).1 as usize, false);
+                self.fov_data.set_transparent(self.map.idx_xy(idx).0 as usize, self.map.idx_xy(idx).1 as usize, false);
             }
         }
     
-        state.fov_data.clear_fov(); // compute_fov does not clear the existing fov
-        state.fov.compute_fov(&mut state.fov_data, state.map.idx_xy(state.player_position).0 as usize, state.map.idx_xy(state.player_position).1 as usize, 6, true);
+        self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+        self.fov.compute_fov(&mut self.fov_data, self.map.idx_xy(self.player_position).0 as usize, self.map.idx_xy(self.player_position).1 as usize, 6, true);
         //reveal tiles
-        for (idx, b) in state.fov_data.fov.iter().enumerate() {
+        for (idx, b) in self.fov_data.fov.iter().enumerate() {
             if *b {
-                state.map.revealed_tiles[idx] = true;
+                self.map.revealed_tiles[idx] = true;
             }
         }
         
         //rendering and position handled otherwise, so the player Entity only needs combat stats
         //NOTE: player is always entity id 0
         // 15, 14, 13, 12, 10, 8 aka elite array
-        let player = state.ecs_world.spawn(("Player".to_string(), Player{}, GameState{turns:0}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
+        let player = self.ecs_world.spawn(("Player".to_string(), Player{}, GameState{turns:0}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
         Attributes{strength:Attribute{base:2, bonus:0}, dexterity:Attribute{base:1, bonus:0}, constitution:Attribute{base:2, bonus:0}, intelligence:Attribute{base:1,bonus:0}, wisdom:Attribute{base:-1,bonus:0}, charisma:Attribute{base:0,bonus:0}}));
         //starting inventory
-        state.give_item("Protein shake".to_string());
-        state.give_item("Medkit".to_string());
+        self.give_item("Protein shake".to_string());
+        self.give_item("Medkit".to_string());
 
         //spawn anything listed
-        state.spawn_entities_list(builder.build_data.list_spawns);
-        //state.spawn_entities();
-
-        log!("We have a universe");
-
-        //lispy test
-        parse_script();
-
-        // We'll return the state with the short-hand
-        state
+        self.spawn_entities_list(builder.build_data.list_spawns);
     }
 
+    //for JS
     pub fn on_game_start(&mut self) {
         //show MUD desc for initial position
         let current_position = self.map.idx_xy(self.player_position);
