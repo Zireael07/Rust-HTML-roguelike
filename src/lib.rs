@@ -437,13 +437,16 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
 
     log!("Loaded from rust: {}", &format!("{:?}", ron));
 
-    let data : NPCPrefab = ron::from_str(&ron).expect("malformed file");
+    let data : Vec<NPCPrefab> = ron::from_str(&ron).expect("malformed file");
     //debug
-    log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.ai, data.faction, data.combat));
+    for e in &data {
+        log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", e.name, e.renderable, e.ai, e.faction, e.combat));
+    }
+        
     //log!("{}", &format!("{:?}", data));
 
-    state.game_start();
-    state.spawn_entities(data);
+    state.game_start(data);
+    //state.spawn_entities(data);
 
     return state
 }
@@ -473,53 +476,8 @@ impl Universe {
         state
     }
 
-    pub fn game_start(&mut self) {
-        //mapgen
-        let mut builder = map_builders::random_builder(80,60);
-        builder.build_map();
-        self.map = builder.build_data.map.clone();
 
-        //spawn player on start
-        match builder.build_data.starting_position {
-            None => {},
-            Some(point) => {
-                self.player_position = self.map.xy_idx(point.x, point.y);
-            }
-        }
-
-        //FOV
-        self.fov_data = MapData::new(80,60);
-
-        //build FOV cache
-        for (idx, tile) in self.map.tiles.iter().enumerate() {
-            if *tile == Cell::Wall as u8 {
-                self.fov_data.set_transparent(self.map.idx_xy(idx).0 as usize, self.map.idx_xy(idx).1 as usize, false);
-            }
-        }
-    
-        self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
-        self.fov.compute_fov(&mut self.fov_data, self.map.idx_xy(self.player_position).0 as usize, self.map.idx_xy(self.player_position).1 as usize, 6, true);
-        //reveal tiles
-        for (idx, b) in self.fov_data.fov.iter().enumerate() {
-            if *b {
-                self.map.revealed_tiles[idx] = true;
-            }
-        }
-        
-        //rendering and position handled otherwise, so the player Entity only needs combat stats
-        //NOTE: player is always entity id 0
-        // 15, 14, 13, 12, 10, 8 aka elite array
-        let player = self.ecs_world.spawn(("Player".to_string(), Player{}, GameState{turns:0}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
-        Attributes{strength:Attribute{base:2, bonus:0}, dexterity:Attribute{base:1, bonus:0}, constitution:Attribute{base:2, bonus:0}, intelligence:Attribute{base:1,bonus:0}, wisdom:Attribute{base:-1,bonus:0}, charisma:Attribute{base:0,bonus:0}}));
-        //starting inventory
-        self.give_item("Protein shake".to_string());
-        self.give_item("Medkit".to_string());
-
-        //spawn anything listed
-        self.spawn_entities_list(builder.build_data.list_spawns);
-    }
-
-    //for JS
+    //for JS follow-ups (the main function isn't exposed)
     pub fn on_game_start(&mut self) {
         //show MUD desc for initial position
         let current_position = self.map.idx_xy(self.player_position);
@@ -527,32 +485,6 @@ impl Universe {
         //greet the player
         game_message(&format!("{{cWelcome to Neon Twilight!"));
     }
-
-    pub fn spawn_entities(&mut self, data: NPCPrefab) {
-        //spawn entities
-        let th = self.ecs_world.spawn((Point{x:5,y:5}, data.renderable as u8, data.name.to_string(), data.ai.unwrap(), data.faction.unwrap(), data.combat.unwrap()));
-
-        //let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-        //their starting equipment
-        let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
-        self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
-        self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
-        self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
-
-        let it = self.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
-        let med = self.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
-        let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
-        
-        //debug
-        log!("Spawned entities!");
-        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
-               
-    }
-
 
     pub fn width(&self) -> u32 {
         self.map.width
@@ -584,43 +516,16 @@ impl Universe {
         return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
-    //for JS
-    pub fn spawn_ex(&mut self, x:i32, y:i32, name:String) {
-        let pos = self.map.free_grid_in_range(x,y,4);
-        return self.spawn(pos.x,pos.y,name);
-    }
+    //for JS (currently unused because wasm_bindgen doesn't play nice with Vec<NPCPrefab>)
+    // pub fn spawn_ex(&mut self, x:i32, y:i32, name:String) {
+    //     let pos = self.map.free_grid_in_range(x,y,4);
+    //     return self.spawn(pos.x,pos.y,name);
+    // }
 
     pub fn console_input(&mut self, input:String) {
         log!("Rust console input: {}", input);
     }
 
-
-    pub fn spawn(&mut self, x:i32, y:i32, name:String) {
-        //TODO: should be a dict lookup
-        // props
-        if name == "Table".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Table as u8));
-        } else if name == "Chair".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Chair as u8));
-        }
-        //NPCs
-        else if name == "Barkeep".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
-        } 
-        else if name == "Patron".to_string() {
-            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
-            let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
-        } else {
-            let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
-            //their starting equipment
-            let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-            let l_jacket = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-            let jeans = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
-            self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
-            self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
-            self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
-        }
-    }
 
     pub fn process(&mut self, input: Option<Command>) {
         // New: handle keyboard inputs.
@@ -1329,10 +1234,117 @@ impl Universe {
 ///-------------------------------------------------------------------------------------------------------------
 //Methods not exposed to JS
 impl Universe {
-    pub fn spawn_entities_list(&mut self, list_spawns:Vec<(usize, String)>) {
+    //https://github.com/rustwasm/wasm-bindgen/issues/111 prevents using vec<NPCPrefab> as parameter, too :(
+    pub fn game_start(&mut self, data: Vec<NPCPrefab>) {
+        //mapgen
+        let mut builder = map_builders::random_builder(80,60);
+        builder.build_map();
+        self.map = builder.build_data.map.clone();
+
+        //spawn player on start
+        match builder.build_data.starting_position {
+            None => {},
+            Some(point) => {
+                self.player_position = self.map.xy_idx(point.x, point.y);
+            }
+        }
+
+        //FOV
+        self.fov_data = MapData::new(80,60);
+
+        //build FOV cache
+        for (idx, tile) in self.map.tiles.iter().enumerate() {
+            if *tile == Cell::Wall as u8 {
+                self.fov_data.set_transparent(self.map.idx_xy(idx).0 as usize, self.map.idx_xy(idx).1 as usize, false);
+            }
+        }
+    
+        self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
+        self.fov.compute_fov(&mut self.fov_data, self.map.idx_xy(self.player_position).0 as usize, self.map.idx_xy(self.player_position).1 as usize, 6, true);
+        //reveal tiles
+        for (idx, b) in self.fov_data.fov.iter().enumerate() {
+            if *b {
+                self.map.revealed_tiles[idx] = true;
+            }
+        }
+        
+        //rendering and position handled otherwise, so the player Entity only needs combat stats
+        //NOTE: player is always entity id 0
+        // 15, 14, 13, 12, 10, 8 aka elite array
+        let player = self.ecs_world.spawn(("Player".to_string(), Player{}, GameState{turns:0}, CombatStats{hp:20, max_hp: 20, defense:1, power:1}, Money{money:100.0}, Needs{hunger:500, thirst:300}, 
+        Attributes{strength:Attribute{base:2, bonus:0}, dexterity:Attribute{base:1, bonus:0}, constitution:Attribute{base:2, bonus:0}, intelligence:Attribute{base:1,bonus:0}, wisdom:Attribute{base:-1,bonus:0}, charisma:Attribute{base:0,bonus:0}}));
+        //starting inventory
+        self.give_item("Protein shake".to_string());
+        self.give_item("Medkit".to_string());
+
+        //spawn anything listed
+        self.spawn_entities_list(builder.build_data.list_spawns, &data);
+        self.spawn_entities(&data);
+    }
+
+    //moved spawn because wasm_bindgen doesn't play ball with Vec<NPCPrefab>
+
+    //TODO: unhardcode order?
+    pub fn spawn(&mut self, x:i32, y:i32, name:String, data: &Vec<NPCPrefab>) {
+        //TODO: should be a dict lookup
+        // props
+        if name == "Table".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Table as u8));
+        } else if name == "Chair".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Chair as u8));
+        }
+        //NPCs
+        else if name == "Barkeep".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, data[1].renderable as u8, data[1].name.to_string(), data[1].faction.unwrap(), data[1].combat.unwrap(), Vendor{}));
+            //self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
+        } 
+        else if name == "Patron".to_string() {
+            let pat = self.ecs_world.spawn((Point{x:x, y:y}, data[2].renderable as u8, data[2].name.to_string(), data[2].ai.unwrap(), data[2].faction.unwrap(), data[2].combat.unwrap()));
+            //let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
+            let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
+        } else {
+            let th = self.ecs_world.spawn((Point{x:x, y:y}, data[0].renderable as u8, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
+            //let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+            //their starting equipment
+            let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let l_jacket = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let jeans = self.ecs_world.spawn((Point{x:x,y:y}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+            self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
+            self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
+            self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
+        }
+    }
+
+
+    pub fn spawn_entities(&mut self, data: &Vec<NPCPrefab>) {
+        //spawn entities
+        let th = self.ecs_world.spawn((Point{x:5,y:5}, data[0].renderable as u8, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
+
+        //let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
+        //their starting equipment
+        let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:4,y:4}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
+        self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
+        self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
+
+        let it = self.ecs_world.spawn((Point{x:6,y:7}, Renderable::Knife as u8, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
+        let med = self.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
+        let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable::Boots as u8, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jacket as u8, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:6,y:18}, Renderable::Jeans as u8, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        
+        //debug
+        log!("Spawned entities!");
+        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
+               
+    }
+
+    pub fn spawn_entities_list(&mut self, list_spawns:Vec<(usize, String)>, data: &Vec<NPCPrefab>) {
         for entity in list_spawns.iter() {
             let pos = self.map.idx_xy(entity.0);
-            self.spawn(pos.0, pos.1, entity.1.clone());
+            self.spawn(pos.0, pos.1, entity.1.clone(), &data);
         }
     }
 

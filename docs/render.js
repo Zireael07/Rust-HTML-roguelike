@@ -672,11 +672,11 @@ function initRenderer(wasm) {
     var button = document.getElementById("confirm")
     button.onclick = function(e) { confirmCreation() }
 
-    //test JS Lisp
-    var line = "{ + 4 {* 3 4} }"
-    res(line);
+    // //test JS Lisp
+    // var line = "{ + 4 {* 3 4} }"
+    // res(line);
 
-    universe.spawn_ex(player[0]+2, player[1]+2, "Patron");
+    // universe.spawn_ex(player[0]+2, player[1]+2, "Patron");
 
 }
 
