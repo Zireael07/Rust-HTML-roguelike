@@ -1079,6 +1079,21 @@ impl Universe {
         return self.describe(x,y);
     }
 
+    pub fn get_faction(&self, x:i32, y:i32) -> u8 {
+        let mut fact = 99; //unfortunately we can't use -1 in u8
+        let ent = self.entities_at(x as usize, y as usize);
+        match ent {
+            Some(entity) => {
+                if self.ecs_world.get::<Faction>(entity).is_ok() {
+                    fact = self.ecs_world.get::<Faction>(entity).unwrap().typ as u8;
+                }
+            },
+            None => { }
+        }
+        
+        return fact;
+    }
+
     ///---------------------------------------------------------------------------------------------------
     //save/load
     pub fn save_game(&self) -> String {

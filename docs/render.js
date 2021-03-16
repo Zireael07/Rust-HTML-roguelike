@@ -12,11 +12,11 @@ var automoving = false;
 // The tile palette is precomputed in order to not have to create
 // thousands of Tiles on the fly.
 var AT = new ut.Tile("@", 255, 255, 255);
-var THUG = new ut.Tile("t", 55, 0, 0, 255, 0, 0); //red bg means hostile
+var THUG = new ut.Tile("t", 55, 0, 0); //, 255, 0, 0); //red bg means hostile
 var KNIFE = new ut.Tile("/", 0, 255, 255);
 var MED = new ut.Tile("!", 255, 0, 0);
-var BARKEEP = new ut.Tile("☺", 0, 128, 255, 255, 255, 0); //yellow bg means neutral
-var PATRON = new ut.Tile("☺", 100, 100, 100, 255, 255, 0);
+var BARKEEP = new ut.Tile("☺", 0, 128, 255); //, 255, 255, 0); //yellow bg means neutral
+var PATRON = new ut.Tile("☺", 100, 100, 100); //, 255, 255, 0);
 
 var BOOTS = new ut.Tile("]", 129, 77, 4, 255,255,255);
 var JACKET = new ut.Tile("]", 255,124,0, 255,255,255);
@@ -143,8 +143,23 @@ function tick() {
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");
 		// 	continue;
-		// }
-		term.put(tile, tilex, tiley);
+        // }
+        
+        //mark attitude/faction with background color
+        if (tile == THUG || tile == BARKEEP || tile == PATRON) {
+           var fact = universe.get_faction(ex, ey);
+           if (fact == 0) {    
+               term.put(new ut.Tile(tile.ch, tile.r, tile.g, tile.b, 255, 0, 0), tilex, tiley); //red bg means hostile
+           }
+           if (fact == 1) {
+               term.put(new ut.Tile(tile.ch, tile.r, tile.g, tile.b, 255, 255, 0), tilex, tiley); //yellow bg means neutral
+           }
+        }
+        else {
+            term.put(tile, tilex, tiley);            
+        }
+
+		//term.put(tile, tilex, tiley);
     }
     
     // draw highlight under clicked tile
