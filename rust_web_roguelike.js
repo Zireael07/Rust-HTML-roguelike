@@ -279,7 +279,7 @@ function handleError(f) {
         }
     };
 }
-function __wbg_adapter_127(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_126(arg0, arg1, arg2, arg3) {
     wasm.wasm_bindgen__convert__closures__invoke2_mut__h3eebab41faf99faf(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
@@ -341,15 +341,6 @@ export class Universe {
     */
     on_game_start() {
         wasm.universe_on_game_start(this.ptr);
-    }
-    /**
-    * @param {NPCPrefab} data
-    */
-    spawn_entities(data) {
-        _assertClass(data, NPCPrefab);
-        var ptr0 = data.ptr;
-        data.ptr = 0;
-        wasm.universe_spawn_entities(this.ptr, ptr0);
     }
     /**
     * @returns {number}
@@ -425,24 +416,12 @@ export class Universe {
         return ret !== 0;
     }
     /**
-    * @param {number} x
-    * @param {number} y
-    * @param {string} name
+    * @param {string} input
     */
-    spawn_ex(x, y, name) {
-        var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    console_input(input) {
+        var ptr0 = passStringToWasm0(input, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.universe_spawn_ex(this.ptr, x, y, ptr0, len0);
-    }
-    /**
-    * @param {number} x
-    * @param {number} y
-    * @param {string} name
-    */
-    spawn(x, y, name) {
-        var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        wasm.universe_spawn(this.ptr, x, y, ptr0, len0);
+        wasm.universe_console_input(this.ptr, ptr0, len0);
     }
     /**
     * @param {number | undefined} input
@@ -681,6 +660,15 @@ export class Universe {
         }
     }
     /**
+    * @param {number} x
+    * @param {number} y
+    * @returns {number}
+    */
+    get_faction(x, y) {
+        var ret = wasm.universe_get_faction(this.ptr, x, y);
+        return ret;
+    }
+    /**
     *---------------------------------------------------------------------------------------------------
     * @returns {string}
     */
@@ -907,7 +895,7 @@ async function init(input) {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_127(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_126(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -1013,8 +1001,8 @@ async function init(input) {
         var ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1334 = function(arg0, arg1, arg2) {
-        var ret = makeMutClosure(arg0, arg1, 205, __wbg_adapter_20);
+    imports.wbg.__wbindgen_closure_wrapper1264 = function(arg0, arg1, arg2) {
+        var ret = makeMutClosure(arg0, arg1, 183, __wbg_adapter_20);
         return addHeapObject(ret);
     };
 
