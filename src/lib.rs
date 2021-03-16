@@ -319,7 +319,6 @@ impl fmt::Display for Rolls {
 #[derive(Serialize, Deserialize)]
 pub struct NPCPrefab {
     name: String,
-    point: Point,
     renderable: Renderable,
     ai: Option<AI>,
     faction: Option<Faction>, 
@@ -440,7 +439,7 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
 
     let data : NPCPrefab = ron::from_str(&ron).expect("malformed file");
     //debug
-    log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.point, data.ai, data.faction, data.combat));
+    log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", data.name, data.renderable, data.ai, data.faction, data.combat));
     //log!("{}", &format!("{:?}", data));
 
     state.game_start();

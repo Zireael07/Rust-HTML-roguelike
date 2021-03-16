@@ -1,7 +1,6 @@
 #![enable(implicit_some)]
 
 (
-    point: Point(x:7, y:7), 
     renderable: Thug, 
     name: "Thug",
     ai: AI(), //unit struct 
