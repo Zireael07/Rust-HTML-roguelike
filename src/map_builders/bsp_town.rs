@@ -36,6 +36,7 @@ impl MetaMapBuilder for BSPTownBuilder {
 #[derive(Debug)]
 enum BuildingTag {
     Pub,
+    Hostel,
     Hovel,
     Unassigned,
 }
@@ -134,6 +135,7 @@ impl BSPTownBuilder {
         for r in rooms_copy.iter() {
             let room = *r;
             //rooms.push(room);
+            //Rust is weird, ranges are inclusive at the beginning but exclusive at the end
             for y in room.y1 .. room.y2 {
                 for x in room.x1 .. room.x2 {
                     let idx = build_data.map.xy_idx(x, y);
@@ -190,6 +192,7 @@ impl BSPTownBuilder {
         for (i,building) in buildings.iter().enumerate() {
             let rect_width = i32::abs(building.x1 - building.x2);
             let rect_height = i32::abs(building.y1 - building.y2);
+            log!("{}", &format!("building: w {} h {} ", rect_width, rect_height));
             building_size.push((
                 i,
                 rect_height * rect_width,
@@ -197,8 +200,9 @@ impl BSPTownBuilder {
             ));
         }
         building_size.sort_by(|a,b| b.1.cmp(&a.1));
-        building_size[0].2 = BuildingTag::Pub;
-        for b in building_size.iter_mut().skip(1) {
+        building_size[0].2 = BuildingTag::Hostel;
+        building_size[1].2 = BuildingTag::Pub;
+        for b in building_size.iter_mut().skip(2) {
             b.2 = BuildingTag::Hovel;
         }
 
@@ -214,6 +218,7 @@ impl BSPTownBuilder {
             let build_type = &building_index[i].2;
             match build_type {
                 BuildingTag::Pub => self.build_pub(&building, build_data),
+                BuildingTag::Hostel => self.build_capsule_hotel(&building, build_data),
                 _ => {}
             }
         }
@@ -221,6 +226,7 @@ impl BSPTownBuilder {
 
     fn build_pub(&mut self, building: &Rect, build_data : &mut BuilderMap) 
     {
+        log!("{}", &format!("pub: {:?}", building));
         // Place the player
         let cent = building.center();
         build_data.starting_position = Some(Point{
@@ -245,6 +251,54 @@ impl BSPTownBuilder {
                 }
             }
         }
+    }
+
+    fn build_capsule_hotel(&mut self, building: &Rect, build_data : &mut BuilderMap) 
+    {
+        log!("{}", &format!("hotel: {:?}", building));
+        let start_x = building.x1;
+        let end_x = building.x2-1;
+        let start_y = building.y1;
+        let end_y = building.y2-1;
+        // place dividing walls
+        for x in start_x..end_x {
+            // if divides by 3, put a wall
+            // this ensures equal sized capsules
+            if (x-start_x) > 1 && (x-start_x) % 3 == 0 {
+                for y in start_y..end_y {
+                    let idx = build_data.map.xy_idx(x, y);
+                    build_data.map.tiles[idx] = Cell::Wall as u8;
+                }
+            }
+                    
+            // if not
+            // if first partition or second
+            if ((x-start_x) < 3+1 || (x-start_x) > 5+1) && (x-start_x) % 3 != 0 {
+                for y in start_y..end_y {
+                    // same trick as above
+                    if (y-start_y) > 1 && (y-start_y) % 3 == 0 {
+                        let idx = build_data.map.xy_idx(x, y);
+                        build_data.map.tiles[idx] = Cell::Wall as u8;
+                    }
+                }
+            }
+            
+            // doors to capsules
+            if (x-start_x) > 1 && (x-start_x) % 3 == 0 {
+                for y in start_y..end_y {
+                    if (y-start_y) > 1 && y < end_y && (y-start_y) % 3 == 1 {
+                        let idx = build_data.map.xy_idx(x, y);
+                        build_data.map.tiles[idx] = Cell::Door as u8;
+                    }
+                }
+            }
+
+        }
+            
+        // force door
+        let cent = building.center();
+        let idx = build_data.map.xy_idx(cent.0, building.y2-1);
+        build_data.map.tiles[idx] = Cell::Door as u8;
     }
 
 
