@@ -136,6 +136,7 @@ impl BSPTownBuilder {
             let room = *r;
             //rooms.push(room);
             //Rust is weird, ranges are inclusive at the beginning but exclusive at the end
+            // this lets us have at least one tile of separation between buildings
             for y in room.y1 .. room.y2 {
                 for x in room.x1 .. room.x2 {
                     let idx = build_data.map.xy_idx(x, y);
@@ -190,8 +191,8 @@ impl BSPTownBuilder {
     {
         let mut building_size : Vec<(usize, i32, BuildingTag)> = Vec::new();
         for (i,building) in buildings.iter().enumerate() {
-            let rect_width = i32::abs(building.x1 - building.x2);
-            let rect_height = i32::abs(building.y1 - building.y2);
+            let rect_width = i32::abs(building.x1 - building.x2-1);
+            let rect_height = i32::abs(building.y1 - building.y2-1);
             log!("{}", &format!("building: w {} h {} ", rect_width, rect_height));
             building_size.push((
                 i,
@@ -199,7 +200,9 @@ impl BSPTownBuilder {
                 BuildingTag::Unassigned
             ));
         }
+        //sort descending
         building_size.sort_by(|a,b| b.1.cmp(&a.1));
+        //log!("{}", &format!("sorted buildings: {:?}", building_size));
         building_size[0].2 = BuildingTag::Hostel;
         building_size[1].2 = BuildingTag::Pub;
         for b in building_size.iter_mut().skip(2) {
@@ -214,8 +217,11 @@ impl BSPTownBuilder {
         buildings: &Vec<Rect>, 
         building_index : &[(usize, i32, BuildingTag)]) 
     {
+        //log!("{}", &format!("{:?}", buildings));
         for (i,building) in buildings.iter().enumerate() {
-            let build_type = &building_index[i].2;
+            // find building type entry with matching i
+            let b_index = building_index.iter().position(|x| x.0 == i).unwrap(); //position() returns an Option
+            let build_type = &building_index[b_index].2;
             match build_type {
                 BuildingTag::Pub => self.build_pub(&building, build_data),
                 BuildingTag::Hostel => self.build_capsule_hotel(&building, build_data),
@@ -285,8 +291,9 @@ impl BSPTownBuilder {
             
             // doors to capsules
             if (x-start_x) > 1 && (x-start_x) % 3 == 0 {
+                //Rust ranges are exclusive at the end
                 for y in start_y..end_y {
-                    if (y-start_y) > 1 && y < end_y && (y-start_y) % 3 == 1 {
+                    if (y-start_y) >= 1 && (y-start_y) % 3 == 1 {
                         let idx = build_data.map.xy_idx(x, y);
                         build_data.map.tiles[idx] = Cell::Door as u8;
                     }
@@ -297,7 +304,12 @@ impl BSPTownBuilder {
             
         // force door
         let cent = building.center();
-        let idx = build_data.map.xy_idx(cent.0, building.y2-1);
+        let mut x = cent.0;
+        if ((cent.0-building.x1) % 3 == 0) {
+            x = cent.0+1; //shuffle a bit to the right
+        }
+
+        let idx = build_data.map.xy_idx(x, building.y2-1);
         build_data.map.tiles[idx] = Cell::Door as u8;
     }
 
