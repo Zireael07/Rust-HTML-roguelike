@@ -25,6 +25,7 @@ var JEANS = new ut.Tile("]", 0, 23, 255, 255,255,255);
 
 var TABLE = new ut.Tile("╦", 170, 170, 170);
 var CHAIR = new ut.Tile("└", 170, 170, 170);
+var BED = new ut.Tile("#", 0, 128, 128);
 
 var WALL = new ut.Tile('▒', 100, 100, 100);
 var FLOOR = new ut.Tile('.', 50, 50, 50);
@@ -139,6 +140,7 @@ function tick() {
         if (tile == 7 ) { tile = JACKET};
         if (tile == 8 ) { tile = JEANS};
         if (tile == 9) { tile = PATRON};
+        if (tile == 10) { tile = BED};
 
 		// if (e.tile == null || e.tile == undefined) {
 		// 	console.log("Tile for " + e + " is null!");

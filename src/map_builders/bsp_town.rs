@@ -232,7 +232,7 @@ impl BSPTownBuilder {
 
     fn build_pub(&mut self, building: &Rect, build_data : &mut BuilderMap) 
     {
-        log!("{}", &format!("pub: {:?}", building));
+        //log!("{}", &format!("pub: {:?}", building));
         // Place the player
         let cent = building.center();
         build_data.starting_position = Some(Point{
@@ -261,7 +261,7 @@ impl BSPTownBuilder {
 
     fn build_capsule_hotel(&mut self, building: &Rect, build_data : &mut BuilderMap) 
     {
-        log!("{}", &format!("hotel: {:?}", building));
+        //log!("{}", &format!("hotel: {:?}", building));
         let start_x = building.x1;
         let end_x = building.x2-1;
         let start_y = building.y1;
@@ -288,6 +288,17 @@ impl BSPTownBuilder {
                     }
                 }
             }
+
+            // place one bed per capsule
+            if (((x-start_x) > 0 && (x-start_x) < 3+1) || (x-start_x) > 6) && (x-start_x) % 3 == 1 {
+                for y in start_y..end_y {
+                    if (y-start_y) % 3 == 1 {
+                        let idx = build_data.map.xy_idx(x, y);
+                        build_data.list_spawns.push((idx, "Bed".to_string()));
+                    }
+                }
+            }
+
             
             // doors to capsules
             if (x-start_x) > 1 && (x-start_x) % 3 == 0 {

@@ -169,7 +169,8 @@ pub enum Renderable {
     Boots = 6,
     Jacket = 7,
     Jeans = 8,
-    Patron = 9
+    Patron = 9,
+    Bed = 10
 }
 
 //for ECS
@@ -1293,6 +1294,9 @@ impl Universe {
         } else if name == "Chair".to_string() {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Chair as u8));
         }
+        else if name == "Bed".to_string() {
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Bed as u8));
+        }
         //NPCs
         else if name == "Barkeep".to_string() {
             self.ecs_world.spawn((Point{x:x, y:y}, data[1].renderable as u8, data[1].name.to_string(), data[1].faction.unwrap(), data[1].combat.unwrap(), Vendor{}));
@@ -1302,7 +1306,7 @@ impl Universe {
             let pat = self.ecs_world.spawn((Point{x:x, y:y}, data[2].renderable as u8, data[2].name.to_string(), data[2].ai.unwrap(), data[2].faction.unwrap(), data[2].combat.unwrap()));
             //let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
             let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
-        } else {
+        } else if name == "Thug".to_string() {
             let th = self.ecs_world.spawn((Point{x:x, y:y}, data[0].renderable as u8, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
             //let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
             //their starting equipment
@@ -1312,6 +1316,9 @@ impl Universe {
             self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
             self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
             self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
+        }
+        else {
+            log!("Tried to spawn {}", name);
         }
     }
 
