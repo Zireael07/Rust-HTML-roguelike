@@ -705,8 +705,14 @@ impl Universe {
                 let path = self.ecs_world.get_mut::<Path>(entity);
                 if path.is_ok() {
                     let mut steps = path.unwrap().steps.clone();
-                    steps.remove(0);
-                   return steps;
+                    //paranoia check
+                    if steps[0] as usize != self.player_position {
+                        return [].to_vec();
+                    }
+                    else {
+                        steps.remove(0);
+                        return steps;
+                    }
                 } else {
                     return [].to_vec();
                 }
