@@ -1786,9 +1786,20 @@ impl Universe {
                         // is late, want to find a bed...
                         log!("{}", &format!("Wants to find a bed..."));
                         let beds = self.props_list_by_render(Renderable::Bed as u8);
+                        let mut dists = Vec::new();
+                        for b in beds {
+                            let pt = self.ecs_world.get::<Point>(b).unwrap();
+                            let dist = distance2d_chessboard(point.x, point.y, pt.x, pt.y);
+                            dists.push((b, dist));
+                        }
+                        //sort by closest
+                        dists.sort_by(|a,b| a.1.cmp(&b.1));
+                            
                         //just pick the first one for now
-                        let bed = beds[0];
-                        let pt = self.ecs_world.get::<Point>(bed).unwrap();
+                        //let bed = beds[0];
+                        //let pt = self.ecs_world.get::<Point>(bed).unwrap();
+                        
+                        let pt = self.ecs_world.get::<Point>(dists[0].0).unwrap();
                         if distance2d_chessboard(point.x, point.y, pt.x, pt.y) > 1 {
                             let new_pos = path_to_target(&mut self.map, point.x as usize, point.y as usize, pt.x as usize, pt.y as usize);
                             //actually move
