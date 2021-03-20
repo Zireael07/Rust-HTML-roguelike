@@ -407,6 +407,25 @@ pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y:
     vec![player_position as i32] //dummy
 }
 
+pub fn path_to_target(map: &mut Map, sx: usize, sy: usize, tx: usize, ty: usize) -> (usize, usize) {
+    //call A*
+    let path = a_star_search(map.xy_idx(sx as i32, sy as i32) as i32, map.xy_idx(tx as i32, ty as i32) as i32, &map);
+    if path.success {
+        let idx = path.steps[1];
+        let idx_pos = map.idx_xy(idx as usize);
+        if !map.is_tile_blocked(idx) {
+            let old_idx = (sy * map.width as usize) + sx;
+            //mark as blocked for pathfinding
+            map.clear_tile_blocked(old_idx as i32);
+            map.set_tile_blocked(idx as i32);
+            log!("{}", &format!("Path step x {} y {}", idx_pos.0, idx_pos.1));
+            return (idx_pos.0 as usize, idx_pos.1 as usize);
+        }
+    }
+    log!("{}", &format!("No path found sx {} sy {} tx {} ty {}", sx, sy, tx, ty));
+    (sx,sy) //dummy
+}
+
 /// Public methods, exported to JavaScript.
 
 //async loader based on https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
@@ -1380,6 +1399,19 @@ impl Universe {
         return ent;
     }
 
+    pub fn props_list_by_render(&self, render_f: u8) -> Vec<Entity> {
+        let mut props = Vec::new();
+        //props do not have a name, just a point and render
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        .without::<String>()
+        .iter() {
+            if *render == render_f {
+                props.push(id);
+            }
+        }
+        return props;
+    }
+
     pub fn items_at(&self, x: usize, y: usize) -> Option<Entity> {
         let mut item: Option<Entity> = None;
         for (id, (point, it)) in self.ecs_world.query::<(&Point, &Item)>()
@@ -1630,6 +1662,25 @@ impl Universe {
 
     }
 
+    fn get_time(&mut self) -> i64 {
+        let mut time = 0;
+
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let gs = self.ecs_world.get::<GameState>(entity).unwrap();
+                time = gs.turns;
+            },
+            None => {},
+        }
+        return time;
+    }
+
+
 
     fn remove_dead(&mut self) {
         // Here we query entities with 0 or less hp and despawn them
@@ -1687,6 +1738,10 @@ impl Universe {
     ///-------------------------------------------------------------------------------------
     //AI logic lives here!
     pub fn get_AI(&mut self) {
+        // get the game time once
+        let time = self.get_time();
+        log!("{}", &format!("Time: {}", time));
+
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
         for (id, (ai, point)) in &mut self.ecs_world.query::<(&AI, &mut Point)>()
         .with::<String>()
@@ -1699,27 +1754,43 @@ impl Universe {
                 let fact = self.ecs_world.get::<Faction>(id).unwrap().typ;
                 // townsfolk and NOT vendor
                 if fact == FactionType::Townsfolk && self.ecs_world.get::<Vendor>(id).is_err() {
-                    //random movement
-                    let mut x = point.x;
-                    let mut y = point.y;
-                    //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
-                    let mut rng = rand::thread_rng();
-                    let move_roll = rng.gen_range(1, 5);
-                    match move_roll {
-                        1 => x -= 1,
-                        2 => x += 1,
-                        3 => y -= 1,
-                        4 => y += 1,
-                        _ => {}
-                    }
+                    if time < 10 {
+                        //random movement
+                        let mut x = point.x;
+                        let mut y = point.y;
+                        //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
+                        let mut rng = rand::thread_rng();
+                        let move_roll = rng.gen_range(1, 5);
+                        match move_roll {
+                            1 => x -= 1,
+                            2 => x += 1,
+                            3 => y -= 1,
+                            4 => y += 1,
+                            _ => {}
+                        }
 
-                    //move
-                    let dest_idx = self.map.xy_idx(x, y);
-                    if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx as i32) {
-                        //actually move
-                        point.x = x;
-                        point.y = y;
+                        //move
+                        let dest_idx = self.map.xy_idx(x, y);
+                        if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx as i32) {
+                            //actually move
+                            point.x = x;
+                            point.y = y;
+                        }
+                    } else {
+                        // is late, want to find a bed...
+                        log!("{}", &format!("Wants to find a bed..."));
+                        let beds = self.props_list_by_render(Renderable::Bed as u8);
+                        //just pick the first one for now
+                        let bed = beds[0];
+                        let pt = self.ecs_world.get::<Point>(bed).unwrap();
+                        if distance2d_chessboard(point.x, point.y, pt.x, pt.y) > 1 {
+                            let new_pos = path_to_target(&mut self.map, point.x as usize, point.y as usize, pt.x as usize, pt.y as usize);
+                            //actually move
+                            point.x = new_pos.0 as i32;
+                            point.y = new_pos.1 as i32;
+                        }
                     }
+                   
 
                 } else if fact == FactionType::Enemy {
                     //TODO: extract to a function: self.is_visible is the problem here... (map and player position can be passed quite easily)
