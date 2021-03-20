@@ -285,7 +285,7 @@ function __wbg_adapter_126(arg0, arg1, arg2, arg3) {
 
 /**
 */
-export const Renderable = Object.freeze({ Thug:0,"0":"Thug",Knife:1,"1":"Knife",Medkit:2,"2":"Medkit",Barkeep:3,"3":"Barkeep",Table:4,"4":"Table",Chair:5,"5":"Chair",Boots:6,"6":"Boots",Jacket:7,"7":"Jacket",Jeans:8,"8":"Jeans",Patron:9,"9":"Patron", });
+export const Renderable = Object.freeze({ Thug:0,"0":"Thug",Knife:1,"1":"Knife",Medkit:2,"2":"Medkit",Barkeep:3,"3":"Barkeep",Table:4,"4":"Table",Chair:5,"5":"Chair",Boots:6,"6":"Boots",Jacket:7,"7":"Jacket",Jeans:8,"8":"Jeans",Patron:9,"9":"Patron",Bed:10,"10":"Bed", });
 /**
 */
 export const Command = Object.freeze({ MoveLeft:0,"0":"MoveLeft",MoveRight:1,"1":"MoveRight",MoveDown:2,"2":"MoveDown",MoveUp:3,"3":"MoveUp",GetItem:4,"4":"GetItem",Inventory:5,"5":"Inventory",SaveGame:6,"6":"SaveGame", });
@@ -999,8 +999,8 @@ async function init(input) {
         var ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1267 = function(arg0, arg1, arg2) {
-        var ret = makeMutClosure(arg0, arg1, 183, __wbg_adapter_20);
+    imports.wbg.__wbindgen_closure_wrapper1268 = function(arg0, arg1, arg2) {
+        var ret = makeMutClosure(arg0, arg1, 182, __wbg_adapter_20);
         return addHeapObject(ret);
     };
 
