@@ -279,7 +279,7 @@ function handleError(f) {
         }
     };
 }
-function __wbg_adapter_126(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_127(arg0, arg1, arg2, arg3) {
     wasm.wasm_bindgen__convert__closures__invoke2_mut__h2a9b604cf76820ec(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
@@ -288,7 +288,7 @@ function __wbg_adapter_126(arg0, arg1, arg2, arg3) {
 export const Renderable = Object.freeze({ Thug:0,"0":"Thug",Knife:1,"1":"Knife",Medkit:2,"2":"Medkit",Barkeep:3,"3":"Barkeep",Table:4,"4":"Table",Chair:5,"5":"Chair",Boots:6,"6":"Boots",Jacket:7,"7":"Jacket",Jeans:8,"8":"Jeans",Patron:9,"9":"Patron",Bed:10,"10":"Bed", });
 /**
 */
-export const Command = Object.freeze({ MoveLeft:0,"0":"MoveLeft",MoveRight:1,"1":"MoveRight",MoveDown:2,"2":"MoveDown",MoveUp:3,"3":"MoveUp",GetItem:4,"4":"GetItem",Inventory:5,"5":"Inventory",SaveGame:6,"6":"SaveGame", });
+export const Command = Object.freeze({ MoveLeft:0,"0":"MoveLeft",MoveRight:1,"1":"MoveRight",MoveDown:2,"2":"MoveDown",MoveUp:3,"3":"MoveUp",GetItem:4,"4":"GetItem",Inventory:5,"5":"Inventory",SaveGame:6,"6":"SaveGame",Wait:7,"7":"Wait", });
 /**
 */
 export const Cell = Object.freeze({ Floor:0,"0":"Floor",Wall:1,"1":"Wall",Grass:2,"2":"Grass",Tree:3,"3":"Tree",FloorIndoor:4,"4":"FloorIndoor",Door:5,"5":"Door", });
@@ -427,7 +427,7 @@ export class Universe {
     * @param {number | undefined} input
     */
     process(input) {
-        wasm.universe_process(this.ptr, isLikeNone(input) ? 7 : input);
+        wasm.universe_process(this.ptr, isLikeNone(input) ? 8 : input);
     }
     /**
     * @param {number} x
@@ -669,6 +669,11 @@ export class Universe {
         return ret;
     }
     /**
+    */
+    wait() {
+        wasm.universe_wait(this.ptr);
+    }
+    /**
     *---------------------------------------------------------------------------------------------------
     * @returns {string}
     */
@@ -893,7 +898,7 @@ async function init(input) {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_126(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_127(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -999,7 +1004,7 @@ async function init(input) {
         var ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1268 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper1298 = function(arg0, arg1, arg2) {
         var ret = makeMutClosure(arg0, arg1, 182, __wbg_adapter_20);
         return addHeapObject(ret);
     };
