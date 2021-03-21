@@ -1022,7 +1022,7 @@ impl Universe {
         return fact;
     }
 
-    pub fn wait(&self) {
+    pub fn wait(&mut self) {
         //get player entity
         let mut play: Option<Entity> = None;
         for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
@@ -1030,22 +1030,39 @@ impl Universe {
         }
         match play {
             Some(entity) => {
-                let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                let mut turns_passed = 0;
+                // block to make the loop below work
+                {
+                    let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
 
-                //wait until 19:00
-                let end_t = NaiveTime::from_hms(19,00,00);
-                //let mut f = end_t.format("%H:%M:%S").to_string();
-                //game_message(&format!("End time: {}", f));
+                    //wait until 19:00
+                    let end_t = NaiveTime::from_hms(19,00,00);
+                    //let mut f = end_t.format("%H:%M:%S").to_string();
+                    //game_message(&format!("End time: {}", f));
+    
+                    //add the current number of turns to game start
+                    let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                    //returns a Duration
+                    let diff = end_t - cur_t.0;
+                    turns_passed = diff.num_seconds();
+                    //log!("{}", &format!("{} s", diff.num_seconds()));
+                    gs.turns += turns_passed;    
+                }
+               
+                //simulate all that time
+                for _ in 0..turns_passed {
+                    self.get_AI();
+                    //reenable when it makes sense to do so
+                    //no inter-AI combat yet
+                    //self.remove_dead();
+                    // needs rebalancing for 1s turns
+                    //self.survival_tick();
+                }
 
-                //add the current number of turns to game start
-                let mut cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
-                //returns a Duration
-                let diff = end_t - cur_t.0;
-                //log!("{}", &format!("{} s", diff.num_seconds()));
-                gs.turns += diff.num_seconds();
 
                 //calculate time again
-                cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                let gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
                 // //t is a tuple (NaiveTime, i64)
                 let f = cur_t.0.format("%H:%M:%S").to_string();
                 game_message(&format!("Time: {}", f));
@@ -1772,7 +1789,7 @@ impl Universe {
         let mut wants_path = Vec::new();
         // get the game time once
         let time = self.get_time();
-        log!("{}", &format!("Time: {}", time));
+        //log!("{}", &format!("Time: {}", time));
 
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
         for (id, (ai, point)) in &mut self.ecs_world.query::<(&AI, &mut Point)>()
