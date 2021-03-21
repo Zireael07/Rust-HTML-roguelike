@@ -365,6 +365,7 @@ pub enum Command {
     GetItem,
     Inventory,
     SaveGame,
+    Wait,
 }
 
 
@@ -556,6 +557,7 @@ impl Universe {
 
                     //others
                     Command::GetItem => self.get_item(),
+                    Command::Wait => self.wait(),
 
                     //save/load
                     //Command::SaveGame => self.save_game(),
@@ -1018,6 +1020,38 @@ impl Universe {
         }
         
         return fact;
+    }
+
+    pub fn wait(&self) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+
+                //wait until 19:00
+                let end_t = NaiveTime::from_hms(19,00,00);
+                //let mut f = end_t.format("%H:%M:%S").to_string();
+                //game_message(&format!("End time: {}", f));
+
+                //add the current number of turns to game start
+                let mut cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                //returns a Duration
+                let diff = end_t - cur_t.0;
+                //log!("{}", &format!("{} s", diff.num_seconds()));
+                gs.turns += diff.num_seconds();
+
+                //calculate time again
+                cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                // //t is a tuple (NaiveTime, i64)
+                let f = cur_t.0.format("%H:%M:%S").to_string();
+                game_message(&format!("Time: {}", f));
+            },
+            None => {},
+        }
     }
 
     ///---------------------------------------------------------------------------------------------------
@@ -1752,7 +1786,8 @@ impl Universe {
                 let fact = self.ecs_world.get::<Faction>(id).unwrap().typ;
                 // townsfolk and NOT vendor
                 if fact == FactionType::Townsfolk && self.ecs_world.get::<Vendor>(id).is_err() {
-                    if time < 10 {
+                    // 39600 turns (seconds) is equal to 19:00h in chrono
+                    if time < 39600 {
                         //random movement
                         let mut x = point.x;
                         let mut y = point.y;

@@ -432,6 +432,7 @@ function onKeyDown(k) {
 	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
+    else if (k == ut.KEY_PERIOD) cmd = rust.Command.Wait; //'r' is taken by 'restore'
     else if (k == ut.KEY_I) {
         if (!vendorOverlay.classList.contains('visible')) {
             cmd = rust.Command.Inventory //dummy
