@@ -591,7 +591,7 @@ impl Universe {
                         }
                     } else {
                         // is late, want to find a bed...
-                        log!("{}", &format!("Wants to find a bed..."));
+                        log!("{}", &format!("{} , wants to find a bed...", time));
 
                         //if we don't have a bed yet...
                         if self.ecs_world.get::<Path>(id).is_err() {
@@ -612,32 +612,36 @@ impl Universe {
                             let pt = self.ecs_world.get::<Point>(dists[0].0).unwrap();
                             if distance2d_chessboard(point.x, point.y, pt.x, pt.y) > 1 {
                                 let path = path_to_target(&mut self.map, point.x as usize, point.y as usize, pt.x as usize, pt.y as usize);
-                                                            
-                                let new_pos = self.map.idx_xy(path[1] as usize);
+                                
+                                //paranoia
+                                if path.len() > 1 {
+                                    let new_pos = self.map.idx_xy(path[1] as usize);
 
-                                let mut moved = false;
-                                if !self.map.is_tile_blocked(path[1]) {
-                                    let old_idx = self.map.xy_idx(point.x, point.y);
-                                    //mark as blocked for pathfinding
-                                    self.map.clear_tile_blocked(old_idx as i32);
-                                    self.map.set_tile_blocked(path[1] as i32);
-
-                                    //actually move
-                                    point.x = new_pos.0 as i32;
-                                    point.y = new_pos.1 as i32;
-
-                                    moved = true;
+                                    let mut moved = false;
+                                    if !self.map.is_tile_blocked(path[1]) {
+                                        let old_idx = self.map.xy_idx(point.x, point.y);
+                                        //mark as blocked for pathfinding
+                                        self.map.clear_tile_blocked(old_idx as i32);
+                                        self.map.set_tile_blocked(path[1] as i32);
+    
+                                        //actually move
+                                        point.x = new_pos.0 as i32;
+                                        point.y = new_pos.1 as i32;
+    
+                                        moved = true;
+                                    }
+    
+    
+                                    //don't A* on every turn
+                                    wants_path.push((id, path, moved));
+                                    // we can't insert while iterating :(
+                                    //self.ecs_world.insert_one(id, Path{ steps: path});
+                                    //axe the point from path
+                                    //self.ecs_world.get_mut::<Path>(id).unwrap().steps.remove(1);
                                 }
 
-
-                                //don't A* on every turn
-                                wants_path.push((id, path, moved));
-                                // we can't insert while iterating :(
-                                //self.ecs_world.insert_one(id, Path{ steps: path});
-                                //axe the point from path
-                                //self.ecs_world.get_mut::<Path>(id).unwrap().steps.remove(1);
-                                }
-                            } else {
+                            }
+                        } else {
                                 //log!("We have a path!");
                                 //we have a Path
                                 let mut path = self.ecs_world.get_mut::<Path>(id).unwrap();
