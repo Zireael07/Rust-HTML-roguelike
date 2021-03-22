@@ -625,12 +625,12 @@ function initRenderer(wasm) {
         //console.log(mouse);
 
         //trigger automove
-        if (universe.has_automove() && universe.get_automove().length > 1 && !automoving) {
+        var steps = universe.get_automove();
+        if (universe.has_automove() && steps.length > 1 && !automoving) {
             console.log("We have automove...");
             automoving = true;
             setTimeout(function() { 
-                //alert("After 1 seconds!"); 
-                var steps = universe.get_automove();
+                //alert("After 1 seconds!");
                 //pop the first step
                 var pos = universe.get_pos(steps[0])
                 var dir_x = pos[0]-player[0]
@@ -643,7 +643,7 @@ function initRenderer(wasm) {
                 //redraw
                 tick();
                 automoving = false;
-            }, 1000);
+            }, 1000); //1 second
         }
         //to redraw the highlight
 		//var w_pos = worldPos(mouse);
