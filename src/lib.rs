@@ -638,7 +638,9 @@ impl Universe {
                 if path.is_ok() {
                     let mut steps = path.unwrap().steps.clone();
                     //paranoia check
-                    if steps[0] as usize != self.player_position {
+                    if !steps.contains(&(self.player_position as i32)) {
+                    //if steps[0] as usize != self.player_position {
+                        log!("{}", &format!("Player pos x {} y {} step 0 x {} y {}", self.map.idx_xy(self.player_position).0, self.map.idx_xy(self.player_position).1, self.map.idx_xy(steps[0] as usize).0, self.map.idx_xy(steps[0] as usize).1));
                         return [].to_vec();
                     }
                     else {
