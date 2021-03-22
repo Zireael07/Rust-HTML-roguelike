@@ -55,16 +55,16 @@ impl Map {
     }
 
     //blocked for pathfinding (eg. by other entities)
-    pub fn set_tile_blocked(&mut self, idx : i32) {
-        self.blocked[idx as usize] = true;
+    pub fn set_tile_blocked(&mut self, idx : usize) {
+        self.blocked[idx] = true;
     }
 
-    pub fn clear_tile_blocked(&mut self, idx : i32) {
-        self.blocked[idx as usize] = false;
+    pub fn clear_tile_blocked(&mut self, idx : usize) {
+        self.blocked[idx] = false;
     }
 
-    pub fn is_tile_blocked(&self, idx: i32) -> bool {
-        return self.blocked[idx as usize];
+    pub fn is_tile_blocked(&self, idx: usize) -> bool {
+        return self.blocked[idx];
     }
 
     pub fn is_tile_walkable(&self, x:i32, y:i32) -> bool {
@@ -76,7 +76,7 @@ impl Map {
     pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width as i32-1 || y < 1 || y > self.height as i32-1 { return false; }
         let idx = (y * self.width as i32) + x;
-        return !self.is_tile_blocked(idx);
+        return !self.is_tile_blocked(idx as usize);
     }
 
     //helpers

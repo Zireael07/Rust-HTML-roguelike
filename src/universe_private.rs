@@ -27,15 +27,15 @@ use super::utils::*;
 //it's outside Universe because we're careful not to pass 'self' to it
 pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize) -> (usize, usize) {
     //call A*
-    let path = a_star_search(map.xy_idx(x as i32, y as i32) as i32, player_position as i32, &map);
+    let path = a_star_search(map.xy_idx(x as i32, y as i32), player_position, &map);
     if path.success {
         let idx = path.steps[1];
-        let idx_pos = map.idx_xy(idx as usize);
+        let idx_pos = map.idx_xy(idx);
         if !map.is_tile_blocked(idx) {
             let old_idx = (y * map.width as usize) + x;
             //mark as blocked for pathfinding
-            map.clear_tile_blocked(old_idx as i32);
-            map.set_tile_blocked(idx as i32);
+            map.clear_tile_blocked(old_idx);
+            map.set_tile_blocked(idx);
             log!("{}", &format!("Path step x {} y {}", idx_pos.0, idx_pos.1));
             return (idx_pos.0 as usize, idx_pos.1 as usize);
         }
@@ -44,23 +44,23 @@ pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize)
     (x,y) //dummy
 }
 
-pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y: usize) -> Vec<i32> {
-    let path = a_star_search(player_position as i32, map.xy_idx(x as i32, y as i32) as i32, &map);
+pub fn player_path_to_target(map: &mut Map, player_position: usize, x: usize, y: usize) -> Vec<usize> {
+    let path = a_star_search(player_position, map.xy_idx(x as i32, y as i32), &map);
     if path.success {
         return path.steps;
     }
     log!("{}", &format!("No player path found, x {} y {}", x,y));
-    vec![player_position as i32] //dummy
+    vec![player_position] //dummy
 }
 
-pub fn path_to_target(map: &mut Map, sx: usize, sy: usize, tx: usize, ty: usize) -> Vec<i32> {
+pub fn path_to_target(map: &mut Map, sx: usize, sy: usize, tx: usize, ty: usize) -> Vec<usize> {
     //call A*
-    let path = a_star_search(map.xy_idx(sx as i32, sy as i32) as i32, map.xy_idx(tx as i32, ty as i32) as i32, &map);
+    let path = a_star_search(map.xy_idx(sx as i32, sy as i32), map.xy_idx(tx as i32, ty as i32), &map);
     if path.success {
         return path.steps;
     }
     log!("{}", &format!("No path found sx {} sy {} tx {} ty {}", sx, sy, tx, ty));
-    vec![map.xy_idx(sx as i32,sy as i32) as i32] //dummy
+    vec![map.xy_idx(sx as i32,sy as i32)] //dummy
 }
 
 //Methods not exposed to JS
@@ -559,7 +559,7 @@ impl Universe {
         .with::<String>()
         .iter()
          {
-            log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<String>(id).unwrap().to_string())); //just unwrapping isn't enough to format
+            //log!("{}", &format!("Got AI {} x {} y {}",  point.x, point.y, self.ecs_world.get::<String>(id).unwrap().to_string())); //just unwrapping isn't enough to format
             
             // exact movement depends on faction
             if self.ecs_world.get::<Faction>(id).is_ok() {
@@ -573,7 +573,7 @@ impl Universe {
                         let mut y = point.y;
                         //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
                         let mut rng = rand::thread_rng();
-                        let move_roll = rng.gen_range(1, 5);
+                        let move_roll = rng.gen_range(1, 6);
                         match move_roll {
                             1 => x -= 1,
                             2 => x += 1,
@@ -584,14 +584,14 @@ impl Universe {
 
                         //move
                         let dest_idx = self.map.xy_idx(x, y);
-                        if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx as i32) {
+                        if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx) {
                             //actually move
                             point.x = x;
                             point.y = y;
                         }
                     } else {
                         // is late, want to find a bed...
-                        log!("{}", &format!("{} , wants to find a bed...", time));
+                        log!("{}", &format!("{}, wants to find a bed...", time));
 
                         //if we don't have a bed yet...
                         if self.ecs_world.get::<Path>(id).is_err() {
@@ -615,14 +615,14 @@ impl Universe {
                                 
                                 //paranoia
                                 if path.len() > 1 {
-                                    let new_pos = self.map.idx_xy(path[1] as usize);
+                                    let new_pos = self.map.idx_xy(path[1]);
 
                                     let mut moved = false;
                                     if !self.map.is_tile_blocked(path[1]) {
                                         let old_idx = self.map.xy_idx(point.x, point.y);
                                         //mark as blocked for pathfinding
-                                        self.map.clear_tile_blocked(old_idx as i32);
-                                        self.map.set_tile_blocked(path[1] as i32);
+                                        self.map.clear_tile_blocked(old_idx);
+                                        self.map.set_tile_blocked(path[1]);
     
                                         //actually move
                                         point.x = new_pos.0 as i32;
@@ -648,13 +648,13 @@ impl Universe {
                                 //paranoia
                                 if path.steps.len() > 2 {
                                     // # 0 is beginning point
-                                    let new_pos = self.map.idx_xy(path.steps[1] as usize);
+                                    let new_pos = self.map.idx_xy(path.steps[1]);
 
                                     if !self.map.is_tile_blocked(path.steps[1]) {
                                         let old_idx = self.map.xy_idx(point.x, point.y);
                                         //mark as blocked for pathfinding
-                                        self.map.clear_tile_blocked(old_idx as i32);
-                                        self.map.set_tile_blocked(path.steps[1] as i32);
+                                        self.map.clear_tile_blocked(old_idx);
+                                        self.map.set_tile_blocked(path.steps[1]);
 
                                         //actually move
                                         point.x = new_pos.0 as i32;

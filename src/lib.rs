@@ -191,7 +191,7 @@ pub struct Needs{
     pub thirst: i32,
 }
 pub struct Path{
-    pub steps: Vec<i32> // see astar line 43
+    pub steps: Vec<usize> // see astar line 43
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -519,13 +519,13 @@ impl Universe {
         let mut new_path = player_path_to_target(&mut self.map,  self.player_position, x as usize, y as usize);
 
         //bugfix
-        if !new_path.contains(&(self.player_position as i32)){
-            new_path.insert(0, self.player_position as i32);
+        if !new_path.contains(&self.player_position){
+            new_path.insert(0, self.player_position);
         }
 
         //debugging
         for i in &new_path {
-            log!("{}", &format!("x {} y {}", self.map.idx_xy(*i as usize).0, self.map.idx_xy(*i as usize).1));
+            log!("{}", &format!("x {} y {}", self.map.idx_xy(*i).0, self.map.idx_xy(*i).1));
         }
 
         self.set_automove(new_path);
@@ -613,7 +613,7 @@ impl Universe {
         }
     }
 
-    pub fn set_automove(&mut self, path: Vec<i32>) {
+    pub fn set_automove(&mut self, path: Vec<usize>) {
         //get player entity
         let mut play: Option<Entity> = None;
         for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
@@ -636,7 +636,7 @@ impl Universe {
         }
     }
 
-    pub fn get_automove(&self) -> Vec<i32> {
+    pub fn get_automove(&self) -> Vec<usize> {
          //get player entity
          let mut play: Option<Entity> = None;
          for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
@@ -649,7 +649,7 @@ impl Universe {
                     let mut steps = path.unwrap().steps.clone();
                     
                     //paranoia check
-                    if !steps.contains(&(self.player_position as i32)) {  
+                    if !steps.contains(&self.player_position) {  
                         // for i in &steps {
                         //      log!("{}", &format!("x {} y {}", self.map.idx_xy(*i as usize).0, self.map.idx_xy(*i as usize).1));
                         // }
