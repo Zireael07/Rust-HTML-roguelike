@@ -467,6 +467,11 @@ impl Universe {
         return self.is_visible(x,y) || self.is_seen(x,y);
     }
 
+    pub fn get_pos(&self, ind: usize) -> Vec<i32> {
+        let pos = self.map.idx_xy(ind);
+        vec![pos.0, pos.1]
+    }
+
     //for JS (currently unused because wasm_bindgen doesn't play nice with Vec<NPCPrefab>)
     // pub fn spawn_ex(&mut self, x:i32, y:i32, name:String) {
     //     let pos = self.map.free_grid_in_range(x,y,4);
@@ -511,7 +516,12 @@ impl Universe {
         if self.is_player_dead() {
             return;
         }
-        let new_path = player_path_to_target(&mut self.map,  self.player_position, x as usize, y as usize);
+        let mut new_path = player_path_to_target(&mut self.map,  self.player_position, x as usize, y as usize);
+
+        //bugfix
+        if !new_path.contains(&(self.player_position as i32)){
+            new_path.insert(0, self.player_position as i32);
+        }
 
         //debugging
         for i in &new_path {
@@ -637,10 +647,14 @@ impl Universe {
                 let path = self.ecs_world.get_mut::<Path>(entity);
                 if path.is_ok() {
                     let mut steps = path.unwrap().steps.clone();
+                    
                     //paranoia check
-                    if !steps.contains(&(self.player_position as i32)) {
+                    if !steps.contains(&(self.player_position as i32)) {  
+                        // for i in &steps {
+                        //      log!("{}", &format!("x {} y {}", self.map.idx_xy(*i as usize).0, self.map.idx_xy(*i as usize).1));
+                        // }
                     //if steps[0] as usize != self.player_position {
-                        log!("{}", &format!("Player pos x {} y {} step 0 x {} y {}", self.map.idx_xy(self.player_position).0, self.map.idx_xy(self.player_position).1, self.map.idx_xy(steps[0] as usize).0, self.map.idx_xy(steps[0] as usize).1));
+                        log!("{}", &format!("Player pos x {} y {} not in steps", self.map.idx_xy(self.player_position).0, self.map.idx_xy(self.player_position).1));
                         return [].to_vec();
                     }
                     else {

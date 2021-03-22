@@ -625,16 +625,19 @@ function initRenderer(wasm) {
         //console.log(mouse);
 
         //trigger automove
-        if (universe.has_automove() && universe.get_automove().length > 0 && !automoving) {
+        if (universe.has_automove() && universe.get_automove().length > 1 && !automoving) {
             console.log("We have automove...");
             automoving = true;
             setTimeout(function() { 
                 //alert("After 1 seconds!"); 
                 var steps = universe.get_automove();
                 //pop the first step
-                var pos = getPos(steps[0])
+                var pos = universe.get_pos(steps[0])
                 var dir_x = pos[0]-player[0]
                 var dir_y = pos[1]-player[1]
+                if (dir_x == 0 && dir_y == 0) {
+                    automoving = true;
+                }
                 universe.move_player(dir_x, dir_y);
                 universe.advance_automove();
                 //redraw
