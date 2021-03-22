@@ -972,7 +972,7 @@ impl Universe {
                 let mut turns_passed = 0;
                 // block to make the loop below work
                 {
-                    let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                    let gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
 
                     //wait until 19:00
                     let end_t = NaiveTime::from_hms(19,00,00);
@@ -985,7 +985,7 @@ impl Universe {
                     let diff = end_t - cur_t.0;
                     turns_passed = diff.num_seconds();
                     //log!("{}", &format!("{} s", diff.num_seconds()));
-                    gs.turns += turns_passed;    
+                    //gs.turns += turns_passed;    
                 }
                
                 //simulate all that time
@@ -1000,7 +1000,8 @@ impl Universe {
 
 
                 //calculate time again
-                let gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                gs.turns += turns_passed; // add it here because otherwise the AI acts on final time
                 let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
                 // //t is a tuple (NaiveTime, i64)
                 let f = cur_t.0.format("%H:%M:%S").to_string();
