@@ -1,6 +1,6 @@
 use super::log;
 use super::{Universe, 
-    Point, Player, GameState, Needs, Money, 
+    Point, Player, Renderable, GameState, Needs, Money, 
     AI, Vendor, CombatStats, Faction, 
     Item, InBackpack, Consumable, ProvidesHealing, ProvidesFood, ProvidesQuench, Equippable, MeleeBonus, Equipped};
 
@@ -14,7 +14,7 @@ pub struct SaveData {
     entity: u64, //because Entity cannot be serialized by serde
     name: String,
     point: Option<Point>,
-    render: Option<u8>,
+    render: Option<Renderable>,
     player: Option<Player>,
     gamestate: Option<GameState>,
     needs: Option<Needs>,
@@ -75,8 +75,8 @@ pub fn save_game(u: &Universe) -> String {
         if u.ecs_world.get::<Point>(e).is_ok() {
             saved.point = Some(*u.ecs_world.get::<Point>(e).unwrap()); //they all need to be dereferenced
         }
-        if u.ecs_world.get::<u8>(e).is_ok() {
-            saved.render = Some(*u.ecs_world.get::<u8>(e).unwrap());
+        if u.ecs_world.get::<Renderable>(e).is_ok() {
+            saved.render = Some(*u.ecs_world.get::<Renderable>(e).unwrap());
         }
         //props don't have names
         if u.ecs_world.get::<String>(e).is_ok(){

@@ -163,7 +163,7 @@ pub fn game_describe(string: &str) {
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Renderable {
+pub enum RenderableGlyph {
     Thug = 0,
     Knife = 1,
     Medkit = 2,
@@ -176,6 +176,20 @@ pub enum Renderable {
     Patron = 9,
     Bed = 10
 }
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum RenderOrder {
+    Actor = 1,
+    Item = 2,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Renderable {
+    glyph: u8,
+    order: RenderOrder,
+}
+
 
 //for ECS
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -324,7 +338,7 @@ impl fmt::Display for Rolls {
 #[derive(Serialize, Deserialize)]
 pub struct NPCPrefab {
     name: String,
-    renderable: Renderable,
+    renderable: RenderableGlyph,
     ai: Option<AI>,
     faction: Option<Faction>, 
     combat: Option<CombatStats>,
@@ -771,16 +785,37 @@ impl Universe {
         // Each "drawn" will store 3 u8 values (x,y and tile)
         // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
         let mut js_drawn = Vec::new();
-        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+
+        let mut data = self.ecs_world.query::<(&Point, &Renderable)>()
         .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
-        .iter() {
+        .iter()
+        .map(|(e, (&p, &r))| (e, p, r)) // Copy out of the world
+        .collect::<Vec<_>>();
+
+        //sort by render order
+        data.sort_by(|&a, &b| (b.2.order as u8).cmp(&(a.2.order as u8)) );
+        //data.sort_by(|&a, &b| (a.2.order as u8).cmp(&(b.2.order as u8)) );
+        //log!("{}", format!("{:?}", data));
+
+        for (id, point, render) in data.iter() {
             if self.is_visible(point.x as usize, point.y as usize) {
                 js_drawn.push(point.x as u8);
                 js_drawn.push(point.y as u8);
-                js_drawn.push(*render);
-                //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render));
+                js_drawn.push(render.glyph);
+                //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render.glyph));
             }
         }
+
+        // for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        // .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        // .iter() {
+        //     if self.is_visible(point.x as usize, point.y as usize) {
+        //         js_drawn.push(point.x as u8);
+        //         js_drawn.push(point.y as u8);
+        //         js_drawn.push(*render);
+        //         //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render));
+        //     }
+        // }
 
         return js_drawn;
     }
@@ -899,10 +934,10 @@ impl Universe {
         let mut item: Option<Entity> = None;
         //TODO: should be a dict lookup
         if name == "Protein shake".to_string() {
-            item = Some(self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable::Medkit as u8, "Protein shake".to_string(), Item{}, ProvidesFood{}, ProvidesQuench{}, Consumable{}, ToRemove{yes:false})));
+            item = Some(self.ecs_world.spawn((Point{x:current_position.0,y:current_position.1}, Renderable{glyph: RenderableGlyph::Medkit as u8, order: RenderOrder::Item}, "Protein shake".to_string(), Item{}, ProvidesFood{}, ProvidesQuench{}, Consumable{}, ToRemove{yes:false})));
         }
         if name == "Medkit".to_string() {
-            item = Some(self.ecs_world.spawn((Point{x:5, y:5}, Renderable::Medkit as u8, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5})));
+            item = Some(self.ecs_world.spawn((Point{x:5, y:5}, Renderable{glyph:RenderableGlyph::Medkit as u8, order:RenderOrder::Item}, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5})));
         }
         match item {
             Some(it) => {
