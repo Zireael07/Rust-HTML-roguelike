@@ -73,10 +73,17 @@ impl Map {
         return walkables.contains(&self.tiles[idx as usize]);
     }
 
-    pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {
+    pub fn is_in_bounds(&self, x:i32, y:i32) -> bool {
         if x < 1 || x > self.width as i32-1 || y < 1 || y > self.height as i32-1 { return false; }
+        return true;
+    }
+
+    pub fn is_tile_valid(&self, x:i32, y:i32) -> bool {
+        if !self.is_in_bounds(x,y) { return false; }
+        //if not_blocked {
         let idx = (y * self.width as i32) + x;
         return !self.is_tile_blocked(idx as usize);
+        //}
     }
 
     //helpers

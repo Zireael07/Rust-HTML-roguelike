@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 
 #[allow(dead_code)]
-const MAX_ASTAR_STEPS :usize = 2048;
+const MAX_ASTAR_STEPS :usize = 65536;
 
 
 fn neighbor_idx(map: &Map, sx: i32, sy: i32, delta_x: i32, delta_y: i32) -> usize {
@@ -20,37 +20,37 @@ fn get_available_neighbors(map: &Map, idx:usize) -> Vec<(usize, f32)> {
     let y = idx as i32 / map.width as i32;
 
     // Cardinal directions
-    if map.is_tile_valid(x-1, y) && map.is_tile_walkable(x-1, y) { 
+    if map.is_in_bounds(x-1, y) && map.is_tile_walkable(x-1, y) { 
         let idx = neighbor_idx(map, x,y, -1,0);
         neighbors.push((idx, 1.0)) 
     };
-    if map.is_tile_valid(x+1, y) && map.is_tile_walkable(x+1, y) { 
+    if map.is_in_bounds(x+1, y) && map.is_tile_walkable(x+1, y) { 
         let idx = neighbor_idx(map, x,y, 1, 0);
         neighbors.push((idx, 1.0)) 
     };
-    if map.is_tile_valid(x, y-1) && map.is_tile_walkable(x, y-1) { 
+    if map.is_in_bounds(x, y-1) && map.is_tile_walkable(x, y-1) { 
         let idx = neighbor_idx(map, x,y, 0, -1);
         neighbors.push((idx, 1.0)) 
     };
-    if map.is_tile_valid(x, y+1) && map.is_tile_walkable(x, y+1) { 
+    if map.is_in_bounds(x, y+1) && map.is_tile_walkable(x, y+1) { 
         let idx = neighbor_idx(map, x,y, 0, 1);
         neighbors.push((idx, 1.0)) 
     };
 
     // Diagonals
-    if map.is_tile_valid(x-1, y-1) && map.is_tile_walkable(x-1, y-1) { 
+    if map.is_in_bounds(x-1, y-1) && map.is_tile_walkable(x-1, y-1) { 
         let idx = neighbor_idx(map, x,y, -1, -1);
         neighbors.push((idx, 1.4)); 
     }
-    if map.is_tile_valid(x+1, y-1) && map.is_tile_walkable(x+1, y-1) { 
+    if map.is_in_bounds(x+1, y-1) && map.is_tile_walkable(x+1, y-1) { 
         let idx = neighbor_idx(map, x,y, 1, -1);
         neighbors.push((idx, 1.4)); 
     }
-    if map.is_tile_valid(x-1, y+1) && map.is_tile_walkable(x-1, y+1) { 
+    if map.is_in_bounds(x-1, y+1) && map.is_tile_walkable(x-1, y+1) { 
         let idx = neighbor_idx(map, x,y, -1, 1);
         neighbors.push((idx, 1.4)); 
     }
-    if map.is_tile_valid(x+1, y+1) && map.is_tile_walkable(x+1, y+1) { 
+    if map.is_in_bounds(x+1, y+1) && map.is_tile_walkable(x+1, y+1) { 
         let idx = neighbor_idx(map, x, y, 1, 1);
         neighbors.push((idx, 1.4)); 
     }
@@ -118,37 +118,32 @@ impl AStar {
         return distance2d(&Point{x:map.idx_xy(idx).0, y:map.idx_xy(idx).1}, &Point{x:map.idx_xy(self.end).0, y:map.idx_xy(self.end).1});
     }
 
-    fn add_node(&mut self, q:Node, idx:usize, cost:f32, map: &Map) -> bool {
+    fn add_node(&mut self, q:Node, idx:usize, cost:f32, map: &Map) {
         // Did we reach our goal?
-        if idx == self.end {
-            self.parents.insert(idx, q.idx);
-            return true;
-        } else {
-            let distance = self.distance_to_end(idx, map);
-            let s = Node{ idx:idx, f:distance + cost, g:cost, h:distance };
+        let distance = self.distance_to_end(idx, map);
+        let s = Node{ idx:idx, f:distance + cost, g:cost, h:distance };
 
-            // If a node with the same position is in the open list with a lower f, skip add
-            let mut should_add = true;
-            for e in self.open_list.iter() {
-                if e.f < s.f && e.idx == idx { 
-                    should_add = false; 
-                }
-            }
-
-            // If a node with the same position is in the closed list, with a lower f, skip add
-            if should_add && self.closed_list.contains_key(&idx) && self.closed_list[&idx] < s.f { 
+        // If a node with the same position is in the open list with a lower f, skip add
+        let mut should_add = true;
+        for e in self.open_list.iter() {
+            if e.f < s.f && e.idx == idx { 
                 should_add = false; 
             }
-
-            if should_add {
-                self.open_list.push(s);
-                self.parents.insert(idx, q.idx);
-            }
-
-            return false;
         }
+
+        // If a node with the same position is in the closed list, with a lower f, skip add
+        if should_add && self.closed_list.contains_key(&idx) && self.closed_list[&idx] < s.f { 
+            should_add = false; 
+        }
+
+        if should_add {
+            self.open_list.push(s);
+            self.parents.insert(idx, q.idx);
+        }
+
     }
 
+    /// Helper function to unwrap a path once we've found the end-point.
     fn found_it(&self) -> NavigationPath {
         let mut result = NavigationPath::new();
         result.success = true;
@@ -165,6 +160,7 @@ impl AStar {
         return result;
     }
 
+    /// Performs an A-Star search
     fn search(&mut self, map: &Map) -> NavigationPath {
         let result = NavigationPath::new();
         while self.open_list.len() != 0 && self.step_counter < MAX_ASTAR_STEPS {
@@ -174,15 +170,15 @@ impl AStar {
             let q = self.open_list[0];
             self.open_list.remove(0);
 
-            // Generate neighbors
-            let neighbors = get_available_neighbors(map, q.idx);
-
-            for n in neighbors.iter() {
-                if self.add_node(q, n.0, n.1 + q.f, map) {
-                    let success = self.found_it();
-                    return success;
-                }
+            if q.idx == self.end {
+                let success = self.found_it();
+                return success;
             }
+
+            // Generate neighbors
+            get_available_neighbors(map, q.idx)
+                .iter()
+                .for_each(|s| self.add_node(q, s.0, s.1 + q.f, map));
 
             if self.closed_list.contains_key(&q.idx) { self.closed_list.remove(&q.idx); }
             self.closed_list.insert(q.idx, q.f);
