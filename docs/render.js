@@ -325,6 +325,22 @@ function confirmCreation() {
     }
 }
 
+function examineFunction(button){
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+    console.log("ID: ", i);
+    document.getElementById("description").classList.toggle('visible', true);
+    //var w_pos = worldPos(mouse);
+    var w_pos = universe.entity_view_pos(i);
+    //draw
+    let html = "<div>DESCRIPTION</div><p style='white-space: pre-line'>"; //this style makes HTML understand \n linebreaks
+    html += universe.get_description(w_pos[0], w_pos[1]) + '</p> <p>\nPress E again to close</p>';
+    document.getElementById("description").innerHTML = html;
+}
+
+
 //view listing
 function createViewListOverlay() {
     const overlay = document.querySelector("#viewlist");
@@ -339,7 +355,7 @@ function createViewListOverlay() {
         let len = viewlist.length;
 		for (var i = 0; i < len; ++i) {
             var item = viewlist[i];
-            html += `<li> ${universe.view_string_for_id(item)}</li>`;
+            html += `<li> ${universe.view_string_for_id(item)} <button id=examine-${item}>E</button></li>`;
 			empty = false;
         } //);
         html += `</ul>`;
@@ -348,7 +364,15 @@ function createViewListOverlay() {
         // } else {
         //     html = `<div>Select an item to use it, or <kbd>I</kbd> again to cancel.</div>${html}`;
         // }
-		overlay.innerHTML = html;
+        overlay.innerHTML = html;
+
+        //TODO: fold into the previous somehow?
+		for (var i = 0; i < len; i++) {
+                var item = viewlist[i];
+                var button = document.querySelector('#examine-'+CSS.escape(item));
+                //anonymous function
+                button.onclick = function(e) { examineFunction(e.target); }
+        }
     }
 
     return {

@@ -486,6 +486,45 @@ impl Universe {
         vec![pos.0, pos.1]
     }
 
+    pub fn draw_entities(&self) -> Vec<u8> {
+        // Each "drawn" will store 3 u8 values (x,y and tile)
+        // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
+        let mut js_drawn = Vec::new();
+
+        let mut data = self.ecs_world.query::<(&Point, &Renderable)>()
+        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        .iter()
+        .map(|(e, (&p, &r))| (e, p, r)) // Copy out of the world
+        .collect::<Vec<_>>();
+
+        //sort by render order
+        data.sort_by(|&a, &b| (b.2.order as u8).cmp(&(a.2.order as u8)) );
+        //data.sort_by(|&a, &b| (a.2.order as u8).cmp(&(b.2.order as u8)) );
+        //log!("{}", format!("{:?}", data));
+
+        for (id, point, render) in data.iter() {
+            if self.is_visible(point.x as usize, point.y as usize) {
+                js_drawn.push(point.x as u8);
+                js_drawn.push(point.y as u8);
+                js_drawn.push(render.glyph);
+                //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render.glyph));
+            }
+        }
+
+        // for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        // .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        // .iter() {
+        //     if self.is_visible(point.x as usize, point.y as usize) {
+        //         js_drawn.push(point.x as u8);
+        //         js_drawn.push(point.y as u8);
+        //         js_drawn.push(*render);
+        //         //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render));
+        //     }
+        // }
+
+        return js_drawn;
+    }
+
     //for JS (currently unused because wasm_bindgen doesn't play nice with Vec<NPCPrefab>)
     // pub fn spawn_ex(&mut self, x:i32, y:i32, name:String) {
     //     let pos = self.map.free_grid_in_range(x,y,4);
@@ -763,7 +802,7 @@ impl Universe {
         
     }
 
-
+    //GUI stuff
     pub fn get_item(&mut self) {
         let current_position = self.map.idx_xy(self.player_position);
         let item = self.items_at(current_position.0 as usize, current_position.1 as usize);
@@ -781,48 +820,9 @@ impl Universe {
         }
     }
 
-    pub fn draw_entities(&self) -> Vec<u8> {
-        // Each "drawn" will store 3 u8 values (x,y and tile)
-        // based on https://aimlesslygoingforward.com/blog/2017/12/25/dose-response-ported-to-webassembly/ 
-        let mut js_drawn = Vec::new();
-
-        let mut data = self.ecs_world.query::<(&Point, &Renderable)>()
-        .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
-        .iter()
-        .map(|(e, (&p, &r))| (e, p, r)) // Copy out of the world
-        .collect::<Vec<_>>();
-
-        //sort by render order
-        data.sort_by(|&a, &b| (b.2.order as u8).cmp(&(a.2.order as u8)) );
-        //data.sort_by(|&a, &b| (a.2.order as u8).cmp(&(b.2.order as u8)) );
-        //log!("{}", format!("{:?}", data));
-
-        for (id, point, render) in data.iter() {
-            if self.is_visible(point.x as usize, point.y as usize) {
-                js_drawn.push(point.x as u8);
-                js_drawn.push(point.y as u8);
-                js_drawn.push(render.glyph);
-                //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render.glyph));
-            }
-        }
-
-        // for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
-        // .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
-        // .iter() {
-        //     if self.is_visible(point.x as usize, point.y as usize) {
-        //         js_drawn.push(point.x as u8);
-        //         js_drawn.push(point.y as u8);
-        //         js_drawn.push(*render);
-        //         //log!("{}", &format!("Rust: x {} y {} tile {}", point.x, point.y, render));
-        //     }
-        // }
-
-        return js_drawn;
-    }
-
     pub fn view_list(&self) -> Vec<u64> {
         let mut list = Vec::new();
-        for (id, (point, render)) in self.ecs_world.query::<(&Point, &u8)>()
+        for (id, (point, render)) in self.ecs_world.query::<(&Point, &Renderable)>()
         .with::<String>()
         .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
         .iter() {
@@ -843,6 +843,12 @@ impl Universe {
         let dist = distance2d_chessboard(point.x, point.y, player_pos.0, player_pos.1);
         let name = self.ecs_world.get::<String>(ent).unwrap().to_string();
         return format!("{} - {} {:?}", name, dist, direction);
+    }
+
+    pub fn entity_view_pos(&self, id: u64) -> Vec<i32> {
+        let ent = hecs::Entity::from_bits(id); //restore
+        let point = self.ecs_world.get::<Point>(ent).unwrap();
+        return vec![point.x, point.y];
     }
 
     pub fn inventory_size(&self) -> usize {
