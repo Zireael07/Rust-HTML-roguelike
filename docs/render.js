@@ -642,7 +642,10 @@ function initRenderer(wasm) {
 		//console.log("World pos: x " + w_pos.x + " y: " + w_pos.y);
 		onClickH(w_pos);
 	});
-	gm.addEventListener('mouseup', e => { e.preventDefault() } );
+    gm.addEventListener('mouseup', e => { e.preventDefault() } );
+
+    //mouse move triggers proceeding with stuff
+    // this allows the player to effectively pause the game if he's not interacting
 	gm.addEventListener('mousemove', e => { 
 		e.preventDefault();
 		mouse = termPos(e, gm);
@@ -660,7 +663,7 @@ function initRenderer(wasm) {
                 var dir_x = pos[0]-player[0]
                 var dir_y = pos[1]-player[1]
                 if (dir_x == 0 && dir_y == 0) {
-                    automoving = true;
+                    automoving = true; //abort
                 }
                 universe.move_player(dir_x, dir_y);
                 universe.advance_automove();
@@ -669,10 +672,13 @@ function initRenderer(wasm) {
                 automoving = false;
             }, 1000); //1 second
         }
+
+
+        // in case we have something to process on the Rust side, send a dummy command...
+        universe.process(rust.Command.None);
         //to redraw the highlight
-		//var w_pos = worldPos(mouse);
-        //universe.describe(w_pos.x, w_pos.y);
         tick();
+
 	});
 
     //hidden console

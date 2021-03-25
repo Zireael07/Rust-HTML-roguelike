@@ -346,9 +346,13 @@ pub struct NPCPrefab {
 
 
 //input
+//for input that does not come from JS side
+pub static mut GLOBAL_INPUT: Option<Command> = None;
+
 #[wasm_bindgen]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Command {
-//    None = -1, //unfortunately we can't use -1 in wasm_bindgen...
+    None, //dummy, unfortunately we can't use -1 in wasm_bindgen...
     MoveLeft,
     MoveRight,
     MoveDown,
@@ -536,7 +540,16 @@ impl Universe {
     }
 
 
-    pub fn process(&mut self, input: Option<Command>) {
+    pub fn process(&mut self, mut input: Option<Command>) {
+        //new: handle other sorts of input sources
+        //UGLY but I don't know a better way to do it, it's based on bracketlib input handling
+        unsafe {
+            if GLOBAL_INPUT.is_some() {
+                input = GLOBAL_INPUT;
+                log!("Global input: {:?}", input);
+            }
+
+        }
         // New: handle keyboard inputs.
         match input {
             None => {}, // Nothing happened
@@ -563,6 +576,12 @@ impl Universe {
                 }
             }
         }
+
+        //clear
+        unsafe {
+            GLOBAL_INPUT = None;
+        }
+
     }
 
     pub fn astar_path(&mut self, x:i32, y:i32) {
@@ -589,6 +608,8 @@ impl Universe {
     // requested by the player. We calculate the new coordinates,
     // and if it is a floor - move the player there.
     pub fn move_player(&mut self, delta_x: i32, delta_y: i32) {
+        //log!("Move player x {} y {}", delta_x, delta_y);
+
         if self.is_player_dead() {
             return;
         }
@@ -646,6 +667,13 @@ impl Universe {
                                     let document = window.document().expect("expecting a document on window");  
                                     let view = document.get_element_by_id("conversation").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
                                     view.class_list().toggle("visible");
+
+                                    //test
+                                    unsafe {
+                                        GLOBAL_INPUT = Some(Command::MoveLeft);
+                                        log!("Command to move left issued");
+                                    }
+                                    
                                 }) as Box<dyn FnMut()>);
 
                                 let id = &format!("conv-id-{}", i);
