@@ -325,6 +325,22 @@ function confirmCreation() {
     }
 }
 
+function examineFunction(button){
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+    console.log("ID: ", i);
+    document.getElementById("description").classList.toggle('visible', true);
+    //var w_pos = worldPos(mouse);
+    var w_pos = universe.entity_view_pos(i);
+    //draw
+    let html = "<div>DESCRIPTION</div><p style='white-space: pre-line'>"; //this style makes HTML understand \n linebreaks
+    html += universe.get_description(w_pos[0], w_pos[1]) + '</p> <p>\nPress E again to close</p>';
+    document.getElementById("description").innerHTML = html;
+}
+
+
 //view listing
 function createViewListOverlay() {
     const overlay = document.querySelector("#viewlist");
@@ -339,7 +355,7 @@ function createViewListOverlay() {
         let len = viewlist.length;
 		for (var i = 0; i < len; ++i) {
             var item = viewlist[i];
-            html += `<li> ${universe.view_string_for_id(item)}</li>`;
+            html += `<li> ${universe.view_string_for_id(item)} <button id=examine-${item}>E</button></li>`;
 			empty = false;
         } //);
         html += `</ul>`;
@@ -348,7 +364,15 @@ function createViewListOverlay() {
         // } else {
         //     html = `<div>Select an item to use it, or <kbd>I</kbd> again to cancel.</div>${html}`;
         // }
-		overlay.innerHTML = html;
+        overlay.innerHTML = html;
+
+        //TODO: fold into the previous somehow?
+		for (var i = 0; i < len; i++) {
+                var item = viewlist[i];
+                var button = document.querySelector('#examine-'+CSS.escape(item));
+                //anonymous function
+                button.onclick = function(e) { examineFunction(e.target); }
+        }
     }
 
     return {
@@ -618,7 +642,10 @@ function initRenderer(wasm) {
 		//console.log("World pos: x " + w_pos.x + " y: " + w_pos.y);
 		onClickH(w_pos);
 	});
-	gm.addEventListener('mouseup', e => { e.preventDefault() } );
+    gm.addEventListener('mouseup', e => { e.preventDefault() } );
+
+    //mouse move triggers proceeding with stuff
+    // this allows the player to effectively pause the game if he's not interacting
 	gm.addEventListener('mousemove', e => { 
 		e.preventDefault();
 		mouse = termPos(e, gm);
@@ -636,7 +663,7 @@ function initRenderer(wasm) {
                 var dir_x = pos[0]-player[0]
                 var dir_y = pos[1]-player[1]
                 if (dir_x == 0 && dir_y == 0) {
-                    automoving = true;
+                    automoving = true; //abort
                 }
                 universe.move_player(dir_x, dir_y);
                 universe.advance_automove();
@@ -645,10 +672,13 @@ function initRenderer(wasm) {
                 automoving = false;
             }, 1000); //1 second
         }
+
+
+        // in case we have something to process on the Rust side, send a dummy command...
+        universe.process(rust.Command.None);
         //to redraw the highlight
-		//var w_pos = worldPos(mouse);
-        //universe.describe(w_pos.x, w_pos.y);
         tick();
+
 	});
 
     //hidden console
