@@ -624,14 +624,40 @@ impl Universe {
                             
                             let text = &format!("<div> {} </div>", conv.text);
                             let mut replies = "".to_string();
-                            for a in &conv.answers {
-                                let tmp = format!("<span style=\"color:rgb(0,255,0)\"> {} <span>", a);
+                            for (i, a) in conv.answers.iter().enumerate() {
+                                let tmp = format!("<button id=conv-id-{}>{}</button> <span style=\"color:rgb(0,255,0)\"> {} <span>", i, i, a);
                                 replies = format!("{} \n {}", replies, tmp);
                             }  
 
                             view.set_inner_html(&format!("{} {}", text, replies));
-                            
+
+
+                            //basic interactivity
+                            for (i,a) in conv.answers.iter().enumerate() {
+                                //closure
+                                //needs move due to i being used
+                                let click_handle =  Closure::wrap(Box::new(move || {
+                                    //log!("Test click handler");
+                                    log!("Clicked button for answer id {}", i);
+                                    
+                                    //close the menu for now
+                                    //get the damned thing by ourselves to avoid 'value moved'
+                                    let window = web_sys::window().expect("global window does not exists");    
+                                    let document = window.document().expect("expecting a document on window");  
+                                    let view = document.get_element_by_id("conversation").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                                    view.class_list().toggle("visible");
+                                }) as Box<dyn FnMut()>);
+
+                                let id = &format!("conv-id-{}", i);
+                                let but = document.get_element_by_id(id).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                                but.set_onclick(Some(click_handle.as_ref().unchecked_ref()));
+
+                                //avoid memleak on Rust side
+                                click_handle.forget();
+                            }
+
                             let list = view.class_list().toggle("visible");
+                           
                         }
                         else {
                             game_message(&format!("The man says 🇪 🇸: hola!"));
