@@ -643,14 +643,15 @@ impl Universe {
                             let document = window.document().expect("expecting a document on window");                        
                             let view = document.get_element_by_id("conversation").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
                             
-                            let text = &format!("<div> {} </div>", conv.text);
+                            //the img is there to mark language being spoken by NPC
+                            let text = &format!("<div> <img src=\"./es.svg\" alt=\"\" style=\"height:14px\"> {} </div>", conv.text);
                             let mut replies = "".to_string();
                             for (i, a) in conv.answers.iter().enumerate() {
                                 let tmp = format!("<button id=conv-id-{}>{}</button> <span style=\"color:rgb(0,255,0)\"> {} <span>", i, i, a);
                                 replies = format!("{} \n {}", replies, tmp);
                             }  
-
-                            view.set_inner_html(&format!("{} {}", text, replies));
+                            // ... and player
+                            view.set_inner_html(&format!("{} \n <img src=\"./es.svg\" alt=\"\" style=\"height:14px\"> {}", text, replies));
 
 
                             //basic interactivity
@@ -669,10 +670,10 @@ impl Universe {
                                     view.class_list().toggle("visible");
 
                                     //test
-                                    unsafe {
-                                        GLOBAL_INPUT = Some(Command::MoveLeft);
-                                        log!("Command to move left issued");
-                                    }
+                                    // unsafe {
+                                    //     GLOBAL_INPUT = Some(Command::MoveLeft);
+                                    //     log!("Command to move left issued");
+                                    // }
                                     
                                 }) as Box<dyn FnMut()>);
 
