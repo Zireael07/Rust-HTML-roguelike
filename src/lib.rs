@@ -344,9 +344,19 @@ pub struct NPCPrefab {
     combat: Option<CombatStats>,
 }
 
+#[wasm_bindgen]
+#[derive(Debug, PartialEq)]
+pub enum WaitType {
+    Minutes5,
+    Minutes30,
+    Hour1,
+    Hour2,
+    TillDusk,
+}
+
 
 //input
-//for input that does not come from JS side
+//for input that does not come from JS side (e.g. actions after conversation)
 pub static mut GLOBAL_INPUT: Option<Command> = None;
 
 #[wasm_bindgen]
@@ -569,8 +579,8 @@ impl Universe {
                     //others
                     Command::GetItem => self.get_item(),
                     Command::Rest => self.rest(),
-                    Command::Wait => self.wait(),
-
+                    
+                    //Command::Wait => self.wait(),
                     //save/load
                     //Command::SaveGame => self.save_game(),
 
@@ -1113,7 +1123,7 @@ impl Universe {
         }
     }    
 
-    pub fn wait(&mut self) {
+    pub fn wait(&mut self, opt: WaitType) {
         //get player entity
         let mut play: Option<Entity> = None;
         for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
@@ -1122,22 +1132,38 @@ impl Universe {
         match play {
             Some(entity) => {
                 let mut turns_passed = 0;
-                // block to make the loop below work
-                {
-                    let gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
 
-                    //wait until 19:00
-                    let end_t = NaiveTime::from_hms(19,00,00);
-                    //let mut f = end_t.format("%H:%M:%S").to_string();
-                    //game_message(&format!("End time: {}", f));
-    
-                    //add the current number of turns to game start
-                    let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
-                    //returns a Duration
-                    let diff = end_t - cur_t.0;
-                    turns_passed = diff.num_seconds();
-                    //log!("{}", &format!("{} s", diff.num_seconds()));
-                    //gs.turns += turns_passed;    
+                if opt == WaitType::TillDusk {
+                    // block to make the loop below work
+                    {
+                        let gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+
+                        //wait until 19:00
+                        let end_t = NaiveTime::from_hms(19,00,00);
+                        //let mut f = end_t.format("%H:%M:%S").to_string();
+                        //game_message(&format!("End time: {}", f));
+
+                        //add the current number of turns to game start
+                        let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                        //returns a Duration
+                        let diff = end_t - cur_t.0;
+                        turns_passed = diff.num_seconds();
+                        //log!("{}", &format!("{} s", diff.num_seconds()));
+                        //gs.turns += turns_passed;    
+                    }
+                }
+
+                if opt == WaitType::Minutes5 {
+                    turns_passed = Duration::minutes(5).num_seconds();
+                }
+                if opt == WaitType::Minutes30 {
+                    turns_passed = Duration::minutes(30).num_seconds();
+                }
+                if opt == WaitType::Hour1 {
+                    turns_passed = Duration::hours(1).num_seconds();
+                }
+                if opt == WaitType::Hour2 {
+                    turns_passed = Duration::hours(2).num_seconds();
                 }
                
                 //simulate all that time

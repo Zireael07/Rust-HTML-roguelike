@@ -422,6 +422,34 @@ function showLogHistory() {
 	// }
 }
 
+function showRestView() {
+    if (!document.getElementById("rest").classList.contains('visible')) {
+        document.getElementById("rest").classList.toggle('visible', true);
+    }
+}
+
+function waitClick(button) {
+    //extract id from item id
+    var id = button.id;
+    var reg = id.match(/(\d+)/); 
+    var i = reg[0];
+
+    var tim = -1;
+    //lookup
+    if (i == 1) { tim = rust.WaitType.Minutes5 }
+    if (i == 2) { tim = rust.WaitType.Minutes30 }
+    if (i == 3) { tim = rust.WaitType.Hour1 }
+    if (i == 4) { tim = rust.WaitType.Hour2 }
+    if (i == 5) { tim = rust.WaitType.TillDusk } 
+
+    if (tim != -1) {
+        universe.wait(tim);
+        //hide list
+        document.getElementById("rest").classList.toggle('visible', false);
+    }
+    
+}
+
 //tabs
 function openTab(evt) {
     // Declare all variables
@@ -457,7 +485,11 @@ function onKeyDown(k) {
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
     else if (k == ut.KEY_R) cmd = rust.Command.Rest;
-    else if (k == ut.KEY_PERIOD) cmd = rust.Command.Wait; //'r' is taken by 'rest' above
+    else if (k == ut.KEY_PERIOD) //'r' is taken by 'rest' above 
+    {
+        cmd = rust.Command.Wait; // dummy
+        showRestView();
+    }
     else if (k == ut.KEY_I) {
         if (!vendorOverlay.classList.contains('visible')) {
             cmd = rust.Command.Inventory //dummy
@@ -625,6 +657,11 @@ function initRenderer(wasm) {
 
     //default to ASCII map open
     document.getElementById("game").style.display = "block";
+
+    var c = document.getElementById("rest").children
+    for (i = 0; i < c.length; i++) {
+        c[i].onclick = function(e) { waitClick(e.target) }
+    }
 
 	// Initialize input
     ut.initInput(onKeyDown);
