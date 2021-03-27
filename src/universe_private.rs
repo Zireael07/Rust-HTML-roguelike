@@ -591,7 +591,7 @@ impl Universe {
                         }
                     } else {
                         // is late, want to find a bed...
-                        log!("{}", &format!("t: {}, wants to find a bed... x {} y {} ", time, point.x, point.y));
+                        //log!("{}", &format!("t: {}, wants to find a bed... x {} y {} ", time, point.x, point.y));
 
                         //if we don't have a bed yet...
                         if self.ecs_world.get::<Path>(id).is_err() {

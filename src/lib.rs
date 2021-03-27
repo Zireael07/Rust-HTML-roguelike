@@ -361,6 +361,7 @@ pub enum Command {
     Inventory,
     SaveGame,
     Wait,
+    Rest,
 }
 
 
@@ -567,6 +568,7 @@ impl Universe {
 
                     //others
                     Command::GetItem => self.get_item(),
+                    Command::Rest => self.rest(),
                     Command::Wait => self.wait(),
 
                     //save/load
@@ -1072,6 +1074,44 @@ impl Universe {
         
         return fact;
     }
+
+    pub fn rest(&mut self) {
+        //get player entity
+        let mut play: Option<Entity> = None;
+        for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+            play = Some(id);
+        }
+        match play {
+            Some(entity) => {
+                let turns_passed = Duration::hours(8).num_seconds();
+
+                //simulate all that time
+                for _ in 0..turns_passed {
+                    self.get_AI();
+                    //reenable when it makes sense to do so
+                    //no inter-AI combat yet
+                    //self.remove_dead();
+                    // needs rebalancing for 1s turns
+                    //self.survival_tick();
+                }
+
+                let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                //add the current number of turns to game start
+                let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));
+                let t = cur_t.0.overflowing_add_signed(Duration::hours(8));
+
+                // //t is a tuple (NaiveTime, i64)
+                let f = t.0.format("%H:%M:%S").to_string();
+                game_message(&format!("Time: {}", f));
+
+                //let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
+                //update our turns counter
+                gs.turns += turns_passed;
+
+            },
+            None => {},
+        }
+    }    
 
     pub fn wait(&mut self) {
         //get player entity
