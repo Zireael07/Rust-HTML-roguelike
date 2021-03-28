@@ -1,6 +1,6 @@
 use super::log;
 use super::{game_message, 
-    Universe, NPCPrefab, 
+    Universe, 
     Cell, Renderable, RenderableGlyph, RenderOrder, Rolls,
     ToRemove,
     Point, Player, GameState, Needs, Money, Path,
@@ -18,6 +18,7 @@ use rand::Rng;
 //time
 use chrono::{NaiveTime, Timelike, Duration};
 
+use super::data_loader::NPCPrefab;
 use super::map_builders;    
 use super::map::*;
 use super::fov::*;

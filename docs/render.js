@@ -610,7 +610,7 @@ async function initGame(wasm) {
     universe = rust.Universe.new();
     //async/await again to load text data
     //workaround
-    universe = await rust.load_datafile(universe);
+    universe = await rust.load_datafile_ex(universe);
 //     const res = await fetch("./npcs.ron");
 //     //console.log(res);
 //     const ron = await res.text();

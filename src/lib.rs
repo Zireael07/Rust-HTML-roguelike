@@ -10,10 +10,6 @@ use wasm_bindgen::prelude::*;
 //the websys bindings uses it
 use wasm_bindgen::JsCast; // for dyn_into
 
-//for fetching data files
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response};
-
 //better panics
 extern crate console_error_panic_hook;
 use std::panic;
@@ -55,6 +51,7 @@ mod map_builders;
 //use map_builders::*;
 
 mod saveload;
+mod data_loader;
 
 //lisp-y
 mod lispy;
@@ -333,17 +330,6 @@ impl fmt::Display for Rolls {
     }
 }
 
-//what it says
-#[wasm_bindgen]
-#[derive(Serialize, Deserialize)]
-pub struct NPCPrefab {
-    name: String,
-    renderable: RenderableGlyph,
-    ai: Option<AI>,
-    faction: Option<Faction>, 
-    combat: Option<CombatStats>,
-}
-
 #[wasm_bindgen]
 #[derive(Debug, PartialEq)]
 pub enum WaitType {
@@ -387,48 +373,10 @@ pub struct Universe {
 
 
 /// Public methods, exported to JavaScript.
-
-//async loader based on https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
 #[wasm_bindgen]
 // returning Universe as a workaround for https://github.com/rustwasm/wasm-bindgen/issues/1858
-pub async fn load_datafile(mut state: Universe) -> Universe {
-    let mut opts = RequestInit::new();
-    opts.method("GET");
-    opts.mode(RequestMode::Cors);
-
-    let url = "./npcs.ron";
-
-    let request = Request::new_with_str_and_init(&url, &opts).unwrap(); //no ? because we don't return Result
-
-    request
-        .headers();
-        //.set("Accept", "application/vnd.github.v3+json")?;
-        //.unwrap();
-
-    let window = web_sys::window().unwrap();
-    let resp_value = JsFuture::from(window.fetch_with_request(&request)).await.unwrap(); //?;
-
-    // `resp_value` is a `Response` object.
-    assert!(resp_value.is_instance_of::<Response>());
-    let resp: Response = resp_value.dyn_into().unwrap();
-
-    // Convert this other `Promise` into a rust `Future`, and then to string
-    let ron = JsFuture::from(resp.text().unwrap()).await.unwrap().as_string().unwrap(); //?;
-
-    log!("Loaded from rust: {}", &format!("{:?}", ron));
-
-    let data : Vec<NPCPrefab> = ron::from_str(&ron).expect("malformed file");
-    //debug
-    for e in &data {
-        log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", e.name, e.renderable, e.ai, e.faction, e.combat));
-    }
-        
-    //log!("{}", &format!("{:?}", data));
-
-    state.game_start(data);
-    //state.spawn_entities(data);
-
-    return state
+pub async fn load_datafile_ex(mut state: Universe) -> Universe {
+    return data_loader::load_datafile(state).await;
 }
 
 
