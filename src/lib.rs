@@ -57,6 +57,9 @@ mod data_loader;
 mod lispy;
 use lispy::*;
 
+#[macro_use]
+extern crate lazy_static;
+
 // A macro to provide `println!(..)`-style syntax for `console.log` logging.
 #[macro_export]
 macro_rules! log {

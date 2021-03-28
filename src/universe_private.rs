@@ -18,7 +18,7 @@ use rand::Rng;
 //time
 use chrono::{NaiveTime, Timelike, Duration};
 
-use super::data_loader::NPCPrefab;
+use super::data_loader::{DataMaster, NPCPrefab};
 use super::map_builders;    
 use super::map::*;
 use super::fov::*;
@@ -66,8 +66,7 @@ pub fn path_to_target(map: &mut Map, sx: usize, sy: usize, tx: usize, ty: usize)
 
 //Methods not exposed to JS
 impl Universe {
-    //https://github.com/rustwasm/wasm-bindgen/issues/111 prevents using vec<NPCPrefab> as parameter, too :(
-    pub fn game_start(&mut self, data: Vec<NPCPrefab>) {
+    pub fn game_start(&mut self, data: &DataMaster) {
         //mapgen
         let mut builder = map_builders::random_builder(80,60);
         builder.build_map();
@@ -110,11 +109,11 @@ impl Universe {
         self.give_item("Medkit".to_string());
 
         //spawn anything listed
-        self.spawn_entities_list(builder.build_data.list_spawns, &data);
-        self.spawn_entities(&data);
+        self.spawn_entities_list(builder.build_data.list_spawns, &data.npcs);
+        self.spawn_entities(&data.npcs);
     }
 
-    //moved spawn because wasm_bindgen doesn't play ball with Vec<NPCPrefab>
+    //moved spawn because of //https://github.com/rustwasm/wasm-bindgen/issues/111 preventing using vec<NPCPrefab> as parameter, too :(
 
     //TODO: unhardcode order?
     pub fn spawn(&mut self, x:i32, y:i32, name:String, data: &Vec<NPCPrefab>) {

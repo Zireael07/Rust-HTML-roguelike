@@ -60,6 +60,7 @@ chrono = { version = "0.4", features = ["wasmbind"] }
 
 # Data files
 ron = "*"
+lazy_static  = "1.4.0"
 
 # Parsing
 nom = "6.0"
