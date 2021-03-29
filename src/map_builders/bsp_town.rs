@@ -193,7 +193,7 @@ impl BSPTownBuilder {
         for (i,building) in buildings.iter().enumerate() {
             let rect_width = i32::abs(building.x1 - building.x2-1);
             let rect_height = i32::abs(building.y1 - building.y2-1);
-            log!("{}", &format!("building: w {} h {} ", rect_width, rect_height));
+            //log!("{}", &format!("building: w {} h {} ", rect_width, rect_height));
             building_size.push((
                 i,
                 rect_height * rect_width,

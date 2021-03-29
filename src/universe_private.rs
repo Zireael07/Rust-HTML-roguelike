@@ -137,7 +137,7 @@ impl Universe {
             //let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
             let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
         } else if name == "Thug".to_string() {
-            let th = self.ecs_world.spawn((Point{x:x, y:y}, data[0].renderable as u8, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
+            let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data[0].renderable as u8, order: RenderOrder::Actor}, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
             //let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
             //their starting equipment
             let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
