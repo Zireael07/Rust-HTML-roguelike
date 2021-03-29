@@ -1,0 +1,31 @@
+#![enable(implicit_some)]
+
+(
+    npcs: [
+        (
+            renderable: Thug, 
+            name: "Thug",
+            ai: AI(), //unit struct 
+            faction: (typ: Enemy), 
+            combat: CombatStats(hp:10, max_hp:10, defense:1, power:1)
+        ),
+        (
+            renderable: Barkeep,
+            name: "Barkeep",
+            faction: (typ: Townsfolk),
+            combat: CombatStats(hp:5, max_hp:5, defense:1, power:1)
+        ),
+        (
+            renderable: Patron,
+            name: "Patron",
+            ai: AI(),
+            faction: (typ: Townsfolk),
+            combat: CombatStats(hp:3, max_hp:3, defense:1, power:1)
+        ),
+    ],
+    map: (
+        width: 80,
+        height: 60,
+    )
+)
+
