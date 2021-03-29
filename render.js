@@ -484,7 +484,7 @@ function onKeyDown(k) {
 	else if (k === ut.KEY_UP || k === ut.KEY_K) cmd = rust.Command.MoveUp;
     else if (k === ut.KEY_DOWN || k === ut.KEY_J) cmd = rust.Command.MoveDown;
     else if (k == ut.KEY_G) cmd = rust.Command.GetItem;
-    else if (k == ut.KEY_R) cmd = rust.Command.Rest;
+    else if (k == ut.KEY_R && !ut.isKeyPressed(ut.KEY_SHIFT)) cmd = rust.Command.Rest;
     else if (k == ut.KEY_PERIOD) //'r' is taken by 'rest' above 
     {
         cmd = rust.Command.Wait; // dummy
