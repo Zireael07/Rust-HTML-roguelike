@@ -18,7 +18,7 @@ use rand::Rng;
 //time
 use chrono::{NaiveTime, Timelike, Duration};
 
-use super::data_loader::{DataMaster, NPCPrefab};
+use super::data_loader::{DataMaster, NPCPrefab, DATA};
 use super::map_builders;    
 use super::map::*;
 use super::fov::*;
@@ -729,6 +729,25 @@ impl Universe {
                 self.ecs_world.get_mut::<Path>(w.0).unwrap().steps.remove(1);
             }
 
+        }
+    }
+
+    pub fn debug_console_core(&mut self, input:String) {
+        //split by spaces
+        let v: Vec<&str> = input.split(' ').collect();
+        //debug
+        log!("{}", &format!("{:?}", v));
+        match v[0] {
+            "spawn" => { 
+                log!("Debug console entered: spawn"); 
+                if v.len() < 2 {
+                    log!("Not enough parameters supplied");
+                } else {
+                    let current_position = self.map.idx_xy(self.player_position);
+                    self.spawn(current_position.0+1, current_position.1+1, v[1].to_string(), &DATA.lock().unwrap().npcs)
+                }
+            },
+            _ => { log!("Unknown command entered"); }
         }
     }
 

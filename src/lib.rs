@@ -499,6 +499,8 @@ impl Universe {
 
     pub fn console_input(&mut self, input:String) {
         log!("Rust console input: {}", input);
+        
+        self.debug_console_core(input);
     }
 
 
