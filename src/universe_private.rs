@@ -67,8 +67,9 @@ pub fn path_to_target(map: &mut Map, sx: usize, sy: usize, tx: usize, ty: usize)
 //Methods not exposed to JS
 impl Universe {
     pub fn game_start(&mut self, data: &DataMaster) {
+        let map_size = (data.map.width, data.map.height);
         //mapgen
-        let mut builder = map_builders::random_builder(80,60);
+        let mut builder = map_builders::random_builder(map_size.0 as i32, map_size.1 as i32);
         builder.build_map();
         self.map = builder.build_data.map.clone();
 
@@ -81,7 +82,7 @@ impl Universe {
         }
 
         //FOV
-        self.fov_data = MapData::new(80,60);
+        self.fov_data = MapData::new(map_size.0 as usize, map_size.1 as usize);
 
         //build FOV cache
         for (idx, tile) in self.map.tiles.iter().enumerate() {

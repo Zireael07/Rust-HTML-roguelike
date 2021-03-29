@@ -14,7 +14,8 @@ use std::sync::Mutex;
 //what it says
 #[derive(Deserialize)]
 pub struct DataMaster {
-    pub npcs : Vec<NPCPrefab>
+    pub npcs : Vec<NPCPrefab>,
+    pub map : MapConfig,
 }
 
 
@@ -27,6 +28,12 @@ pub struct NPCPrefab {
     pub combat: Option<CombatStats>,
 }
 
+#[derive(Deserialize)]
+pub struct MapConfig {
+    pub width: u32,
+    pub height: u32,
+}
+
 lazy_static! {
     pub static ref DATA: Mutex<DataMaster> = Mutex::new(DataMaster::empty());
 }
@@ -36,10 +43,15 @@ impl DataMaster {
     pub fn empty() -> DataMaster {
         DataMaster {
             npcs: Vec::new(),
+            map: MapConfig{width:2, height:2}, //dummy
         }
     }
 
-    //pub fn load(&mut self, )
+    pub fn load(&mut self, loaded: DataMaster) {
+        //just copy everything over
+        self.npcs = loaded.npcs;
+        self.map = loaded.map;
+    }
 }
 
 //async loader based on https://rustwasm.github.io/docs/wasm-bindgen/examples/fetch.html
@@ -49,7 +61,7 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
     opts.method("GET");
     opts.mode(RequestMode::Cors);
 
-    let url = "./npcs.ron";
+    let url = "./data.ron";
 
     let request = Request::new_with_str_and_init(&url, &opts).unwrap(); //no ? because we don't return Result
 
@@ -70,14 +82,16 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
 
     log!("Loaded from rust: {}", &format!("{:?}", ron));
 
-    let data : Vec<NPCPrefab> = ron::from_str(&ron).expect("malformed file");
+    let data : DataMaster = ron::from_str(&ron).expect("malformed file");
     //debug
-    for e in &data {
+    for e in &data.npcs {
         log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", e.name, e.renderable, e.ai, e.faction, e.combat));
     }
+
+    DATA.lock().unwrap().load(data);
         
     //log!("{}", &format!("{:?}", data));
-    DATA.lock().unwrap().npcs = data;
+    //DATA.lock().unwrap() = data;
 
 
     state.game_start(&DATA.lock().unwrap());
