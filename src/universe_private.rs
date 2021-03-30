@@ -474,7 +474,7 @@ impl Universe {
 
     }
 
-    fn get_time(&mut self) -> i64 {
+    fn get_time(&self) -> i64 {
         let mut time = 0;
 
         //get player entity
@@ -490,6 +490,14 @@ impl Universe {
             None => {},
         }
         return time;
+    }
+
+    fn get_time_of_day(&self) -> i64 {
+        let tm = self.get_time();
+        //t is a tuple (NaiveTime, i64)
+        let t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(tm));
+        let time = t.0.signed_duration_since(NaiveTime::from_hms(00, 00,00));
+        return time.num_seconds();
     }
 
 
@@ -552,7 +560,8 @@ impl Universe {
     pub fn get_AI(&mut self) {
         let mut wants_path = Vec::new();
         // get the game time once
-        let time = self.get_time();
+        //let time = self.get_time();
+        let time = self.get_time_of_day();
         //log!("{}", &format!("Time: {}", time));
 
         // we need to borrow mutably (for the movement to happen), so we have to use a Point instead of two usizes (hecs limitation)
@@ -567,28 +576,33 @@ impl Universe {
                 let fact = self.ecs_world.get::<Faction>(id).unwrap().typ;
                 // townsfolk and NOT vendor
                 if fact == FactionType::Townsfolk && self.ecs_world.get::<Vendor>(id).is_err() {
-                    // 39600 turns (seconds) is equal to 19:00h in chrono
-                    if time < 39600 {
-                        //random movement
-                        let mut x = point.x;
-                        let mut y = point.y;
-                        //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
-                        let mut rng = rand::thread_rng();
-                        let move_roll = rng.gen_range(1, 6);
-                        match move_roll {
-                            1 => x -= 1,
-                            2 => x += 1,
-                            3 => y -= 1,
-                            4 => y += 1,
-                            _ => {}
-                        }
+                    // 39600 turns (seconds) is equal to 19:00h in chrono (if we count from 8:00)
+                    //28 800 is turns since midnight for 8:00h (game start)
+                    if time < 39600+28800 {
+                        if time > 25400 {
+                            //random movement
+                            let mut x = point.x;
+                            let mut y = point.y;
+                            //"A single instance is cached per thread and the returned ThreadRng is a reference to this instance" 
+                            let mut rng = rand::thread_rng();
+                            let move_roll = rng.gen_range(1, 6);
+                            match move_roll {
+                                1 => x -= 1,
+                                2 => x += 1,
+                                3 => y -= 1,
+                                4 => y += 1,
+                                _ => {}
+                            }
 
-                        //move
-                        let dest_idx = self.map.xy_idx(x, y);
-                        if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx) {
-                            //actually move
-                            point.x = x;
-                            point.y = y;
+                            //move
+                            let dest_idx = self.map.xy_idx(x, y);
+                            if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx) {
+                                //actually move
+                                point.x = x;
+                                point.y = y;
+                            }
+                        } else if time > 21600 { // after 6:00h
+                            log!("Time to get up!");
                         }
                     } else {
                         // is late, want to find a bed...
@@ -748,6 +762,10 @@ impl Universe {
                     self.spawn(current_position.0+1, current_position.1+1, v[1].to_string(), &DATA.lock().unwrap().npcs)
                 }
             },
+            "time" => {
+                let time = self.get_time_of_day();
+                log!("{}", &format!("Time of day: {} ", time));
+            }
             _ => { log!("Unknown command entered"); }
         }
     }
