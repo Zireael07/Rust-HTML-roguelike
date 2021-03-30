@@ -4,7 +4,7 @@ use super::{game_message,
     Cell, Renderable, RenderableGlyph, RenderOrder, Rolls,
     ToRemove,
     Point, Player, GameState, Needs, Money, Path,
-    AI, Vendor, CombatStats, Faction, FactionType, Conversation, Attributes, Attribute,
+    AI, Vendor, CombatStats, Faction, FactionType, Conversation, Asleep, Attributes, Attribute,
     WantsToDropItem, WantsToUseItem,
     Item, InBackpack, Consumable, ProvidesHealing, ProvidesFood, ProvidesQuench, Equippable, EquipmentSlot, MeleeBonus, DefenseBonus, Equipped};
 
@@ -559,6 +559,8 @@ impl Universe {
     //AI logic lives here!
     pub fn get_AI(&mut self) {
         let mut wants_path = Vec::new();
+        let mut wants_sleep = Vec::new();
+
         // get the game time once
         //let time = self.get_time();
         let time = self.get_time_of_day();
@@ -602,7 +604,71 @@ impl Universe {
                                 point.y = y;
                             }
                         } else if time > 21600 { // after 6:00h
-                            log!("Time to get up!");
+                            //log!("Time to get up!");
+                            // for some reason, some times are skipped, so we check
+                            if self.ecs_world.get::<Asleep>(id).is_ok() {
+                                //hack solution: we know the one vendor is in pub
+                                for (ent_id, vendor) in self.ecs_world.query::<(&Vendor)>().iter() {
+                                    let tg = self.ecs_world.get::<Point>(ent_id).unwrap();
+                                    let path = path_to_target(&mut self.map, point.x as usize, point.y as usize, tg.x as usize, tg.y as usize);
+
+                                    //log!("{}", &format!("We have a path to vendor: {:?}", path));
+
+                                    //paranoia
+                                    if path.len() > 1 {
+                                        let new_pos = self.map.idx_xy(path[1]);
+
+                                        let mut moved = false;
+                                        if !self.map.is_tile_blocked(path[1]) {
+                                            let old_idx = self.map.xy_idx(point.x, point.y);
+                                            //mark as blocked for pathfinding
+                                            self.map.clear_tile_blocked(old_idx);
+                                            self.map.set_tile_blocked(path[1]);
+        
+                                            //actually move
+                                            point.x = new_pos.0 as i32;
+                                            point.y = new_pos.1 as i32;
+        
+                                            moved = true;
+                                        }
+        
+        
+                                        //don't A* on every turn
+                                        wants_path.push((id, path, moved));
+                                    }
+                                }
+                                //we're awake now...
+                            } else {
+                                if self.ecs_world.get_mut::<Path>(id).is_ok() {
+                                    //we have a Path
+                                    let mut path = self.ecs_world.get_mut::<Path>(id).unwrap();
+
+                                    //log!("We have a path back to the barkeep!");
+                                    //paranoia
+                                    if path.steps.len() > 2 {
+                                        // # 0 is beginning point
+                                        let new_pos = self.map.idx_xy(path.steps[1]);
+
+                                        if !self.map.is_tile_blocked(path.steps[1]) {
+                                            let old_idx = self.map.xy_idx(point.x, point.y);
+                                            //mark as blocked for pathfinding
+                                            self.map.clear_tile_blocked(old_idx);
+                                            self.map.set_tile_blocked(path.steps[1]);
+
+                                            //actually move
+                                            point.x = new_pos.0 as i32;
+                                            point.y = new_pos.1 as i32;
+
+                                            //log!("Done a move!");
+
+                                            //axe the point from path
+                                            path.steps.remove(1);
+                                        }
+                                    }
+                                }
+                                
+                            }
+                           
                         }
                     } else {
                         // is late, want to find a bed...
@@ -678,7 +744,11 @@ impl Universe {
                                         //self.ecs_world.get_mut::<Path>(id).unwrap().steps.remove(1);
                                     }
 
+                                } else {
+                                    //we're done, mark us as asleep
+                                    wants_sleep.push(id);
                                 }
+                                
                             }
 
                         }
@@ -738,12 +808,20 @@ impl Universe {
         
         //postponed stuff to here since we can't add components while iterating
         for w in wants_path {
+            //if we already have a path, nuke it
+            self.ecs_world.remove_one::<Path>(w.0);
+            //wanting a path implies not being asleep
+            self.ecs_world.remove_one::<Asleep>(w.0);
+
             self.ecs_world.insert_one(w.0, Path{ steps: w.1});
             if w.2 {
                 //axe the point since we already moved by 1 step
                 self.ecs_world.get_mut::<Path>(w.0).unwrap().steps.remove(1);
             }
 
+        }
+        for id in wants_sleep {
+            self.ecs_world.insert_one(id, Asleep{});
         }
     }
 

@@ -225,7 +225,10 @@ pub struct Attributes {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct AI {}
+pub struct AI {
+    //pub state: i32;
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CombatStats {
     pub max_hp : i32,
@@ -251,6 +254,9 @@ pub struct Faction {
 pub struct Vendor {
     //pub categories : Vec<String>
 }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct Asleep {}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Item{}
