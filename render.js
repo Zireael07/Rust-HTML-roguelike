@@ -541,6 +541,14 @@ function onKeyDown(k) {
         }
     }
 
+    //if blocking screens are open, ignore keys
+    if (document.getElementById("creation").classList.contains('visible') || 
+    vendorOverlay.classList.contains('visible') || logOverlay.classList.contains('visible') || 
+    document.getElementById("conversation").classList.contains('visible') || document.getElementById("inventory").classList.contains('visible')) {
+        //console.log("Ignoring command because blocking screen is open...");
+        cmd = -1;
+    }
+
     if (cmd != -1) {
         // update Rust
         universe.process(cmd);
