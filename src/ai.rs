@@ -1,8 +1,10 @@
+use std::borrow::BorrowMut; //to be able to pass Path from system to function
+
 use super::log;
 use super::{game_message, path_to_player, path_to_target,
     Universe,
     AI, Faction, FactionType, Vendor, Asleep, Player,
-    Point, Path, RenderableGlyph};
+    Point, Path, Map, RenderableGlyph};
 
 use hecs::Entity;
 
@@ -10,6 +12,51 @@ use hecs::Entity;
 use rand::Rng;
 
 use super::utils::*;
+
+//avoid passing self for the same reason as in pathing functions in universe_private.rs (system has a borrow on self)
+fn setup_path_and_step(map: &mut Map, id: Entity, path: Vec<usize>, point: &mut Point, wants_path: &mut Vec<(Entity, Vec<usize>, bool)>) {
+    //paranoia
+    if path.len() > 1 {
+        let new_pos = map.idx_xy(path[1]);
+
+        let mut moved = false;
+        if !map.is_tile_blocked(path[1]) {
+            let old_idx = map.xy_idx(point.x, point.y);
+            //mark as blocked for pathfinding
+            map.clear_tile_blocked(old_idx);
+            map.set_tile_blocked(path[1]);
+
+            //actually move
+            point.x = new_pos.0 as i32;
+            point.y = new_pos.1 as i32;
+
+            moved = true;
+        }
+
+
+        //don't A* on every turn
+        wants_path.push((id, path, moved));
+    }
+}
+
+fn move_along_path(map: &mut Map, path: &mut Path, point: &mut Point) {
+    // # 0 is beginning point
+    let new_pos = map.idx_xy(path.steps[1]);
+
+    if !map.is_tile_blocked(path.steps[1]) {
+        let old_idx = map.xy_idx(point.x, point.y);
+        //mark as blocked for pathfinding
+        map.clear_tile_blocked(old_idx);
+        map.set_tile_blocked(path.steps[1]);
+
+        //actually move
+        point.x = new_pos.0 as i32;
+        point.y = new_pos.1 as i32;
+
+        //axe the point from path
+        path.steps.remove(1);
+    }
+}
 
 impl Universe {
     //AI logic lives here!
@@ -69,29 +116,7 @@ impl Universe {
                                     let path = path_to_target(&mut self.map, point.x as usize, point.y as usize, tg.x as usize, tg.y as usize);
 
                                     //log!("{}", &format!("We have a path to vendor: {:?}", path));
-
-                                    //paranoia
-                                    if path.len() > 1 {
-                                        let new_pos = self.map.idx_xy(path[1]);
-
-                                        let mut moved = false;
-                                        if !self.map.is_tile_blocked(path[1]) {
-                                            let old_idx = self.map.xy_idx(point.x, point.y);
-                                            //mark as blocked for pathfinding
-                                            self.map.clear_tile_blocked(old_idx);
-                                            self.map.set_tile_blocked(path[1]);
-        
-                                            //actually move
-                                            point.x = new_pos.0 as i32;
-                                            point.y = new_pos.1 as i32;
-        
-                                            moved = true;
-                                        }
-        
-        
-                                        //don't A* on every turn
-                                        wants_path.push((id, path, moved));
-                                    }
+                                    setup_path_and_step(&mut self.map, id, path, point, &mut wants_path);
                                 }
                                 //we're awake now...
                             } else {
@@ -102,24 +127,7 @@ impl Universe {
                                     //log!("We have a path back to the barkeep!");
                                     //paranoia
                                     if path.steps.len() > 2 {
-                                        // # 0 is beginning point
-                                        let new_pos = self.map.idx_xy(path.steps[1]);
-
-                                        if !self.map.is_tile_blocked(path.steps[1]) {
-                                            let old_idx = self.map.xy_idx(point.x, point.y);
-                                            //mark as blocked for pathfinding
-                                            self.map.clear_tile_blocked(old_idx);
-                                            self.map.set_tile_blocked(path.steps[1]);
-
-                                            //actually move
-                                            point.x = new_pos.0 as i32;
-                                            point.y = new_pos.1 as i32;
-
-                                            //log!("Done a move!");
-
-                                            //axe the point from path
-                                            path.steps.remove(1);
-                                        }
+                                       move_along_path(&mut self.map, path.borrow_mut(), point);
                                     }
                                 }
                                 
@@ -145,29 +153,7 @@ impl Universe {
                             let pt = self.ecs_world.get::<Point>(dists[0].0).unwrap();
                             if distance2d_chessboard(point.x, point.y, pt.x, pt.y) > 1 {
                                 let path = path_to_target(&mut self.map, point.x as usize, point.y as usize, pt.x as usize, pt.y as usize);
-                                
-                                //paranoia
-                                if path.len() > 1 {
-                                    let new_pos = self.map.idx_xy(path[1]);
-
-                                    let mut moved = false;
-                                    if !self.map.is_tile_blocked(path[1]) {
-                                        let old_idx = self.map.xy_idx(point.x, point.y);
-                                        //mark as blocked for pathfinding
-                                        self.map.clear_tile_blocked(old_idx);
-                                        self.map.set_tile_blocked(path[1]);
-    
-                                        //actually move
-                                        point.x = new_pos.0 as i32;
-                                        point.y = new_pos.1 as i32;
-    
-                                        moved = true;
-                                    }
-    
-    
-                                    //don't A* on every turn
-                                    wants_path.push((id, path, moved));
-                                }
+                                setup_path_and_step(&mut self.map, id, path, point, &mut wants_path);
 
                             }
                         } else {
@@ -176,33 +162,13 @@ impl Universe {
                                 let mut path = self.ecs_world.get_mut::<Path>(id).unwrap();
                                 //paranoia
                                 if path.steps.len() > 2 {
-                                    // # 0 is beginning point
-                                    let new_pos = self.map.idx_xy(path.steps[1]);
-
-                                    if !self.map.is_tile_blocked(path.steps[1]) {
-                                        let old_idx = self.map.xy_idx(point.x, point.y);
-                                        //mark as blocked for pathfinding
-                                        self.map.clear_tile_blocked(old_idx);
-                                        self.map.set_tile_blocked(path.steps[1]);
-
-                                        //actually move
-                                        point.x = new_pos.0 as i32;
-                                        point.y = new_pos.1 as i32;
-
-                                        //log!("Done a move!");
-
-                                        //axe the point from path
-                                        path.steps.remove(1);
-                                        //self.ecs_world.get_mut::<Path>(id).unwrap().steps.remove(1);
-                                    }
-
+                                    //see: https://stackoverflow.com/questions/49841847/passing-the-contents-of-a-refcellmut-t-to-a-function
+                                    move_along_path(&mut self.map, path.borrow_mut(), point);                                    
                                 } else {
                                     //we're done, mark us as asleep
                                     wants_sleep.push(id);
                                 }
-                                
                             }
-
                         }
                    
 
