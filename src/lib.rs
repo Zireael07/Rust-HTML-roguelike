@@ -50,6 +50,8 @@ use rect::*;
 mod map_builders;
 //use map_builders::*;
 
+mod ai;
+
 mod saveload;
 mod data_loader;
 
