@@ -111,14 +111,14 @@ impl Universe {
         self.give_item("Medkit".to_string());
 
         //spawn anything listed
-        self.spawn_entities_list(builder.build_data.list_spawns, &data.npcs);
-        self.spawn_entities(&data.npcs);
+        self.spawn_entities_list(builder.build_data.list_spawns, &data);
+        self.spawn_entities(&data);
     }
 
     //moved spawn because of //https://github.com/rustwasm/wasm-bindgen/issues/111 preventing using vec<NPCPrefab> as parameter, too :(
 
     //TODO: unhardcode order?
-    pub fn spawn(&mut self, x:i32, y:i32, name:String, data: &Vec<NPCPrefab>) {
+    pub fn spawn(&mut self, x:i32, y:i32, name:String, data: &DataMaster) {
         //TODO: should be a dict lookup
         // props
         if name == "Table".to_string() {
@@ -131,20 +131,23 @@ impl Universe {
         }
         //NPCs
         else if name == "Barkeep".to_string() {
-            self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data[1].renderable as u8, order: RenderOrder::Actor}, data[1].name.to_string(), data[1].faction.unwrap(), data[1].combat.unwrap(), Vendor{}));
+            self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[1].renderable as u8, order: RenderOrder::Actor}, data.npcs[1].name.to_string(), data.npcs[1].faction.unwrap(), data.npcs[1].combat.unwrap(), Vendor{}));
             //self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } 
         else if name == "Patron".to_string() {
-            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data[2].renderable as u8, order: RenderOrder::Actor}, data[2].name.to_string(), data[2].ai.unwrap(), data[2].faction.unwrap(), data[2].combat.unwrap()));
+            let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[2].renderable as u8, order: RenderOrder::Actor}, data.npcs[2].name.to_string(), data.npcs[2].ai.unwrap(), data.npcs[2].faction.unwrap(), data.npcs[2].combat.unwrap()));
             //let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
             let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
         } else if name == "Thug".to_string() {
-            let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data[0].renderable as u8, order: RenderOrder::Actor}, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
+            let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[0].renderable as u8, order: RenderOrder::Actor}, data.npcs[0].name.to_string(), data.npcs[0].ai.unwrap(), data.npcs[0].faction.unwrap(), data.npcs[0].combat.unwrap()));
             //let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
             //their starting equipment
-            let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-            let l_jacket = self.ecs_world.spawn((Point{x:x,y:y}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-            let jeans = self.ecs_world.spawn((Point{x:x,y:y}, Renderable{glyph: RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+            let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.items[0].renderable as u8, order: RenderOrder::Item}, data.items[0].name.to_string(), data.items[0].item.unwrap(), data.items[0].equippable.unwrap(), data.items[0].defense.unwrap(), ToRemove{yes:false}));
+            //let boots = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let l_jacket = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.items[1].renderable as u8, order: RenderOrder::Item}, data.items[1].name.to_string(), data.items[1].item.unwrap(), data.items[1].equippable.unwrap(), data.items[1].defense.unwrap(), ToRemove{yes:false}));
+            //let l_jacket = self.ecs_world.spawn((Point{x:x,y:y}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+            let jeans = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.items[2].renderable as u8, order: RenderOrder::Item}, data.items[2].name.to_string(), data.items[2].item.unwrap(), data.items[2].equippable.unwrap(), data.items[2].defense.unwrap(), ToRemove{yes:false}));
+            //let jeans = self.ecs_world.spawn((Point{x:x,y:y}, Renderable{glyph: RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
             self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
             self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
             self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
@@ -155,32 +158,37 @@ impl Universe {
     }
 
 
-    pub fn spawn_entities(&mut self, data: &Vec<NPCPrefab>) {
+    pub fn spawn_entities(&mut self, data: &DataMaster) {
         //spawn entities
-        let th = self.ecs_world.spawn((Point{x:5,y:5}, Renderable{glyph:data[0].renderable as u8, order: RenderOrder::Actor}, data[0].name.to_string(), data[0].ai.unwrap(), data[0].faction.unwrap(), data[0].combat.unwrap()));
+        let th = self.ecs_world.spawn((Point{x:5,y:5}, Renderable{glyph:data.npcs[0].renderable as u8, order: RenderOrder::Actor}, data.npcs[0].name.to_string(), data.npcs[0].ai.unwrap(), data.npcs[0].faction.unwrap(), data.npcs[0].combat.unwrap()));
 
         //let th = self.ecs_world.spawn((Point{x:4, y:4}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
         //their starting equipment
-        let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable{glyph: RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = self.ecs_world.spawn((Point{x:4,y:4}, Renderable{glyph:RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+        let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable{glyph:data.items[0].renderable as u8, order: RenderOrder::Item}, data.items[0].name.to_string(), data.items[0].item.unwrap(), data.items[0].equippable.unwrap(), data.items[0].defense.unwrap(), ToRemove{yes:false}));
+        //let boots = self.ecs_world.spawn((Point{x:4, y:4}, Renderable{glyph:RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:4, y:4}, Renderable{glyph:data.items[1].renderable as u8, order: RenderOrder::Item}, data.items[1].name.to_string(), data.items[1].item.unwrap(), data.items[1].equippable.unwrap(), data.items[1].defense.unwrap(), ToRemove{yes:false}));
+        //let l_jacket = self.ecs_world.spawn((Point{x:4,y:4}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:4, y:4}, Renderable{glyph:data.items[2].renderable as u8, order: RenderOrder::Item}, data.items[2].name.to_string(), data.items[2].item.unwrap(), data.items[2].equippable.unwrap(), data.items[2].defense.unwrap(), ToRemove{yes:false}));
+       //let jeans = self.ecs_world.spawn((Point{x:4,y:4}, Renderable{glyph: RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
         self.ecs_world.insert_one(boots, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Feet});
         self.ecs_world.insert_one(l_jacket, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Torso});
         self.ecs_world.insert_one(jeans, Equipped{ owner: th.to_bits(), slot: EquipmentSlot::Legs});
 
         let it = self.ecs_world.spawn((Point{x:6,y:7}, Renderable{glyph: RenderableGlyph::Knife as u8, order: RenderOrder::Item}, "Combat knife".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Melee }, MeleeBonus{ bonus: 2}, ToRemove{yes:false}));
         let med = self.ecs_world.spawn((Point{x:5, y:5}, Renderable{glyph: RenderableGlyph::Medkit as u8, order: RenderOrder::Item}, "Medkit".to_string(), Item{}, ToRemove{yes:false}, Consumable{}, ProvidesHealing{heal_amount:5}));
-        let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable{glyph: RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let l_jacket = self.ecs_world.spawn((Point{x:6,y:18}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
-        let jeans = self.ecs_world.spawn((Point{x:6,y:18}, Renderable{glyph: RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
         
+        let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable{glyph:data.items[0].renderable as u8, order: RenderOrder::Item}, data.items[0].name.to_string(), data.items[0].item.unwrap(), data.items[0].equippable.unwrap(), data.items[0].defense.unwrap(), ToRemove{yes:false}));
+        //let boots = self.ecs_world.spawn((Point{x:6, y:18}, Renderable{glyph:RenderableGlyph::Boots as u8, order: RenderOrder::Item}, "Boots".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Feet }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let l_jacket = self.ecs_world.spawn((Point{x:6, y:18}, Renderable{glyph:data.items[1].renderable as u8, order: RenderOrder::Item}, data.items[1].name.to_string(), data.items[1].item.unwrap(), data.items[1].equippable.unwrap(), data.items[1].defense.unwrap(), ToRemove{yes:false}));
+        //let l_jacket = self.ecs_world.spawn((Point{x:6,y:18}, Renderable{glyph: RenderableGlyph::Jacket as u8, order: RenderOrder::Item}, "Leather jacket".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Torso }, DefenseBonus{ bonus: 0.15 }, ToRemove{yes:false}));
+        let jeans = self.ecs_world.spawn((Point{x:6, y:18}, Renderable{glyph:data.items[2].renderable as u8, order: RenderOrder::Item}, data.items[2].name.to_string(), data.items[2].item.unwrap(), data.items[2].equippable.unwrap(), data.items[2].defense.unwrap(), ToRemove{yes:false}));
+        //let jeans = self.ecs_world.spawn((Point{x:6,y:18}, Renderable{glyph: RenderableGlyph::Jeans as u8, order: RenderOrder::Item}, "Jeans".to_string(), Item{}, Equippable{ slot: EquipmentSlot::Legs}, DefenseBonus{ bonus:0.1}, ToRemove{yes:false}));
+      
         //debug
         log!("Spawned entities!");
-        //log!("{}", &format!("Player stats: {:?}", *state.ecs_world.get::<Attributes>(player).unwrap()));
-               
     }
 
-    pub fn spawn_entities_list(&mut self, list_spawns:Vec<(usize, String)>, data: &Vec<NPCPrefab>) {
+    pub fn spawn_entities_list(&mut self, list_spawns:Vec<(usize, String)>, data: &DataMaster) {
         for entity in list_spawns.iter() {
             let pos = self.map.idx_xy(entity.0);
             self.spawn(pos.0, pos.1, entity.1.clone(), &data);
@@ -569,7 +577,7 @@ impl Universe {
                     log!("Not enough parameters supplied");
                 } else {
                     let current_position = self.map.idx_xy(self.player_position);
-                    self.spawn(current_position.0+1, current_position.1+1, v[1].to_string(), &DATA.lock().unwrap().npcs)
+                    self.spawn(current_position.0+1, current_position.1+1, v[1].to_string(), &DATA.lock().unwrap())
                 }
             },
             "time" => {

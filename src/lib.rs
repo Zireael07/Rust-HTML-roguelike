@@ -288,7 +288,7 @@ pub struct ToRemove {pub yes: bool} //bool is temporary while we can't modify en
 
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum EquipmentSlot { Melee, Torso, Legs, Feet }
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Equippable {
     pub slot : EquipmentSlot
 }
@@ -302,7 +302,7 @@ pub struct MeleeBonus {
     pub bonus : i32
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DefenseBonus {
     pub bonus : f32
 }

@@ -6,7 +6,8 @@ use wasm_bindgen::JsCast; // for dyn_into
 use serde::{Serialize, Deserialize};
 
 use super::log;
-use super::{Universe, RenderableGlyph, AI, Faction, CombatStats};
+use super::{Universe, RenderableGlyph, AI, Faction, CombatStats,
+Item, Equippable, DefenseBonus};
 
 use std::sync::Mutex;
 
@@ -15,6 +16,7 @@ use std::sync::Mutex;
 #[derive(Deserialize)]
 pub struct DataMaster {
     pub npcs : Vec<NPCPrefab>,
+    pub items: Vec<ItemPrefab>,
     pub map : MapConfig,
 }
 
@@ -26,6 +28,15 @@ pub struct NPCPrefab {
     pub ai: Option<AI>,
     pub faction: Option<Faction>, 
     pub combat: Option<CombatStats>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ItemPrefab {
+    pub name: String,
+    pub renderable: RenderableGlyph,
+    pub item: Option<Item>,
+    pub equippable: Option<Equippable>,
+    pub defense: Option<DefenseBonus>,
 }
 
 #[derive(Deserialize)]
@@ -43,6 +54,7 @@ impl DataMaster {
     pub fn empty() -> DataMaster {
         DataMaster {
             npcs: Vec::new(),
+            items: Vec::new(),
             map: MapConfig{width:2, height:2}, //dummy
         }
     }
@@ -50,6 +62,7 @@ impl DataMaster {
     pub fn load(&mut self, loaded: DataMaster) {
         //just copy everything over
         self.npcs = loaded.npcs;
+        self.items = loaded.items;
         self.map = loaded.map;
     }
 }
@@ -87,6 +100,10 @@ pub async fn load_datafile(mut state: Universe) -> Universe {
     for e in &data.npcs {
         log!("{}", &format!("Ent from prefab: {} {:?} {:?} {:?} {:?}", e.name, e.renderable, e.ai, e.faction, e.combat));
     }
+    for e in &data.items {
+        log!("{}", &format!("Item from prefab: {} {:?} {:?} {:?} {:?}", e.name, e.renderable, e.item, e.equippable, e.defense));
+    }
+
 
     DATA.lock().unwrap().load(data);
         

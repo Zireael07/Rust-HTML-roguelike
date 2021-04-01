@@ -23,6 +23,29 @@
             combat: CombatStats(hp:3, max_hp:3, defense:1, power:1)
         ),
     ],
+    items: [
+        (
+            renderable: Boots,
+            name: "Boots",
+            item: Item(), //unit struct
+            equippable: (slot: Feet),
+            defense: DefenseBonus(bonus:0.15)
+        ),
+        (
+            renderable: Jacket,
+            name: "Leather jacket",
+            item: Item(), //unit struct
+            equippable: (slot: Torso),
+            defense: DefenseBonus(bonus:0.15)
+        ),
+        (
+            renderable: Jeans,
+            name: "Jeans",
+            item: Item(), //unit struct
+            equippable: (slot: Legs),
+            defense: DefenseBonus(bonus:0.1),
+        ),
+    ],
     map: (
         width: 80,
         height: 80,
