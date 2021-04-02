@@ -1,14 +1,15 @@
 
 use super::{InitialMapBuilder, BuilderMap, Map, Cell};
 use super::fastnoise::*;
+use super::data_loader::*;
 use super::log; //macro
 
 pub struct NoiseMapBuilder {}
 
 impl InitialMapBuilder for NoiseMapBuilder {
-    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster)  {
         //let mut map = Map::new(20,20);
-        self.noise_build(build_data);
+        self.noise_build(build_data, &data);
     }
 }
 
@@ -18,7 +19,13 @@ impl NoiseMapBuilder {
         Box::new(NoiseMapBuilder{})
     }
 
-    fn noise_build(&mut self, build_data : &mut BuilderMap) {
+    fn noise_build(&mut self, build_data : &mut BuilderMap, data: &DataMaster) {
+        //config
+        //log!("Building map...");
+        // leads to 'cannot recursively acquire mutex'
+        //let data = DATA.lock().unwrap();
+        log!("{}", &format!("data: {:?}", data.map));
+
         //noise
         //generate noise
         let mut rng = rand::thread_rng();
@@ -28,10 +35,10 @@ impl NoiseMapBuilder {
         noise.set_fractal_type(FractalType::FBM);
         
         //for a large map
-        noise.set_fractal_octaves(5);
-        noise.set_fractal_gain(0.6);
-        noise.set_fractal_lacunarity(2.0);
-        noise.set_frequency(2.0);
+        noise.set_fractal_octaves(data.map.octaves);
+        noise.set_fractal_gain(data.map.gain);
+        noise.set_fractal_lacunarity(data.map.lacuna);
+        noise.set_frequency(data.map.frequency);
 
         //for tiny 20x20 map
         //noise.set_fractal_octaves(1);

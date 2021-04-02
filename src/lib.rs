@@ -47,17 +47,20 @@ mod utils;
 use utils::*;
 mod rect;
 use rect::*;
+
+mod data_loader;
+
 mod map_builders;
 //use map_builders::*;
 
 mod ai;
 
 mod saveload;
-mod data_loader;
+
 
 //lisp-y
-mod lispy;
-use lispy::*;
+//mod lispy;
+//use lispy::*;
 
 #[macro_use]
 extern crate lazy_static;

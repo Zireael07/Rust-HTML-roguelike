@@ -1,4 +1,5 @@
 use super::{InitialMapBuilder, MetaMapBuilder, BuilderMap, Map, Cell, Rect, Point};
+use super::data_loader::*;
 use super::log; //macro
 //RNG
 use rand::Rng;
@@ -13,14 +14,14 @@ pub struct BSPTownBuilder {
 
 impl InitialMapBuilder for BSPTownBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, build_data : &mut BuilderMap) {
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster) {
         self.build(build_data);
     }
 }
 
 impl MetaMapBuilder for BSPTownBuilder {
     #[allow(dead_code)]
-    fn build_map(&mut self, build_data : &mut BuilderMap) {
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster) {
         //meta version panics if no submaps
         let submaps : Vec<Rect>;
         if let Some(submaps_builder) = &build_data.submaps {

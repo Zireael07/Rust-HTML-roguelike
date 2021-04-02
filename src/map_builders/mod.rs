@@ -1,5 +1,7 @@
 use super::{Map, Cell, Rect, Point};
 use super::fastnoise;
+use super::data_loader;
+use super::data_loader::DataMaster;
 use super::log;
 
 mod noise_map;
@@ -51,18 +53,18 @@ impl BuilderChain {
         self.builders.push(metabuilder);
     }
 
-    pub fn build_map(&mut self) {
+    pub fn build_map(&mut self, data: &DataMaster) {
         match &mut self.starter {
             None => panic!("Cannot run a map builder chain without a starting build system"),
             Some(starter) => {
                 // Build the starting map
-                starter.build_map(&mut self.build_data);
+                starter.build_map(&mut self.build_data, &data);
             }
         }
 
         // Build additional layers in turn
         for metabuilder in self.builders.iter_mut() {
-            metabuilder.build_map(&mut self.build_data);
+            metabuilder.build_map(&mut self.build_data, &data);
         }
     }
 
@@ -80,11 +82,11 @@ impl BuilderChain {
 // }
 
 pub trait InitialMapBuilder {
-    fn build_map(&mut self, build_data : &mut BuilderMap);
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster);
 }
 
 pub trait MetaMapBuilder {    
-    fn build_map(&mut self, build_data : &mut BuilderMap);
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster);
 }
 
 //Factory function for builder

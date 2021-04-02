@@ -39,10 +39,14 @@ pub struct ItemPrefab {
     pub defense: Option<DefenseBonus>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct MapConfig {
     pub width: u32,
     pub height: u32,
+    pub octaves: i32,
+    pub gain: f32,
+    pub lacuna: f32,
+    pub frequency: f32,
 }
 
 lazy_static! {
@@ -55,7 +59,7 @@ impl DataMaster {
         DataMaster {
             npcs: Vec::new(),
             items: Vec::new(),
-            map: MapConfig{width:2, height:2}, //dummy
+            map: MapConfig{width:2, height:2, octaves:1, gain:0.5,lacuna:0.5, frequency:0.5}, //dummy
         }
     }
 

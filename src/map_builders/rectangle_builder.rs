@@ -1,10 +1,11 @@
 use super::{MetaMapBuilder, BuilderMap, Cell, Rect};
+use super::data_loader::*;
 use super::log; //macro
 
 pub struct RectBuilder {}
 
 impl MetaMapBuilder for RectBuilder {
-    fn build_map(&mut self, build_data : &mut BuilderMap)  {
+    fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster)  {
         self.build(build_data);
     }
 }

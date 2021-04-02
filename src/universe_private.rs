@@ -71,7 +71,8 @@ impl Universe {
         let map_size = (data.map.width, data.map.height);
         //mapgen
         let mut builder = map_builders::random_builder(map_size.0 as i32, map_size.1 as i32);
-        builder.build_map();
+        // unfortunately we have to pass DataMaster here as trying to acquire mutex within mapgen results in 'cannot recursively acquire mutex'
+        builder.build_map(&data);
         self.map = builder.build_data.map.clone();
 
         //spawn player on start
