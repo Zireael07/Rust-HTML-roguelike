@@ -69,8 +69,14 @@ impl BSPTownBuilder {
         if submaps.len() > 0{
             sx = submaps[0].x1;
             sy = submaps[0].y1;
-            endx = submaps[0].x2;
-            endy = submaps[0].y2;
+            //paranoia
+            if submaps[0].x2 < endx {
+                endx = submaps[0].x2;
+            }
+            if submaps[0].y2 < endy {
+                endy = submaps[0].y2;
+            }
+
 
         }
 
@@ -102,15 +108,21 @@ impl BSPTownBuilder {
 
         //BSP now
         self.rects.clear();
-        self.rects.push( Rect::new(sx, sy, endx-1, endy-1) ); // Start with a single (sub)map-sized rectangle
+        let w = endx-1-sx;
+        let h = endy-1-sy;
+        self.rects.push( Rect::new(sx, sy, w, h) ); // Start with a single (sub)map-sized rectangle
         let first_room = self.rects[0];
         self.add_subrects(first_room); // Divide the first room
+
+        //log!("Rects: {:?}", self.rects);
 
         // Up to 240 times, we get a random rectangle and divide it. If its possible to squeeze a
         // room in there, we place it and add it to the rooms list.
         let mut n_rooms = 0;
         while n_rooms < 240 {
-            let rect = self.get_random_rect();
+            let data = self.get_random_rect();
+            let rect = data.0;
+            //log!("{}", format!("random rect: {:?}", data));
 
             //stop too small
             let rect_width = i32::abs(rect.x1 - rect.x2);
@@ -120,10 +132,13 @@ impl BSPTownBuilder {
                 //log!("{}", format!("rect candidate: {:?}", candidate));
 
                 if self.is_possible(candidate, &build_data, &rooms) {
-                    rooms.push(candidate);
+                    rooms.push(candidate);                    
                     self.add_subrects(rect);
                     //buildings added further on
                 }
+            } else {
+                //if rect is too small, nuke it from list
+                self.rects.remove(data.1);
             }
 
             n_rooms += 1;
@@ -341,12 +356,12 @@ impl BSPTownBuilder {
     }
 
     //helpers
-    fn get_random_rect(&mut self) -> Rect {
-        if self.rects.len() == 1 { return self.rects[0]; }
+    fn get_random_rect(&mut self) -> (Rect, usize) {
+        if self.rects.len() == 1 { return (self.rects[0], 0); }
         let mut rng = rand::thread_rng();
         let idx = (rng.gen_range(1, self.rects.len() as i32)-1) as usize; 
         //let idx = (rng.roll_dice(1, self.rects.len() as i32)-1) as usize;
-        self.rects[idx]
+        (self.rects[idx], idx)
     }
 
     fn get_random_sub_rect(&self, rect : Rect) -> Rect {
@@ -370,6 +385,15 @@ impl BSPTownBuilder {
         //offset
         result.x1 += rng.gen_range(1,3); //8
         result.y1 += rng.gen_range(1,3);
+
+        //prevent us sticking to map edges
+        if result.x1 <= 3 {
+            result.x1 += 1;
+        }
+        if result.y1 <= 3 {
+            result.y1 += 1;
+        }
+
         //result.x1 += rng.roll_dice(2, 4);
         //result.y1 += rng.roll_dice(2, 4);
         result.x2 = result.x1 + w;
