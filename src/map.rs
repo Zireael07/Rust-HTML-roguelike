@@ -68,6 +68,9 @@ impl Map {
     }
 
     pub fn is_tile_walkable(&self, x:i32, y:i32) -> bool {
+        //paranoia
+        if !self.is_in_bounds(x,y) { return false };
+        
         let idx = (y * self.width as i32) + x;
         let walkables = vec![Cell::Floor as u8, Cell::FloorIndoor as u8, Cell::Grass as u8, Cell::Door as u8];
         return walkables.contains(&self.tiles[idx as usize]);
