@@ -88,7 +88,7 @@ impl Universe {
 
         //build FOV cache
         for (idx, tile) in self.map.tiles.iter().enumerate() {
-            if *tile == Cell::Wall as u8 {
+            if *tile == Cell::Wall as u8 || *tile == Cell::Mountain as u8 {
                 self.fov_data.set_transparent(self.map.idx_xy(idx).0 as usize, self.map.idx_xy(idx).1 as usize, false);
             }
         }

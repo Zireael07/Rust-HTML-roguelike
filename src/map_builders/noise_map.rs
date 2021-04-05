@@ -57,7 +57,7 @@ impl NoiseMapBuilder {
                 //for small map
                 //if n > 125.0 || n < -125.0 {
                 if n > 140.0 {    
-                    build_data.map.tiles[idx] = Cell::Tree as u8;
+                    build_data.map.tiles[idx] = data.map.ter_wall as u8;
                 } else {
                     build_data.map.tiles[idx] = Cell::Grass as u8;
                 }

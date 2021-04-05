@@ -33,6 +33,8 @@ var GRASS = new ut.Tile(',', 0, 255, 0);
 var TREE = new ut.Tile('♣', 0, 153, 0);
 var FLOOR_INDOOR = new ut.Tile('.', 0, 128, 128);
 var DOOR = new ut.Tile("+", 211, 211, 211);
+var WATER = new ut.Tile("~", 0, 0, 255);
+var MOUNTAIN = new ut.Tile("▓", 200, 200, 200); //▲ fits some sort of rubble and # is more fitting for a web imho
 
 //JS stub logic starts here
 
@@ -79,6 +81,8 @@ function getDungeonTile(x, y) {
     if (v == 3 ) { return TREE };
     if (v == 4 ) { return FLOOR_INDOOR};
     if (v == 5 ) { return DOOR};
+    if (v == 6 ) { return MOUNTAIN};
+    if (v == 7 ) { return WATER};
   	
 	if (t === '#') return WALL;
 	if (t === '.') return FLOOR;

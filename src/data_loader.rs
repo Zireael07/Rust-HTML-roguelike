@@ -6,7 +6,7 @@ use wasm_bindgen::JsCast; // for dyn_into
 use serde::{Serialize, Deserialize};
 
 use super::log;
-use super::{Universe, RenderableGlyph, AI, Faction, CombatStats,
+use super::{Universe, Cell, RenderableGlyph, AI, Faction, CombatStats,
 Item, Equippable, DefenseBonus};
 
 use std::sync::Mutex;
@@ -47,6 +47,7 @@ pub struct MapConfig {
     pub gain: f32,
     pub lacuna: f32,
     pub frequency: f32,
+    pub ter_wall: Cell,
 }
 
 lazy_static! {
@@ -59,7 +60,7 @@ impl DataMaster {
         DataMaster {
             npcs: Vec::new(),
             items: Vec::new(),
-            map: MapConfig{width:2, height:2, octaves:1, gain:0.5,lacuna:0.5, frequency:0.5}, //dummy
+            map: MapConfig{width:2, height:2, octaves:1, gain:0.5,lacuna:0.5, frequency:0.5, ter_wall: Cell::Tree}, //dummy
         }
     }
 

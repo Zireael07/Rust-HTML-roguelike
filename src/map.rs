@@ -9,7 +9,7 @@ use crate::log;
 
 #[wasm_bindgen]
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 pub enum Cell {
     Floor = 0,
     Wall = 1,
@@ -17,6 +17,8 @@ pub enum Cell {
     Tree = 3,
     FloorIndoor = 4,
     Door = 5,
+    Mountain = 6,
+    Water = 7,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
