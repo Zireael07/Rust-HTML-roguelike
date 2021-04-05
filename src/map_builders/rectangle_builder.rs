@@ -6,7 +6,7 @@ pub struct RectBuilder {}
 
 impl MetaMapBuilder for RectBuilder {
     fn build_map(&mut self, build_data : &mut BuilderMap, data: &DataMaster)  {
-        self.build(build_data);
+        self.build(build_data, data);
     }
 }
 
@@ -16,8 +16,8 @@ impl RectBuilder {
         Box::new(RectBuilder{})
     }
 
-    fn build(&mut self, build_data : &mut BuilderMap) {
-        let floors = self.num_unbroken_floors_columns(build_data);
+    fn build(&mut self, build_data : &mut BuilderMap, data: &DataMaster) {
+        let floors = self.num_unbroken_floors_columns(build_data, data);
         let row_floors = self.unbroken_floors_per_row(floors);
         let rect = self.largest_area_rect(row_floors); // x, y, h, w
 
@@ -45,7 +45,7 @@ impl RectBuilder {
 
     // step one of finding rectangle of floor in matrix
     // https://stackoverflow.com/a/12387148
-    fn num_unbroken_floors_columns(&self, build_data : &mut BuilderMap) -> Vec<Vec<i32>> {
+    fn num_unbroken_floors_columns(&self, build_data : &mut BuilderMap, data: &DataMaster) -> Vec<Vec<i32>> {
         //first set it to 0
         let mut num_floors = vec![vec![0; build_data.map.height as usize]; build_data.map.width as usize];
         //Rust is weird, ranges are inclusive at the beginning but exclusive at the end
@@ -58,7 +58,7 @@ impl RectBuilder {
                 //log!("{}", &format!("X,Y {:?},{:?} - num floors north: {:?} ", x, y, add));
                 let idx = build_data.map.xy_idx(x as i32, y as i32);
                 //Rust's ternary expression
-                num_floors[x][y] = if build_data.map.tiles[idx] == Cell::Grass as u8 { 1 + add } else {0};
+                num_floors[x][y] = if build_data.map.tiles[idx] == data.map.ter_ground as u8 { 1 + add } else {0};
             }
         }
 

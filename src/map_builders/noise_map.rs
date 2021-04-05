@@ -59,7 +59,7 @@ impl NoiseMapBuilder {
                 if n > 140.0 {    
                     build_data.map.tiles[idx] = data.map.ter_wall as u8;
                 } else {
-                    build_data.map.tiles[idx] = Cell::Grass as u8;
+                    build_data.map.tiles[idx] = data.map.ter_ground as u8;
                 }
                 //log!("{}", &format!("Tile: x{} y{} {}", x,y, state.tiles[xy_idx(x,y)]));
             }
