@@ -25,10 +25,10 @@ impl RectBuilder {
         let mut submaps : Vec<Rect> = Vec::new();
         submaps.push(Rect::new(rect.0, rect.1, rect.3, rect.2));
         build_data.submaps = Some(submaps);
-        //console::log(format!("Submaps: {:?}", build_data.submaps));
+        //log!("{}", format!("Submaps: {:?}", build_data.submaps));
 
         //here comes nothing...
-        //console::log(format!("Y {:?}-{:?} X:{:?}-{:?}", rect.1, rect.1+rect.2, rect.0, rect.0+rect.3));
+        //log!("{}", format!("Y {:?}-{:?} X:{:?}-{:?}", rect.1, rect.1+rect.2, rect.0, rect.0+rect.3));
 
         //paranoia
         let max_y = if rect.1+rect.2 < build_data.map.height as i32 { rect.1 + rect.2 } else { build_data.map.height as i32 };
@@ -55,14 +55,14 @@ impl RectBuilder {
                 let add = if y == 0 { 0 } else { num_floors[x][y-1] };
                 //pretty and readable but crashes for y == 0
                 //let north = (x + 0, y - 1);
-                //console::log(&format!("X,Y {:?},{:?} - num floors north: {:?} ", x, y, add));
+                //log!("{}", &format!("X,Y {:?},{:?} - num floors north: {:?} ", x, y, add));
                 let idx = build_data.map.xy_idx(x as i32, y as i32);
                 //Rust's ternary expression
                 num_floors[x][y] = if build_data.map.tiles[idx] == Cell::Grass as u8 { 1 + add } else {0};
             }
         }
 
-        //console::log(&format!("{:?}", num_floors));
+        //log!("{}", &format!("{:?}", num_floors));
         num_floors
     }
 
@@ -75,9 +75,9 @@ impl RectBuilder {
                 row.push(floors[x][y]);
             }
             ret.push(row);
-            //console::log(&format!("{:?}", row));
+            //log!("{}", &format!("{:?}", row));
         }
-        //console::log(&format!("{:?}", ret));
+        //log!("{}", &format!("Floors per row {:?}", ret));
         return ret;
     }
 
@@ -92,16 +92,16 @@ impl RectBuilder {
             y -= 1;
             rects.push(self.max_rectangle_histogram(row.to_vec(), y as i32));
         }
-        //console::log(&format!("Rects: {:?}", rects));
+        //log!("{}", &format!("Rects: {:?}", rects));
 
         //sort (cmp works by reference)
         rects.sort_by(|a, b| a.0.cmp(&b.0));
-        //console::log(&format!("Rects sorted: {:?}", rects));
+        //log!("{}", &format!("Rects sorted: {:?}", rects));
 
         //it seems to work on ascending order by default, so get the last
-        //console::log(&format!("Biggest rect: {:?}", rects[rects.len()-1]));
+        //log!("{}", &format!("Biggest rect: {:?}", rects[rects.len()-1]));
         let biggest = rects[rects.len()-1];
-        //console::log(&format!("x {:?} y {:?} h {:?} w {:?}  = area: {:?} ", biggest.3, biggest.4, biggest.1, biggest.2, biggest.0));
+        //log!("{}", &format!("x {:?} y {:?} h {:?} w {:?}  = area: {:?} ", biggest.3, biggest.4, biggest.1, biggest.2, biggest.0));
         (biggest.3, biggest.4, biggest.1, biggest.2)
     }
 
@@ -134,10 +134,15 @@ impl RectBuilder {
 
                     if area > max_area {
                         max_area = area;
+                        // the smallest bar possible is 1 (a line with walls above it is 1) so deduce 1 from height
+                        // or we add because we're substracting, well...
+                        //we inserted -1 at the beginning, so we need to deduce 1 from i, too 
+                        
+                        
                         // answer is area, height, width, x, id = y (y last because it comes from outside the calculation itself)
                         // this algo is bottom-up, so deduce height from y to get the top
-                        //it goes left->right, so the i (position in histogram is the right end)
-                        answer = (area, last_bar, width, i as i32-width, id-last_bar); 
+                        //it goes left->right, so the i (position in histogram) is the right end
+                        answer = (area, last_bar-1, width, i as i32-1-width, id-last_bar+1); 
 
                     }
                 }
