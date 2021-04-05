@@ -48,6 +48,7 @@ pub struct MapConfig {
     pub lacuna: f32,
     pub frequency: f32,
     pub ter_wall: Cell,
+    pub ter_bound: Cell,
 }
 
 lazy_static! {
@@ -60,7 +61,8 @@ impl DataMaster {
         DataMaster {
             npcs: Vec::new(),
             items: Vec::new(),
-            map: MapConfig{width:2, height:2, octaves:1, gain:0.5,lacuna:0.5, frequency:0.5, ter_wall: Cell::Tree}, //dummy
+            map: MapConfig{width:2, height:2, octaves:1, gain:0.5,lacuna:0.5, 
+                frequency:0.5, ter_wall: Cell::Tree, ter_bound: Cell::Mountain}, //dummy
         }
     }
 
