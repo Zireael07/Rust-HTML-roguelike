@@ -792,13 +792,15 @@ impl Universe {
         let mut has_walls = false;
 
         let walls = self.map.revealed_tiles.iter().enumerate()
-            .filter(|x| if *x.1 && self.map.tiles[x.0] == Cell::Wall as u8 { return true } else { return false } )
+            .filter(|x| if *x.1 && (self.map.tiles[x.0] == Cell::Wall as u8 || self.map.tiles[x.0] == Cell::Mountain as u8)
+                { return true } else { return false } )
             .collect::<Vec<(usize, &bool)>>();
         
         let doors = self.map.revealed_tiles.iter().enumerate()
         .filter(|x| if *x.1 && self.map.tiles[x.0] == Cell::Door as u8 { return true } else { return false } )
         .collect::<Vec<(usize, &bool)>>();
 
+        //TODO: instead of describing individual tiles, figure out how to describe as "a wall 9 N 5 wide"
         for (idx, b) in walls {
             let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
             // the range of the viewport to each side is x 20 y 12
