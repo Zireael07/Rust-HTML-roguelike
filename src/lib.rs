@@ -618,12 +618,6 @@ impl Universe {
                             let list = vendor.class_list().toggle("visible");
                         } 
                         else if self.ecs_world.get::<Conversation>(entity).is_ok() {
-                            //debug
-                            if self.ecs_world.get::<NPCName>(entity).is_ok() {
-                                log!("{}", &format!("NPC name: {}", self.ecs_world.get::<NPCName>(entity).unwrap().name));
-                            }
-
-
                             let conv = self.ecs_world.get::<Conversation>(entity).unwrap();
                             //display convo
                             let window = web_sys::window().expect("global window does not exists");    
@@ -634,10 +628,16 @@ impl Universe {
                             let text = &format!("<div> <img src=\"./es.svg\" alt=\"\" style=\"height:14px\"> {} </div>", conv.text);
                             let mut replies = "".to_string();
                             for (i, a) in conv.answers.iter().enumerate() {
-                                let tmp = format!("<button id=conv-id-{}>{}</button> <span style=\"color:rgb(0,255,0)\"> {} <span>", i, i, a);
+                                let tmp = format!("<button id=conv-id-{}>{}</button> <span style=\"color:rgb(0,255,0)\"> {} </span>", i, i, a);
                                 replies = format!("{} \n {}", replies, tmp);
-                            }  
-                            // ... and player
+                            } 
+                            //append a question for their name
+                            if self.ecs_world.get::<NPCName>(entity).is_ok() {
+                                let tmp = format!("<button id=conv-id-{}>{}</button> <span style=\"color:rgb(0,255,0)\"> Cual es tu nombre?</span>", conv.answers.len(), conv.answers.len());
+                                replies = format!("{} \n {}", replies, tmp);
+                            }
+
+                            // mark language for the player, too
                             view.set_inner_html(&format!("{} \n <img src=\"./es.svg\" alt=\"\" style=\"height:14px\"> {}", text, replies));
 
 
@@ -670,6 +670,41 @@ impl Universe {
 
                                 //avoid memleak on Rust side
                                 click_handle.forget();
+                            }
+
+                            // handle asking their name
+                            if self.ecs_world.get::<NPCName>(entity).is_ok() {
+                                //workaround for the fact that we need owned (static) variable
+                                let name = String::from(&self.ecs_world.get::<NPCName>(entity).unwrap().name);
+                                //log!("{}", &format!("NPC name: {}", name));
+                                // https://rustwasm.github.io/wasm-bindgen/api/wasm_bindgen/closure/struct.Closure.html
+                                //It must be 'static, aka no stack references (use the move keyword).
+                                let click_handle_b = Closure::wrap(Box::new(move || {
+                                    log!("{}", &format!("Clicked name question, {}", name));
+
+                                    //redraw the window
+                                    //get the damned thing by ourselves to avoid 'value moved'
+                                    let window = web_sys::window().expect("global window does not exists");    
+                                    let document = window.document().expect("expecting a document on window");
+                                    let view = document.get_element_by_id("conversation").unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                                
+                                    //the img is there to mark language being spoken by NPC
+                                    let text = &format!("<div> <img src=\"./es.svg\" alt=\"\" style=\"height:14px\"> Me llamo {} </div>", name);
+                                    view.set_inner_html(text);
+
+                                }) as Box<dyn FnMut()>);
+                                
+                                
+                                let id = &format!("conv-id-{}", conv.answers.len());
+                                let but = document.get_element_by_id(id).unwrap().dyn_into::<web_sys::HtmlElement>().unwrap();
+                                // uses `as_ref()` to get a `JsValue`
+                                // from our `Closure` which is then converted to a `&Function`
+                                // using the `JsCast::unchecked_ref` function.
+                                but.set_onclick(Some(click_handle_b.as_ref().unchecked_ref()));
+
+
+                                //avoid memleak on Rust side
+                                click_handle_b.forget();
                             }
 
                             let list = view.class_list().toggle("visible");
