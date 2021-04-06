@@ -49,10 +49,14 @@
     map: (
         width: 80,
         height: 80,
-        octaves:5,
+        octaves:3, //5,
         gain:0.6,
         lacuna:2.0,
-        frequency:2.0,
+        frequency: 0.01, //default?
+        //frequency:2.0, // lots of tiny dots, essentially blue noise
+        ter_wall: Mountain,
+        ter_ground: Grass, //ground is what is put down before town is built on empty space
+        ter_bound: Water,
     )
 )
 

@@ -302,7 +302,7 @@ export const WaitType = Object.freeze({ Minutes5:0,"0":"Minutes5",Minutes30:1,"1
 export const Command = Object.freeze({ None:0,"0":"None",MoveLeft:1,"1":"MoveLeft",MoveRight:2,"2":"MoveRight",MoveDown:3,"3":"MoveDown",MoveUp:4,"4":"MoveUp",GetItem:5,"5":"GetItem",Inventory:6,"6":"Inventory",SaveGame:7,"7":"SaveGame",Wait:8,"8":"Wait",Rest:9,"9":"Rest", });
 /**
 */
-export const Cell = Object.freeze({ Floor:0,"0":"Floor",Wall:1,"1":"Wall",Grass:2,"2":"Grass",Tree:3,"3":"Tree",FloorIndoor:4,"4":"FloorIndoor",Door:5,"5":"Door", });
+export const Cell = Object.freeze({ Floor:0,"0":"Floor",Wall:1,"1":"Wall",Grass:2,"2":"Grass",Tree:3,"3":"Tree",FloorIndoor:4,"4":"FloorIndoor",Door:5,"5":"Door",Mountain:6,"6":"Mountain",Water:7,"7":"Water", });
 /**
 */
 export class Universe {
@@ -1044,12 +1044,12 @@ async function init(input) {
         var ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper577 = function(arg0, arg1, arg2) {
-        var ret = makeMutClosure(arg0, arg1, 115, __wbg_adapter_20);
+    imports.wbg.__wbindgen_closure_wrapper754 = function(arg0, arg1, arg2) {
+        var ret = makeMutClosure(arg0, arg1, 113, __wbg_adapter_20);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1263 = function(arg0, arg1, arg2) {
-        var ret = makeMutClosure(arg0, arg1, 172, __wbg_adapter_23);
+    imports.wbg.__wbindgen_closure_wrapper1276 = function(arg0, arg1, arg2) {
+        var ret = makeMutClosure(arg0, arg1, 174, __wbg_adapter_23);
         return addHeapObject(ret);
     };
 
