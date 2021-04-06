@@ -790,37 +790,73 @@ impl Universe {
         //describe the doors/walls in sight
         let mut other_desc = "".to_string();
         let mut has_walls = false;
-        for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
-            if *b {
-                //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
-                if (self.map.tiles[idx] == Cell::Door as u8) {
-                    let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                    // the range of the viewport to each side is x 20 y 12
-                    if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
-                        let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                        let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                        // door is not necessarily the first thing you see, so we need to keep any existing other_desc
-                        let tmp = format!(" You see a door {} away to {:?}.", dist, direction); 
-                        other_desc = format!("{} {}", other_desc, tmp)
-                    }
 
+        let walls = self.map.revealed_tiles.iter().enumerate()
+            .filter(|x| if *x.1 && self.map.tiles[x.0] == Cell::Wall as u8 { return true } else { return false } )
+            .collect::<Vec<(usize, &bool)>>();
+        
+        let doors = self.map.revealed_tiles.iter().enumerate()
+        .filter(|x| if *x.1 && self.map.tiles[x.0] == Cell::Door as u8 { return true } else { return false } )
+        .collect::<Vec<(usize, &bool)>>();
+
+        for (idx, b) in walls {
+            let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+            // the range of the viewport to each side is x 20 y 12
+            if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                let mut tmp = format!(" and {} away to {:?},", dist, direction);
+                if !has_walls {
+                    tmp = format!(" You see a wall {} away to {:?},", dist, direction);
                 }
-                if (self.map.tiles[idx] == Cell::Wall as u8) {
-                    let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
-                    // the range of the viewport to each side is x 20 y 12
-                    if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
-                        let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
-                        let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
-                        let mut tmp = format!(" and {} away to {:?},", dist, direction);
-                        if !has_walls {
-                            tmp = format!(" You see a wall {} away to {:?},", dist, direction);
-                        }
-                        other_desc = format!("{} {}", other_desc, tmp);
-                        has_walls = true;
-                    }
-                }
+                other_desc = format!("{} {}", other_desc, tmp);
+                has_walls = true;
             }
         }
+
+        for (idx, b) in doors {
+            let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+            // the range of the viewport to each side is x 20 y 12
+            if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+                let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+                let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+                // door is not necessarily the first thing you see, so we need to keep any existing other_desc
+                let tmp = format!(" You see a door {} away to {:?}.", dist, direction); 
+                other_desc = format!("{} {}", other_desc, tmp)
+            }
+        }
+
+        // for (idx, b) in self.map.revealed_tiles.iter().enumerate() {
+        //     if *b {
+        //         //log!("Idx {} map {} ", idx, self.map.tiles[idx]);
+        //         if (self.map.tiles[idx] == Cell::Door as u8) {
+        //             let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+        //             // the range of the viewport to each side is x 20 y 12
+        //             if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+        //                 let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+        //                 let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+        //                 // door is not necessarily the first thing you see, so we need to keep any existing other_desc
+        //                 let tmp = format!(" You see a door {} away to {:?}.", dist, direction); 
+        //                 other_desc = format!("{} {}", other_desc, tmp)
+        //             }
+
+        //         }
+        //         if (self.map.tiles[idx] == Cell::Wall as u8) {
+        //             let point = Point{x:self.map.idx_xy(idx).0, y:self.map.idx_xy(idx).1};
+        //             // the range of the viewport to each side is x 20 y 12
+        //             if (point.x-new_position.0).abs() <= 20 && (point.y-new_position.1).abs() <= 12 {
+        //                 let dist = distance2d_chessboard(point.x, point.y, new_position.0, new_position.1);
+        //                 let direction = dir(&Point{x:new_position.0, y:new_position.1}, &Point{x:point.x, y:point.y});
+        //                 let mut tmp = format!(" and {} away to {:?},", dist, direction);
+        //                 if !has_walls {
+        //                     tmp = format!(" You see a wall {} away to {:?},", dist, direction);
+        //                 }
+        //                 other_desc = format!("{} {}", other_desc, tmp);
+        //                 has_walls = true;
+        //             }
+        //         }
+        //     }
+        // }
 
         //describe entities in view
         let mut ent_desc = "You see here:".to_string();
