@@ -51,7 +51,8 @@ use rect::*;
 mod data_loader;
 
 mod map_builders;
-//use map_builders::*;
+
+mod npc_name;
 
 mod ai;
 
@@ -258,6 +259,10 @@ pub struct Faction {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vendor {
     //pub categories : Vec<String>
+}
+
+pub struct NPCName {
+    pub name: String
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -613,6 +618,12 @@ impl Universe {
                             let list = vendor.class_list().toggle("visible");
                         } 
                         else if self.ecs_world.get::<Conversation>(entity).is_ok() {
+                            //debug
+                            if self.ecs_world.get::<NPCName>(entity).is_ok() {
+                                log!("{}", &format!("NPC name: {}", self.ecs_world.get::<NPCName>(entity).unwrap().name));
+                            }
+
+
                             let conv = self.ecs_world.get::<Conversation>(entity).unwrap();
                             //display convo
                             let window = web_sys::window().expect("global window does not exists");    

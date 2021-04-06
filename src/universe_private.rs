@@ -4,7 +4,7 @@ use super::{game_message,
     Cell, Renderable, RenderableGlyph, RenderOrder, Rolls,
     ToRemove,
     Point, Player, GameState, Needs, Money,
-    Vendor, CombatStats, Conversation, Attributes, Attribute,
+    Vendor, CombatStats, Conversation, NPCName, Attributes, Attribute,
     WantsToDropItem, WantsToUseItem,
     Item, InBackpack, Consumable, ProvidesHealing, ProvidesFood, ProvidesQuench, Equippable, EquipmentSlot, MeleeBonus, DefenseBonus, Equipped};
 
@@ -25,6 +25,7 @@ use super::fov::*;
 use super::astar::a_star_search;
 use super::utils::*;
 use super::ai::*;
+use super::npc_name::*;
 
 //it's outside Universe because we're careful not to pass 'self' to it
 pub fn path_to_player(map: &mut Map, x: usize, y: usize, player_position: usize) -> (usize, usize) {
@@ -139,6 +140,10 @@ impl Universe {
             let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[2].renderable as u8, order: RenderOrder::Actor}, data.npcs[2].name.to_string(), data.npcs[2].ai.unwrap(), data.npcs[2].faction.unwrap(), data.npcs[2].combat.unwrap()));
             //let pat = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Patron as u8, "Patron".to_string(), AI{}, Faction{typ: FactionType::Townsfolk}, CombatStats{hp:3, max_hp:3, defense:1, power:1}));
             let conv = self.ecs_world.insert_one(pat, Conversation{text:"Hola, tio!".to_string(), answers:vec!["Tambien.".to_string(), "No recuerdo español.".to_string()]});
+            
+            //randomized NPC name
+            let sel_name = randomized_NPC_name(true);
+            let nm = self.ecs_world.insert_one(pat, NPCName{name: sel_name.to_string()});
         } else if name == "Thug".to_string() {
             let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[0].renderable as u8, order: RenderOrder::Actor}, data.npcs[0].name.to_string(), data.npcs[0].ai.unwrap(), data.npcs[0].faction.unwrap(), data.npcs[0].combat.unwrap()));
             //let th = self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Thug as u8, "Thug".to_string(), AI{}, Faction{typ: FactionType::Enemy}, CombatStats{hp:10, max_hp:10, defense:1, power:1}));
