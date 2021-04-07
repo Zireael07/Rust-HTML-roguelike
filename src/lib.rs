@@ -719,7 +719,13 @@ impl Universe {
                     self.end_turn();
                 },
                 None => {
+                    self.map.clear_tile_blocked(self.player_position);
+
                     self.player_position = new_idx;
+
+                    //mark player tile as unwalkable for AI/pathing
+                    self.map.set_tile_blocked(new_idx);
+
                     //refresh fov
                     self.fov_data.clear_fov(); // compute_fov does not clear the existing fov
                     self.fov.compute_fov(&mut self.fov_data, new_position.0 as usize, new_position.1 as usize, 6, true);

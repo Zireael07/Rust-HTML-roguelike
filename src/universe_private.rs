@@ -134,6 +134,9 @@ impl Universe {
         //NPCs
         else if name == "Barkeep".to_string() {
             self.ecs_world.spawn((Point{x:x, y:y}, Renderable{glyph:data.npcs[1].renderable as u8, order: RenderOrder::Actor}, data.npcs[1].name.to_string(), data.npcs[1].faction.unwrap(), data.npcs[1].combat.unwrap(), Vendor{}));
+            //doesn't move, so mark his tile as blocked
+            self.map.set_tile_blocked(self.map.xy_idx(x,y));
+            
             //self.ecs_world.spawn((Point{x:x, y:y}, Renderable::Barkeep as u8, "Barkeep".to_string(), Faction{typ: FactionType::Townsfolk}, CombatStats{hp:5, max_hp:5, defense:1, power:1}, Vendor{}));
         } 
         else if name == "Patron".to_string() {

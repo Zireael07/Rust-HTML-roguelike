@@ -102,6 +102,13 @@ impl Universe {
                             //move
                             let dest_idx = self.map.xy_idx(x, y);
                             if self.map.is_tile_walkable(x,y) && !self.map.is_tile_blocked(dest_idx) {
+                                //check blockers
+                                //let blocker = self.blocking_creatures_at(x as usize, y as usize);
+
+                                //mark as blocked for pathfinding/AI
+                                let old_idx = self.map.xy_idx(point.x, point.y);
+                                self.map.clear_tile_blocked(old_idx);
+                                self.map.set_tile_blocked(dest_idx);
                                 //actually move
                                 point.x = x;
                                 point.y = y;
