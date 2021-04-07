@@ -220,6 +220,7 @@ impl Universe {
         let mut ent: Option<Entity> = None;
         for (id, (point, render)) in self.ecs_world.query::<(&Point, &Renderable)>()
         .without::<InBackpack>().without::<Equipped>() //no ref/pointer here!
+        .with::<String>() //because props don't have names
         .iter() {
             if point.x as usize == x && point.y as usize == y {
                 ent = Some(id);
