@@ -1159,6 +1159,13 @@ impl Universe {
                     //self.survival_tick();
                 }
 
+                //rest!
+                let mut stats = self.ecs_world.get_mut::<CombatStats>(entity).unwrap();
+                //just set to max
+                stats.hp = stats.max_hp;
+                game_message("{gDone resting");
+
+
                 let mut gs = self.ecs_world.get_mut::<GameState>(entity).unwrap();
                 //add the current number of turns to game start
                 let cur_t = NaiveTime::from_hms(08, 00, 00).overflowing_add_signed(Duration::seconds(gs.turns));

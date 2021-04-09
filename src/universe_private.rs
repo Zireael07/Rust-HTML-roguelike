@@ -289,6 +289,9 @@ impl Universe {
             // If it heals, apply the healing
             // NOTE: no & here!!!
             if self.ecs_world.get::<ProvidesHealing>(wantstouse.item).is_ok() {
+                //actually heal!
+                let mut stats = self.ecs_world.get_mut::<CombatStats>(*user).unwrap();
+                stats.hp += self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount;
                 game_message(&format!("{{g{} heals {} damage", self.ecs_world.get::<String>(*user).unwrap().to_string(), self.ecs_world.get::<ProvidesHealing>(wantstouse.item).unwrap().heal_amount));                
             } else {
                 log!("Item doesn't provide healing");
@@ -593,6 +596,20 @@ impl Universe {
             "time" => {
                 let time = self.get_time_of_day();
                 log!("{}", &format!("Time of day: {} ", time));
+            }
+            "health" => {
+                //get player entity
+                let mut play: Option<Entity> = None;
+                for (id, (player)) in self.ecs_world.query::<(&Player)>().iter() {
+                    play = Some(id);
+                }
+                match play {
+                    Some(entity) => {
+                        let hp = self.ecs_world.get::<CombatStats>(entity).unwrap().hp;
+                        log!("{}", &format!("HP: {}", hp))
+                    },
+                    None => {},
+                }
             }
             _ => { log!("Unknown command entered"); }
         }
